@@ -1,0 +1,271 @@
+/* ============================================
+   LACAK PAGE & POPUP - SEKOLAH AMAN
+   ============================================ */
+
+/* ---- TRACKING PAGE (background saat popup ditutup) ---- */
+.tracking-page {
+    min-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px 80px;
+    background: var(--bg-soft);
+}
+
+.tracking-header {
+    text-align: center;
+    max-width: 560px;
+    margin-bottom: 40px;
+}
+
+.tracking-icon-wrap {
+    width: 80px; /* Diperkecil dari 96px */
+    height: 80px;
+    background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.18);
+}
+
+.tracking-icon-wrap svg {
+    width: 40px;
+    height: 40px;
+    color: #059669;
+}
+
+.tracking-header h1 {
+    font-size: 2rem; /* Diperkecil sedikit */
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.tracking-header p {
+    font-size: 1rem;
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Button Lacak di page */
+.btn-lacak-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 380px;
+    padding: 16px 28px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.btn-lacak-page:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.4);
+}
+
+/* ============================================
+   POPUP / MODAL (UPDATED SIZING)
+   ============================================ */
+
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup-card {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px; /* DIKECILKAN DARI 480PX */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.popup-overlay.active .popup-card {
+    transform: translateY(0) scale(1);
+}
+
+/* Green header */
+.popup-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 28px 24px 22px; /* Padding diperkecil */
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* decorative circles */
+.popup-header::before, .popup-header::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+.popup-header::before { width: 120px; height: 120px; top: -50px; right: -30px; }
+.popup-header::after { width: 80px; height: 80px; bottom: -30px; left: -20px; }
+
+/* Close btn modern style */
+.popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 10;
+}
+.popup-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: rotate(90deg);
+}
+
+.popup-icon-box {
+    width: 56px; /* Perkecil */
+    height: 56px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.popup-icon-box svg { width: 28px; height: 28px; color: #10b981; }
+
+.popup-header h2 {
+    color: white;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.popup-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+}
+
+/* Body */
+.popup-body {
+    padding: 24px;
+}
+
+/* Input row styling */
+.popup-input-row {
+    display: flex;
+    align-items: stretch;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+
+.popup-input-row:focus-within {
+    border-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    background: white;
+}
+
+.popup-input-icon {
+    width: 44px;
+    background: #f1f5f9; /* Gunakan warna netral */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 2px solid #e2e8f0;
+}
+.popup-input-row:focus-within .popup-input-icon {
+    background: #ecfdf5;
+    border-right-color: #10b981;
+}
+.popup-input-icon svg { width: 18px; color: #64748b; }
+.popup-input-row:focus-within .popup-input-icon svg { color: #10b981; }
+
+.popup-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background: transparent;
+}
+
+/* FIXED PLACEHOLDER COLOR */
+.popup-input::placeholder {
+    color: #94a3b8 !important; /* Slate-400, lebih jelas */
+    opacity: 1;
+}
+
+/* Submit button */
+.popup-btn-submit {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    transition: all 0.3s;
+}
+
+.popup-btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+    .popup-card { max-width: 90%; }
+    .tracking-header h1 { font-size: 1.6rem; }
+}

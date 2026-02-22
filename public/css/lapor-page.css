@@ -1,0 +1,547 @@
+/* ============================================
+   SEKOLAH AMAN - FORM PELAPORAN STYLES
+   Enhanced & Responsive Version with Modal & Validation
+   ============================================ */
+
+/* ==================== IMPORTANT NOTES ==================== */
+/*
+   CATATAN PENTING UNTUK STRUKTUR HTML:
+   
+   1. Pastikan footer TIDAK menggunakan position: fixed atau absolute
+   2. Footer harus berada di dalam flow normal HTML (setelah <main>)
+   3. Body harus menggunakan overflow-y: auto untuk enable scroll
+   4. Form section memiliki padding-bottom besar (200px) untuk space footer
+   
+   Struktur HTML yang benar:
+   <body>
+     <nav>...</nav>
+     <main class="form-section">...</main>
+     <footer>...</footer>  <!-- NOT FIXED/ABSOLUTE -->
+   </body>
+*/
+
+/* ==================== GLOBAL RESET ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* ==================== FORM SECTION ==================== */
+.form-section {
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 200px;
+    position: relative;
+}
+
+/* ==================== FORM CARD ==================== */
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.form-card:hover {
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+/* ==================== FORM GROUP ==================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+/* ==================== FORM INPUT ==================== */
+.form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1f2937;
+    transition: all 0.2s ease;
+    background: white;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.form-input:hover {
+    border-color: #d1d5db;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+    background: #fefffe;
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+/* Textarea */
+textarea.form-input {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.6;
+}
+
+/* ==================== VALIDATION STATES ==================== */
+/* Error State */
+.form-input.border-red-500 {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2;
+}
+
+.form-input.border-red-500:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Success State */
+.form-input.border-emerald-500 {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4;
+}
+
+.form-input.border-emerald-500:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Shake Animation for Errors */
+@keyframes shake {
+    0%, 100% { 
+        transform: translateX(0); 
+    }
+    10%, 30%, 50%, 70%, 90% { 
+        transform: translateX(-8px); 
+    }
+    20%, 40%, 60%, 80% { 
+        transform: translateX(8px); 
+    }
+}
+
+.shake-animation {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* ==================== FILE UPLOAD ==================== */
+.file-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    transition: all 0.25s ease;
+    background: #f9fafb;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.file-upload-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.02) 0%, rgba(5, 150, 105, 0.02) 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.file-upload-area:hover::before {
+    opacity: 1;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+/* File Item */
+.file-item {
+    background: #f8fffe;
+    border: 1px solid #d1fae5;
+    border-radius: 10px;
+    padding: 12px 14px;
+    transition: all 0.2s ease;
+    animation: slideInUp 0.3s ease;
+}
+
+.file-item:hover {
+    border-color: #10b981;
+    background: #ecfdf5;
+    transform: translateX(4px);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== PRIVACY NOTICE ==================== */
+.privacy-notice {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #a7f3d0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.privacy-notice::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 13px 28px;
+    border-radius: 11px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    box-shadow: 
+        0 4px 12px rgba(16, 185, 129, 0.2),
+        0 0 0 0 rgba(16, 185, 129, 0);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-submit::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+    opacity: 1;
+}
+
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 20px rgba(16, 185, 129, 0.3),
+        0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.btn-submit:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==================== LOADING SPINNER ==================== */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== MODAL ANIMATIONS ==================== */
+/* Modal Scale In Animation */
+@keyframes scale-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scale-in {
+    animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Check Mark Draw Animation */
+@keyframes check-draw {
+    0% {
+        stroke-dasharray: 0, 100;
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        stroke-dasharray: 100, 0;
+        opacity: 1;
+    }
+}
+
+.animate-check-draw {
+    animation: check-draw 0.6s ease-in-out 0.2s both;
+}
+
+/* Subtle Pulse Animation */
+@keyframes pulse-subtle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Slide In Animation */
+.animate-slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==================== MODAL BACKDROP ==================== */
+.backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Modal Content Shadow */
+#modalContent {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ==================== TRANSITIONS ==================== */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* ==================== RESPONSIVE STYLES ==================== */
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+    .form-section {
+        padding-top: 100px;
+        padding-bottom: 150px;
+        min-height: auto;
+    }
+    
+    .form-card {
+        padding: 32px 24px;
+        border-radius: 18px;
+    }
+    
+    .file-upload-area {
+        padding: 24px 16px;
+    }
+}
+
+/* Mobile (640px and below) */
+@media (max-width: 640px) {
+    .form-section {
+        padding-top: 90px;
+        padding-bottom: 120px;
+    }
+    
+    .form-card {
+        padding: 24px 18px;
+        border-radius: 16px;
+    }
+    
+    .form-input {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    textarea.form-input {
+        min-height: 100px;
+    }
+    
+    .file-upload-area {
+        padding: 20px 14px;
+    }
+    
+    .btn-submit {
+        padding: 11px 24px;
+        font-size: 14px;
+    }
+    
+    .privacy-notice {
+        padding: 12px 14px;
+    }
+
+    /* Modal responsive adjustments */
+    #reportCode {
+        font-size: 0.875rem !important;
+        letter-spacing: 0.1em !important;
+    }
+
+    #modalContent {
+        border-radius: 1rem;
+    }
+}
+
+/* Extra small mobile (400px and below) */
+@media (max-width: 400px) {
+    .form-card {
+        padding: 20px 16px;
+    }
+    
+    .form-input {
+        padding: 9px 11px;
+        font-size: 13px;
+    }
+    
+    .btn-submit {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+
+    #reportCode {
+        font-size: 0.75rem !important;
+        letter-spacing: 0.05em !important;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.form-input:focus-visible,
+.btn-submit:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== PRINT STYLES ==================== */
+@media print {
+    .decorative-circle {
+        display: none;
+    }
+    
+    .form-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .btn-submit {
+        background: #000;
+        color: #fff;
+    }
+
+    #successModal {
+        display: none !important;
+    }
+}
+
+/* ==================== CUSTOM UTILITIES ==================== */
+/* Font Mono for Code Display */
+#reportCode {
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.1em;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Selection Color */
+::selection {
+    background-color: #10b981;
+    color: white;
+}
+
+::-moz-selection {
+    background-color: #10b981;
+    color: white;
+}
