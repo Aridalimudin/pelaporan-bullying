@@ -25,7 +25,6 @@
                     </span>
                 </div>
 
-                <!-- Heading -->
                 <div class="py-1">
                     <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
                         <span class="text-gray-900 block mb-2">Berbagi cerita adalah</span>
@@ -33,15 +32,13 @@
                     </h1>
                 </div>
 
-                <!-- Description -->
                 <p class="text-base sm:text-lg text-gray-600 leading-relaxed pt-1">
                     untuk mendapatkan perlindungan
                     <span class="font-bold text-primary-green">STOP BULLYING!</span>
                 </p>
 
-                <!-- CTA Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                    <a href="#lapor" class="btn-primary px-6 py-3 bg-gradient-to-r from-primary-green to-dark-green text-white rounded-xl font-semibold text-base shadow-xl flex items-center justify-center gap-2 group">
+                    <a href="{{ route('lapor.index') }}" class="btn-primary px-6 py-3 bg-gradient-to-r from-primary-green to-dark-green text-white rounded-xl font-semibold text-base shadow-xl flex items-center justify-center gap-2 group">
                         <span>Buat Laporan</span>
                         <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -56,7 +53,6 @@
                     </a>
                 </div>
 
-                <!-- Stats - Compact -->
                 <div class="stats-compact max-w-md">
                     <div class="stat-item">
                         <div class="stat-number">500+</div>
@@ -73,24 +69,19 @@
                 </div>
             </div>
 
-            <!-- Right Content - Illustration Compact -->
             <div class="illustration-wrapper delay-4 animate-slide-up">
                 <div class="relative animate-float">
-                    <!-- Main Card -->
                     <div class="illustration-card">
                         <div class="illustration-inner">
-                            <!-- Decorative Elements -->
                             <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-full -mr-12 -mt-12 opacity-60"></div>
                             <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-br from-emerald-200 to-emerald-100 rounded-full -ml-10 -mb-10 opacity-40"></div>
-                            
-                            <!-- Logo SMK -->
+
                             <div class="relative z-10 p-4">
                                 <img src="{{ asset('images/logoSMK.png') }}" alt="Logo SMK Muhammadiyah 3" class="w-48 h-48 lg:w-56 lg:h-56 object-contain mx-auto" style="filter: drop-shadow(0 10px 25px rgba(16, 185, 129, 0.15));">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Floating Badge 1 - Privacy -->
                     <div class="floating-badge absolute -top-2 -left-2">
                         <div class="flex items-center gap-2">
                             <div class="floating-badge-icon">
@@ -105,7 +96,6 @@
                         </div>
                     </div>
 
-                    <!-- Floating Badge 2 - Response -->
                     <div class="floating-badge absolute -bottom-2 -right-2">
                         <div class="flex items-center gap-2">
                             <div class="floating-badge-icon">
@@ -126,7 +116,6 @@
     </div>
 </main>
 
-<!-- Footer Component -->
 @include('components.footer')
 
 @endsection

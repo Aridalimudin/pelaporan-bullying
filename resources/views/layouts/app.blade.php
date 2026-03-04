@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Sekolah Aman - Stop Bullying' }}</title>
-    
-    <!-- Google Fonts -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -32,7 +30,6 @@
     </script>
     
     <style>
-        /* Fix text clipping */
         h1, h2, h3, h4, h5, h6 {
             overflow: visible !important;
             line-height: 1.3 !important;
@@ -43,16 +40,13 @@
             display: inline-block;
         }
     </style>
-    
-    <!-- Custom CSS -->
+
     <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
 </head>
 <body>
     @yield('content')
-    
-    <!-- JavaScript -->
+
     <script>
-        // Toggle Mobile Menu
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
             if (menu) {
@@ -60,7 +54,6 @@
             }
         }
 
-        // Close mobile menu when clicking outside
         document.addEventListener('click', function(event) {
             const mobileMenu = document.getElementById('mobileMenu');
             const menuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
@@ -71,7 +64,6 @@
             }
         });
 
-        // Close mobile menu when clicking a link
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenu = document.getElementById('mobileMenu');
             if (mobileMenu) {

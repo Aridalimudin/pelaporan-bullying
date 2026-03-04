@@ -1,5 +1,3 @@
-/* Update pada lacak-page.js */
-
 const lacakModule = (function () {
     const overlay = document.getElementById('lacakOverlay');
     const input = document.getElementById('trackingCode');
@@ -16,15 +14,11 @@ const lacakModule = (function () {
         document.body.style.overflow = '';
     }
 
-    // Fungsi otomatis buka saat masuk ke halaman Lacak
     function _autoOpen() {
-        // Logika: Langsung buka popup saat script dimuat di page Lacak
         setTimeout(openPopup, 400); 
     }
 
     function _bind() {
-        // ... kode event listener yang sudah ada sebelumnya ...
-        // Tambahkan fungsi ESC untuk menutup
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePopup();
         });
@@ -33,7 +27,7 @@ const lacakModule = (function () {
     return {
         init: function() {
             _bind();
-            _autoOpen(); // Jalankan otomatisasi
+            _autoOpen();
         },
         openPopup: openPopup,
         closePopup: closePopup

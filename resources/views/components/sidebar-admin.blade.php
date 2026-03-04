@@ -1,0 +1,135 @@
+<aside class="admin-sidebar" id="adminSidebar">
+
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+        </div>
+        <div class="sidebar-brand-text">
+            <span class="brand-name">SIP Bullying</span>
+            <span class="brand-sub">Kesiswaan</span>
+        </div>
+        <button class="sidebar-close-btn" id="sidebarClose" onclick="closeSidebar()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-label">Dashboard</div>
+        <a href="#" class="nav-item {{ ($activePage ?? '') === 'dashboard' ? 'active' : '' }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span>Beranda</span>
+        </a>
+
+        <div class="nav-section-label">Pelaporan</div>
+        <div class="nav-group {{ in_array($activePage ?? '', ['laporan-masuk','menunggu-verifikasi','proses-laporan','laporan-selesai']) ? 'open' : '' }}" id="groupPelaporan">
+            <button class="nav-group-trigger" onclick="toggleNavGroup('groupPelaporan')">
+                <div class="nav-group-left">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span>Manajemen Laporan</span>
+                </div>
+                <svg class="nav-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div class="nav-group-children">
+                <a href="/laporan-masuk" class="nav-child {{ ($activePage ?? '') === 'laporan-masuk' ? 'active' : '' }}">
+                    <span class="child-dot"></span>
+                    <span>Laporan Masuk</span>
+                    <span class="nav-badge">3</span>
+                </a>
+                <a href="/menunggu-verifikasi" class="nav-child {{ ($activePage ?? '') === 'menunggu-verifikasi' ? 'active' : '' }}">
+                    <span class="child-dot"></span>
+                    <span>Menunggu Verifikasi</span>
+                </a>
+                <a href="/proses-laporan" class="nav-child {{ ($activePage ?? '') === 'proses-laporan' ? 'active' : '' }}">
+                    <span class="child-dot"></span>
+                    <span>Proses Laporan</span>
+                </a>
+                <a href="/laporan-selesai" class="nav-child {{ ($activePage ?? '') === 'laporan-selesai' ? 'active' : '' }}">
+                    <span class="child-dot"></span>
+                    <span>Laporan Selesai</span>
+                </a>
+            </div>
+        </div>
+        <div class="nav-section-label">Administrasi</div>
+        <div class="nav-group {{ ($activePage ?? '') === 'master-data' ? 'open' : '' }}" id="groupMasterData">
+            <button class="nav-group-trigger" onclick="toggleNavGroup('groupMasterData')">
+                <div class="nav-group-left">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                    </svg>
+                    <span>Master Data</span>
+                </div>
+                <svg class="nav-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div class="nav-group-children">
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Data Kelas</span></a>
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Data Siswa</span></a>
+            </div>
+        </div>
+
+        <div class="nav-group {{ ($activePage ?? '') === 'manajemen-user' ? 'open' : '' }}" id="groupUser">
+            <button class="nav-group-trigger" onclick="toggleNavGroup('groupUser')">
+                <div class="nav-group-left">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span>Manajemen User</span>
+                </div>
+                <svg class="nav-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div class="nav-group-children">
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Daftar User</span></a>
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Tambah User</span></a>
+            </div>
+        </div>
+
+        <div class="nav-section-label">Analitik</div>
+        <div class="nav-group" id="groupAnalitik">
+            <button class="nav-group-trigger" onclick="toggleNavGroup('groupAnalitik')">
+                <div class="nav-group-left">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Rekapitulasi Kasus</span>
+                </div>
+                <svg class="nav-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div class="nav-group-children">
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Per Bulan</span></a>
+                <a href="#" class="nav-child"><span class="child-dot"></span><span>Per Semester</span></a>
+            </div>
+        </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <form method="POST" action="#">
+            @csrf
+            <button type="submit" class="btn-logout">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>

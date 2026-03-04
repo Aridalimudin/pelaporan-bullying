@@ -1,4 +1,3 @@
-<!-- File Upload Component -->
 <div class="form-group">
     <label class="form-label">
         <span class="text-gray-800 font-semibold text-sm">Bukti Pendukung</span>

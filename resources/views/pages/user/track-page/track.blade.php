@@ -23,6 +23,6 @@
 @include('components.modal-lacak')
 @include('components.footer')
 
-<link rel="stylesheet" href="{{ asset('css/lacak-page.css') }}">
-<script src="{{ asset('js/lacak-page.js') }}"></script>
+<link rel="stylesheet" href="{{ asset('css/track-page.css') }}">
+<script src="{{ asset('js/track-page.js') }}"></script>
 @endsection

@@ -1,21 +1,16 @@
 @extends('layouts.app-form')
 
 @section('content')
-<!-- Decorative Background Elements -->
 <div class="decorative-circle" style="top: 5%; left: 5%; width: 250px; height: 250px; background: #10b981;"></div>
 <div class="decorative-circle" style="bottom: 5%; right: 5%; width: 300px; height: 300px; background: #059669;"></div>
 
-<!-- Navigation Component -->
 @include('components.navbar')
 
-<!-- Form Section -->
 <main class="form-section relative px-4 sm:px-6 lg:px-8 bg-pattern">
     <div class="max-w-2xl mx-auto relative z-10">
         <div class="w-full delay-3 animate-slide-up">
-            
-            <!-- Form Card -->
+
             <div class="form-card">
-                <!-- Header -->
                 <div class="text-center mb-10">
                     <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-50 rounded-2xl mb-4">
                         <svg class="w-7 h-7 text-primary-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,11 +25,8 @@
                     </p>
                 </div>
 
-                <!-- Form -->
                 <form id="reportForm" class="space-y-5" novalidate>
-                    <!-- NISN & Email -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- NISN Field -->
                         <div class="form-group">
                             <label for="nisn" class="form-label">
                                 <span class="text-gray-800 font-semibold text-sm">NISN</span>
@@ -54,7 +46,6 @@
                             <p id="nisn-error" class="text-xs text-red-600 mt-1.5 hidden"></p>
                         </div>
                         
-                        <!-- Email Field -->
                         <div class="form-group">
                             <label for="email" class="form-label">
                                 <span class="text-gray-800 font-semibold text-sm">Email</span>
@@ -72,7 +63,6 @@
                         </div>
                     </div>
 
-                    <!-- Deskripsi Kejadian -->
                     <div class="form-group">
                         <label for="deskripsi" class="form-label">
                             <span class="text-gray-800 font-semibold text-sm">Deskripsi Kejadian</span>
@@ -93,10 +83,8 @@
                         </div>
                     </div>
 
-                    <!-- Upload Bukti Component -->
                     @include('components.file-upload')
 
-                    <!-- Privacy Notice -->
                     <div class="privacy-notice">
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-primary-green flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +99,6 @@
                         </div>
                     </div>
 
-                    <!-- Button -->
                     <div class="pt-2">
                         <button 
                             type="submit" 
@@ -131,14 +118,11 @@
     </div>
 </main>
 
-<!-- Footer Component -->
 @include('components.modal-success')
 @include('components.footer')
 
 <script>
-// Form validation utilities
 const FormValidator = {
-    // Validate NISN (only numbers, min 6 digits)
     validateNISN: function(value) {
         if (!value.trim()) {
             return { valid: false, message: 'NISN wajib diisi' };
@@ -152,7 +136,6 @@ const FormValidator = {
         return { valid: true, message: '' };
     },
 
-    // Validate Email
     validateEmail: function(value) {
         if (!value.trim()) {
             return { valid: false, message: 'Email wajib diisi' };
@@ -164,7 +147,6 @@ const FormValidator = {
         return { valid: true, message: '' };
     },
 
-    // Validate Description
     validateDeskripsi: function(value) {
         if (!value.trim()) {
             return { valid: false, message: 'Deskripsi kejadian wajib diisi' };
@@ -175,26 +157,21 @@ const FormValidator = {
         return { valid: true, message: '' };
     },
 
-    // Show error with shake animation
     showError: function(inputId, message) {
         const input = document.getElementById(inputId);
         const errorElement = document.getElementById(`${inputId}-error`);
-        
-        // Add error styling
+
         input.classList.add('border-red-500', 'shake-animation');
         input.classList.remove('border-emerald-500');
-        
-        // Show error message
+
         errorElement.textContent = message;
         errorElement.classList.remove('hidden');
-        
-        // Remove shake animation after it completes
+
         setTimeout(() => {
             input.classList.remove('shake-animation');
         }, 500);
     },
 
-    // Clear error
     clearError: function(inputId) {
         const input = document.getElementById(inputId);
         const errorElement = document.getElementById(`${inputId}-error`);
@@ -204,7 +181,6 @@ const FormValidator = {
         errorElement.textContent = '';
     },
 
-    // Show success styling
     showSuccess: function(inputId) {
         const input = document.getElementById(inputId);
         input.classList.add('border-emerald-500');
@@ -212,19 +188,15 @@ const FormValidator = {
     }
 };
 
-// Real-time validation
 document.getElementById('nisn').addEventListener('input', function(e) {
     const oldValue = this.value;
-    
-    // Only allow numbers
+
     this.value = this.value.replace(/\D/g, '');
-    
-    // If user tried to type letters, show shake animation
+
     if (oldValue !== this.value && oldValue.length > this.value.length) {
         this.classList.add('shake-animation');
         FormValidator.showError('nisn', 'Hanya boleh angka');
-        
-        // Remove shake animation after it completes
+
         setTimeout(() => {
             this.classList.remove('shake-animation');
         }, 500);
@@ -275,23 +247,19 @@ document.getElementById('deskripsi').addEventListener('input', function() {
     }
 });
 
-// Form submission
 document.getElementById('reportForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
-    // Get form values
+
     const nisn = document.getElementById('nisn').value;
     const email = document.getElementById('email').value;
     const deskripsi = document.getElementById('deskripsi').value;
-    
-    // Validate all fields
+
     const nisnValidation = FormValidator.validateNISN(nisn);
     const emailValidation = FormValidator.validateEmail(email);
     const deskripsiValidation = FormValidator.validateDeskripsi(deskripsi);
     
     let isValid = true;
-    
-    // Show errors if any
+
     if (!nisnValidation.valid) {
         FormValidator.showError('nisn', nisnValidation.message);
         isValid = false;
@@ -306,10 +274,8 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
         FormValidator.showError('deskripsi', deskripsiValidation.message);
         isValid = false;
     }
-    
-    // Stop if validation fails
+
     if (!isValid) {
-        // Scroll to first error
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -318,7 +284,6 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
         return;
     }
 
-    // Loading State
     const submitBtn = document.getElementById('submitBtn');
     const originalContent = submitBtn.innerHTML;
     submitBtn.disabled = true;
@@ -330,9 +295,7 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
         <span>Mengirim...</span>
     `;
 
-    // Simulate AJAX/Backend Process
     setTimeout(() => {
-        // Generate unique code with format: KRF-DDMMYY-XXXX
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -340,12 +303,10 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
         const uniqueCode = Math.random().toString(36).substr(2, 4).toUpperCase();
         
         const generatedCode = `KRF-${day}${month}${year}-${uniqueCode}`;
-        
-        // Reset form
+
         this.reset();
         if (window.resetFileUpload) window.resetFileUpload();
-        
-        // Clear all validations
+
         FormValidator.clearError('nisn');
         FormValidator.clearError('email');
         FormValidator.clearError('deskripsi');
@@ -353,11 +314,9 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
         document.getElementById('email').classList.remove('border-emerald-500');
         document.getElementById('deskripsi').classList.remove('border-emerald-500');
 
-        // Restore button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalContent;
 
-        // Show modal
         openReportModal(generatedCode);
         
     }, 1500);
@@ -365,7 +324,6 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
 </script>
 
 <style>
-/* Shake animation for validation errors */
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
@@ -376,7 +334,6 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
     animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-/* Error state styling */
 .form-input.border-red-500 {
     background-color: #fef2f2;
 }
@@ -386,7 +343,6 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-/* Success state styling */
 .form-input.border-emerald-500 {
     background-color: #f0fdf4;
 }
