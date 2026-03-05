@@ -23,7 +23,11 @@
 
             <div class="md-section">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
                     <span>INFORMASI PELAPOR</span>
                 </div>
                 <div class="md-grid2">
@@ -60,7 +64,11 @@
 
             <div class="md-section" id="sectionWaktu">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
                     <span>WAKTU &amp; KEJADIAN</span>
                 </div>
                 <div class="md-grid2">
@@ -83,7 +91,11 @@
 
             <div class="md-section" id="sectionPihak">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
                     <span>PIHAK TERLIBAT</span>
                 </div>
                 <div class="md-grid2">
@@ -113,14 +125,23 @@
 
             <div class="md-section">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
                     <span>DESKRIPSI KEJADIAN</span>
                 </div>
                 <p class="md-desc" id="mdDeskripsi">—</p>
+            </div>
 
             <div class="md-section">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
                     <span>BUKTI PENDUKUNG</span>
                 </div>
                 <div class="md-bukti-row">
@@ -137,7 +158,11 @@
 
             <div class="md-section md-section-tindak" id="sectionTindakLanjut">
                 <div class="md-sh">
-                    <div class="md-sh-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg></div>
+                    <div class="md-sh-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                        </svg>
+                    </div>
                     <span>TINDAK LANJUT</span>
                 </div>
                 <div class="md-grid2" style="margin-bottom:10px">
@@ -208,7 +233,6 @@
     padding: 24px 16px;
     display: flex; align-items: flex-start; justify-content: center;
 }
-
 .md-panel {
     background: white; border-radius: 20px;
     width: 100%; max-width: 580px;
@@ -372,11 +396,16 @@
 </style>
 
 <script>
+/* =========================================================
+   SHARED STATE — digunakan oleh detail modal DAN konfirmasi
+   ========================================================= */
+var _currentRow  = null;
+var _currentType = null;
+var _currentData = null;
 
-let _currentRow  = null;
-let _currentType = null;
-let _currentData = null;
-
+/* =========================================================
+   HEADER & FOOTER CONFIG
+   ========================================================= */
 const _HDR = {
     'laporan-masuk'       : { label:'LAPORAN MASUK',        bg:'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon:'clip' },
     'menunggu-verifikasi' : { label:'VERIFIKASI LAPORAN',   bg:'linear-gradient(135deg,#7c3aed,#5b21b6)', icon:'shield' },
@@ -390,20 +419,49 @@ const _ICONS = {
     check:  `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
     cross:  `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`,
 };
+
+/* Footer buttons per tipe halaman */
 const _FOOTER = {
-    'laporan-masuk'       : [{ c:'md-btn-cancel', l:'Batal', i:'', a:'closeDetailModal()' }, { c:'md-btn-tolak', l:'Tolak Laporan', i:'cross', a:"triggerKonfirmasi('tolak')" }, { c:'md-btn-terima', l:'Terima Laporan', i:'check', a:"triggerKonfirmasi('terima')" }],
-    'menunggu-verifikasi' : [{ c:'md-btn-cancel', l:'Batal', i:'', a:'closeDetailModal()' }, { c:'md-btn-tolak', l:'Tolak Laporan', i:'cross', a:"triggerKonfirmasi('tolak')" }, { c:'md-btn-proses', l:'Proses Laporan', i:'bolt',  a:"triggerKonfirmasi('proses')" }],
-    'proses-laporan'      : [{ c:'md-btn-cancel', l:'Batal', i:'', a:'closeDetailModal()' }, { c:'md-btn-tolak', l:'Tolak Laporan', i:'cross', a:"triggerKonfirmasi('tolak')" }, { c:'md-btn-selesai',l:'Proses Laporan',i:'check', a:"triggerKonfirmasi('selesai')" }],
-    'laporan-selesai'     : [{ c:'md-btn-cancel', l:'Tutup', i:'', a:'closeDetailModal()' }],
+    'laporan-masuk'       : [
+        { c:'md-btn-cancel', l:'Batal',         i:'',      a:'closeDetailModal()' },
+        { c:'md-btn-tolak',  l:'Tolak Laporan', i:'cross', a:"_fromDetailTrigger('tolak')" },
+        { c:'md-btn-terima', l:'Terima Laporan',i:'check', a:"_fromDetailTrigger('terima')" },
+    ],
+    'menunggu-verifikasi' : [
+        { c:'md-btn-cancel', l:'Batal',         i:'',      a:'closeDetailModal()' },
+        { c:'md-btn-tolak',  l:'Tolak Laporan', i:'cross', a:"_fromDetailTrigger('tolak')" },
+        { c:'md-btn-proses', l:'Proses Laporan',i:'bolt',  a:"_fromDetailTrigger('proses')" },
+    ],
+    'proses-laporan'      : [
+        { c:'md-btn-cancel',  l:'Batal',         i:'',      a:'closeDetailModal()' },
+        { c:'md-btn-tolak',   l:'Tolak Laporan', i:'cross', a:"_fromDetailTrigger('tolak')" },
+        { c:'md-btn-selesai', l:'Selesaikan',    i:'check', a:"_fromDetailTrigger('selesai')" },
+    ],
+    'laporan-selesai'     : [
+        { c:'md-btn-cancel', l:'Tutup', i:'', a:'closeDetailModal()' },
+    ],
 };
 
-function _T(id, v) { const e = document.getElementById(id); if(e) e.textContent = v || '—'; }
-function _V(id, show) { const e = document.getElementById(id); if(e) e.style.display = show ? '' : 'none'; }
+/* =========================================================
+   TRIGGER DARI FOOTER DETAIL MODAL
+   Tutup detail dulu, lalu buka konfirmasi
+   ========================================================= */
+function _fromDetailTrigger(action) {
+    /* Tutup detail modal */
+    document.getElementById('modalDetail').style.display = 'none';
+    /* Buka konfirmasi setelah 1 frame agar animasi tidak bentrok */
+    requestAnimationFrame(() => {
+        triggerKonfirmasi(action);
+    });
+}
 
+/* =========================================================
+   OPEN DETAIL MODAL
+   ========================================================= */
 function openDetailModal(data, type, rowEl) {
-    _currentRow  = rowEl || null;
-    _currentType = type  || 'laporan-masuk';
-    _currentData = data  || {};
+    _currentRow  = rowEl  || null;
+    _currentType = type   || 'laporan-masuk';
+    _currentData = data   || {};
 
     const h = _HDR[_currentType] || _HDR['laporan-masuk'];
     document.getElementById('mdHeader').style.background = h.bg;
@@ -417,10 +475,13 @@ function openDetailModal(data, type, rowEl) {
     _T('mdEmail', data.email);
 
     const isLM = _currentType === 'laporan-masuk';
-    _V('sectionWaktu', !isLM); _V('sectionPihak', !isLM);
+    _V('sectionWaktu', !isLM);
+    _V('sectionPihak', !isLM);
     if (!isLM) {
-        _T('mdTanggal', data.tanggal); _T('mdTempat', data.tempat);
-        _T('mdPelaku',  data.pelaku);  _T('mdKorban', data.korban);
+        _T('mdTanggal', data.tanggal);
+        _T('mdTempat',  data.tempat);
+        _T('mdPelaku',  data.pelaku);
+        _T('mdKorban',  data.korban);
         _T('mdSaksi',   data.saksi || 'Tidak ada');
     }
 
@@ -430,24 +491,30 @@ function openDetailModal(data, type, rowEl) {
     _V('sectionTindakLanjut', hasTindak);
     if (hasTindak) {
         const isS = _currentType === 'laporan-selesai';
-        _V('mdJenisTindakan', !isS);        _V('mdJenisTindakanDisplay', isS);
-        _V('mdTanggalTindak', !isS);        _V('mdTanggalTindakDisplay', isS);
-        _V('mdDeskripsiTindakan', !isS);    _V('mdDeskripsiTindakanDisplay', isS);
-        _V('mdUploadArea', !isS);           _V('mdDokumenDisplay', isS);
+        _V('mdJenisTindakan',        !isS);
+        _V('mdJenisTindakanDisplay',  isS);
+        _V('mdTanggalTindak',        !isS);
+        _V('mdTanggalTindakDisplay',  isS);
+        _V('mdDeskripsiTindakan',    !isS);
+        _V('mdDeskripsiTindakanDisplay', isS);
+        _V('mdUploadArea',           !isS);
+        _V('mdDokumenDisplay',        isS);
         if (isS) {
-            _T('mdJenisTindakanText',       data.jenisTindakan);
-            _T('mdTanggalTindakText',       data.tanggalTindak);
-            _T('mdDeskripsiTindakanDisplay',data.deskripsiTindakan);
+            _T('mdJenisTindakanText',        data.jenisTindakan);
+            _T('mdTanggalTindakText',        data.tanggalTindak);
+            _T('mdDeskripsiTindakanDisplay', data.deskripsiTindakan);
         } else {
-            ['mdJenisTindakan','mdTanggalTindak','mdDeskripsiTindakan'].forEach(id=>{
-                const el=document.getElementById(id); if(el) el.value='';
+            ['mdJenisTindakan','mdTanggalTindak','mdDeskripsiTindakan'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
             });
         }
     }
 
+    /* Footer buttons */
     const footer = document.getElementById('mdFooter');
-    footer.innerHTML = (_FOOTER[_currentType]||[]).map(b =>
-        `<button class="md-btn ${b.c}" onclick="${b.a}">${b.i?_ICONS[b.i]:''} ${b.l}</button>`
+    footer.innerHTML = (_FOOTER[_currentType] || []).map(b =>
+        `<button class="md-btn ${b.c}" onclick="${b.a}">${b.i ? _ICONS[b.i] : ''} ${b.l}</button>`
     ).join('');
 
     const overlay = document.getElementById('modalDetail');
@@ -456,12 +523,28 @@ function openDetailModal(data, type, rowEl) {
     document.body.style.overflow = 'hidden';
 }
 
+/* =========================================================
+   CLOSE DETAIL MODAL
+   ========================================================= */
 function closeDetailModal() {
     document.getElementById('modalDetail').style.display = 'none';
     document.body.style.overflow = '';
 }
 
+/* Klik overlay untuk tutup */
 document.getElementById('modalDetail').addEventListener('click', function(e) {
     if (e.target === this) closeDetailModal();
 });
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function _T(id, v) {
+    const e = document.getElementById(id);
+    if (e) e.textContent = v || '—';
+}
+function _V(id, show) {
+    const e = document.getElementById(id);
+    if (e) e.style.display = show ? '' : 'none';
+}
 </script>
