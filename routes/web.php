@@ -14,7 +14,13 @@ Route::get('/lacak', function () {
     return view('pages.user.track-page.track');
 })->name('lapor.lacak');
 
-//ADMINISTRATOR
+//DASHBOARD
+
+Route::get('/dashboard', function () {
+    return view('pages.administrator.dashboard-page.dashboard');
+})->name('administrator.dashboard');
+
+//ADMINISTRATOR 
 
 Route::get('/login', function () {
     return view('pages.administrator.login-page.login');
@@ -42,6 +48,20 @@ Route::get('/laporan-ditolak', function () {
     return view('pages.administrator.report-management-page.report-rejected');
 })->name('administrator.report-rejected');
 
+//MASTER DATA
+
+Route::get('/data-siswa', function () {
+    return view('pages.administrator.master-data-page.students');
+})->name('administrator.students');
+
+Route::get('/jenis-pelanggaran', function () {
+    return view('pages.administrator.master-data-page.case');
+})->name('administrator.case');
+
+Route::get('/tindakan-disiplin', function () {
+    return view('pages.administrator.master-data-page.disciplinary');
+})->name('administrator.disciplinary');
+
 //USER MANAGEMENT
 
 Route::get('/daftar-users', function () {
@@ -55,3 +75,13 @@ Route::get('/daftar-roles', function () {
 Route::get('/daftar-permissions', function () {
     return view('pages.administrator.user-management-page.permissions');
 })->name('administrator.permissions');
+
+//CASE RECAPITULATION
+
+Route::get('/rekapitulasi-PerBulan', function () {
+    return view('pages.administrator.case-recapitulation-page.monthly');
+})->name('administrator.monthly');
+
+Route::get('/rekapitulasi-PerSemester', function () {
+    return view('pages.administrator.case-recapitulation-page.semester');
+})->name('administrator.semester');
