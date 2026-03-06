@@ -37,3 +37,21 @@ Route::get('/proses-laporan', function () {
 Route::get('/laporan-selesai', function () {
     return view('pages.administrator.report-management-page.report-closed');
 })->name('administrator.report-closed');
+
+Route::get('/laporan-ditolak', function () {
+    return view('pages.administrator.report-management-page.report-rejected');
+})->name('administrator.report-rejected');
+
+//USER MANAGEMENT
+
+Route::get('/daftar-users', function () {
+    return view('pages.administrator.user-management-page.users');
+})->name('administrator.users');
+
+Route::get('/daftar-roles', function () {
+    return view('pages.administrator.user-management-page.roles');
+})->name('administrator.roles');
+
+Route::get('/daftar-permissions', function () {
+    return view('pages.administrator.user-management-page.permissions');
+})->name('administrator.permissions');

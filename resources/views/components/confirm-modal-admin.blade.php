@@ -160,6 +160,7 @@
 .mk-btn-confirm.green  { background: #10b981; box-shadow: 0 4px 14px rgba(16,185,129,.3); }
 .mk-btn-confirm.red    { background: #ef4444; box-shadow: 0 4px 14px rgba(239,68,68,.3); }
 .mk-btn-confirm.yellow { background: #f59e0b; box-shadow: 0 4px 14px rgba(245,158,11,.3); }
+.mk-btn-confirm.blue   { background: #3b82f6; box-shadow: 0 4px 14px rgba(59,130,246,.3); }
 
 .mk-urgensi-tinggi { color: #dc2626; }
 .mk-urgensi-sedang { color: #d97706; }
@@ -232,6 +233,21 @@ const _KFG = {
         btnIcon     : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
         toastType   : 'success', toastTitle: 'Laporan Selesai!', toastMsg: 'Laporan berhasil diselesaikan dan diarsipkan.',
         newStatus   : 'Selesai', newClass: 'selesai',
+    },
+    pulihkan: {
+        topbarBg    : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+        topbarIcon  : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>`,
+        topbarSub   : 'Konfirmasi Pemulihan',
+        topbarTitle : 'Pulihkan Laporan Ini?',
+        alertType   : 'info',
+        alertIcon   : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>`,
+        alertText   : 'Laporan ini akan <strong>dipulihkan</strong> dan dikembalikan ke tahap terakhirnya sebelum ditolak.',
+        note        : 'Laporan akan dikembalikan ke antrian sesuai progress terakhirnya. Pastikan Anda memiliki alasan yang valid untuk memulihkan laporan ini.',
+        btnClass    : 'blue',
+        btnLabel    : 'Ya, Pulihkan Laporan',
+        btnIcon     : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>`,
+        toastType   : 'success', toastTitle: 'Laporan Dipulihkan!', toastMsg: 'Laporan berhasil dipulihkan ke tahap sebelumnya.',
+        newStatus   : 'Dipulihkan', newClass: 'verifikasi',
     },
 };
 

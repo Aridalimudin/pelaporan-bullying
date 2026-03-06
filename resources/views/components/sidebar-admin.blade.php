@@ -32,7 +32,7 @@
 
         {{-- Pelaporan --}}
         <div class="nav-section-label">Pelaporan</div>
-        <div class="nav-group {{ in_array($activePage ?? '', ['laporan-masuk','menunggu-verifikasi','proses-laporan','laporan-selesai']) ? 'open' : '' }}" id="groupPelaporan">
+        <div class="nav-group {{ in_array($activePage ?? '', ['laporan-masuk','menunggu-verifikasi','proses-laporan','laporan-selesai','laporan-ditolak']) ? 'open' : '' }}" id="groupPelaporan">
             <button class="nav-group-trigger" onclick="toggleNavGroup('groupPelaporan')">
                 <div class="nav-group-left">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,8 +50,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
                     <span>Laporan Masuk</span>
-                    @if(isset($countLaporanMasuk) && $countLaporanMasuk > 0)
-                    <span class="nav-badge">{{ $countLaporanMasuk }}</span>
+                    @php
+                        /*
+                         * BADGE LAPORAN MASUK
+                         * Sementara: ganti angka 12 sesuai kebutuhan
+                         * Nanti pakai DB: $__badgeLM = \App\Models\NamaModel::where('status','masuk')->count();
+                         */
+                        $__badgeLM = $countLaporanMasuk ?? 12;
+                    @endphp
+                    @if($__badgeLM > 0)
+                        <span class="nav-badge">{{ $__badgeLM }}</span>
                     @endif
                 </a>
                 <a href="/menunggu-verifikasi" class="nav-child {{ ($activePage ?? '') === 'menunggu-verifikasi' ? 'active' : '' }}">
@@ -59,18 +67,40 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span>Menunggu Verifikasi</span>
+                    @php $__badgeMV = $countMenungguVerifikasi ?? 0; @endphp
+                    @if($__badgeMV > 0)
+                        <span class="nav-badge">{{ $__badgeMV }}</span>
+                    @endif
                 </a>
                 <a href="/proses-laporan" class="nav-child {{ ($activePage ?? '') === 'proses-laporan' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                     <span>Proses Laporan</span>
+                    @php $__badgePL = $countProsesLaporan ?? 0; @endphp
+                    @if($__badgePL > 0)
+                        <span class="nav-badge">{{ $__badgePL }}</span>
+                    @endif
                 </a>
                 <a href="/laporan-selesai" class="nav-child {{ ($activePage ?? '') === 'laporan-selesai' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span>Laporan Selesai</span>
+                    @php $__badgeLS = $countLaporanSelesai ?? 0; @endphp
+                    @if($__badgeLS > 0)
+                        <span class="nav-badge">{{ $__badgeLS }}</span>
+                    @endif
+                </a>
+                <a href="/laporan-ditolak" class="nav-child {{ ($activePage ?? '') === 'laporan-ditolak' ? 'active' : '' }}">
+                    <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Laporan Ditolak</span>
+                    @php $__badgeDT = $countLaporanDitolak ?? 0; @endphp
+                    @if($__badgeDT > 0)
+                        <span class="nav-badge" style="background:#ef4444">{{ $__badgeDT }}</span>
+                    @endif
                 </a>
             </div>
         </div>
@@ -119,19 +149,19 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/daftar-user" class="nav-child {{ ($activePage ?? '') === 'daftar-user' ? 'active' : '' }}">
+                <a href="/daftar-user" class="nav-child {{ ($activePage ?? '') === 'daftar-users' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     <span>User</span>
                 </a>
-                <a href="/role" class="nav-child {{ ($activePage ?? '') === 'role' ? 'active' : '' }}">
+                <a href="/role" class="nav-child {{ ($activePage ?? '') === 'daftar-roles' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
                     <span>Role</span>
                 </a>
-                <a href="/permission" class="nav-child {{ ($activePage ?? '') === 'permission' ? 'active' : '' }}">
+                <a href="/permission" class="nav-child {{ ($activePage ?? '') === 'daftar-permissions' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                     </svg>
@@ -316,13 +346,13 @@
 
     /* Section Labels */
     .nav-section-label {
-        font-size: 10px;
-        font-weight: 700;
+        font-size: 9.5px;
+        font-weight: 800;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 10px 8px 4px;
-        margin-top: 4px;
+        letter-spacing: 1.1px;
+        padding: 12px 12px 5px;
+        margin-top: 2px;
     }
 
     /* Nav Item (single link) */
@@ -420,22 +450,24 @@
     .nav-group-children {
         overflow: hidden;
         max-height: 0;
-        transition: max-height 0.3s ease;
-        padding-left: 14px;
+        transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+        padding-left: 8px;
+        padding-right: 0;
         display: flex;
         flex-direction: column;
         gap: 1px;
+        margin-top: 2px;
     }
 
-    .nav-group.open .nav-group-children { max-height: 300px; }
+    .nav-group.open .nav-group-children { max-height: 500px; }
 
     /* Child Item */
     .nav-child {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 12px;
-        border-radius: var(--radius-sm);
+        gap: 9px;
+        padding: 7px 10px;
+        border-radius: 8px;
         color: var(--text-secondary);
         text-decoration: none;
         font-size: 13px;
@@ -444,43 +476,50 @@
         position: relative;
     }
 
+    .nav-child span:not(.nav-badge) {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .nav-child:hover {
         background: var(--hover-bg);
         color: var(--green-dark);
     }
 
     .nav-child.active {
-        background: #f0fdf4;
+        background: var(--active-bg);
         color: var(--green-primary);
         font-weight: 600;
     }
 
-    /* Child Icon */
+    /* Child Icon — plain SVG, no box, no border */
     .child-icon {
         width: 15px;
         height: 15px;
         flex-shrink: 0;
-        color: #9ca3af;
+        color: #b0b8c4;
         transition: color 0.15s;
     }
 
-    .nav-child:hover .child-icon,
-    .nav-child.active .child-icon {
-        color: var(--green-primary);
-    }
+    .nav-child:hover .child-icon { color: var(--green-primary); }
+    .nav-child.active .child-icon { color: var(--green-primary); }
 
     /* Badge */
     .nav-badge {
         margin-left: auto;
+        flex-shrink: 0;
         background: #ef4444;
         color: white;
-        font-size: 10px;
+        font-size: 9.5px;
         font-weight: 700;
-        padding: 2px 7px;
+        padding: 2px 6px;
         border-radius: 20px;
-        min-width: 20px;
+        min-width: 18px;
         text-align: center;
-        line-height: 1.5;
+        line-height: 1.6;
     }
 
     /* ---- Footer: Profile + Logout ---- */

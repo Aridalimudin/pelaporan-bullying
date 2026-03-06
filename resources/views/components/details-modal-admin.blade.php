@@ -219,6 +219,38 @@
 
         </div>
 
+        {{-- Section khusus laporan-ditolak --}}
+        <div class="md-section md-section-tolak" id="sectionPenolakan" style="display:none">
+            <div class="md-sh">
+                <div class="md-sh-icon" style="background:#fef2f2">
+                    <svg fill="none" stroke="#ef4444" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                </div>
+                <span style="color:#b91c1c">INFORMASI PENOLAKAN</span>
+            </div>
+            <div class="md-grid2" style="margin-bottom:10px">
+                <div class="md-f">
+                    <div class="md-fl">DITOLAK DARI TAHAP</div>
+                    <div class="md-fv">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+                        <span id="mdTahapDitolak">—</span>
+                    </div>
+                </div>
+                <div class="md-f">
+                    <div class="md-fl">TANGGAL PENOLAKAN</div>
+                    <div class="md-fv">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span id="mdTglDitolak">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="md-f">
+                <div class="md-fl">ALASAN PENOLAKAN</div>
+                <p class="md-desc md-alasan" id="mdAlasanTolak">—</p>
+            </div>
+        </div>
+
         <div class="md-footer" id="mdFooter"></div>
 
     </div>
@@ -282,6 +314,8 @@
     background:#f9fafb; border:1.5px solid #e5e7eb; border-radius:14px; padding:14px 15px;
 }
 .md-section-tindak { background:#f0fdf4; border-color:#bbf7d0; }
+.md-section-tolak  { background:#fef2f2; border-color:#fecaca; }
+.md-alasan { background:#fff; border:1.5px solid #fca5a5; border-radius:10px; padding:10px 13px; color:#7f1d1d; font-style:italic; }
 
 .md-sh {
     display:flex; align-items:center; gap:8px; margin-bottom:12px;
@@ -381,10 +415,26 @@
 .md-btn:active { transform:scale(.98) translateY(0); }
 .md-btn-cancel  { background:white; color:#374151; border:1.5px solid #d1d5db !important; flex:0 0 auto !important; padding-left:18px; padding-right:18px; }
 .md-btn-cancel:hover { background:#f9fafb; filter:none; }
-.md-btn-tolak   { background:#ef4444; color:white; box-shadow:0 3px 12px rgba(239,68,68,.28); }
-.md-btn-terima  { background:#10b981; color:white; box-shadow:0 3px 12px rgba(16,185,129,.28); }
-.md-btn-proses  { background:#f59e0b; color:white; box-shadow:0 3px 12px rgba(245,158,11,.28); }
-.md-btn-selesai { background:#10b981; color:white; box-shadow:0 3px 12px rgba(16,185,129,.28); }
+.md-btn-tolak    { background:#ef4444; color:white; box-shadow:0 3px 12px rgba(239,68,68,.28); }
+.md-btn-terima   { background:#10b981; color:white; box-shadow:0 3px 12px rgba(16,185,129,.28); }
+.md-btn-proses   { background:#f59e0b; color:white; box-shadow:0 3px 12px rgba(245,158,11,.28); }
+.md-btn-selesai  { background:#10b981; color:white; box-shadow:0 3px 12px rgba(16,185,129,.28); }
+.md-btn-pulihkan { background:#3b82f6; color:white; box-shadow:0 3px 12px rgba(59,130,246,.28); }
+
+/* Progress trail badge */
+.md-progress-trail {
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    padding:10px 13px; background:#fff7ed; border:1.5px solid #fed7aa;
+    border-radius:10px; margin-bottom:4px;
+}
+.md-pt-label { font-size:.65rem; font-weight:800; letter-spacing:.08em; color:#92400e; }
+.md-pt-step {
+    display:flex; align-items:center; gap:4px;
+    font-size:.72rem; font-weight:600; color:#374151;
+}
+.md-pt-step.done { color:#10b981; }
+.md-pt-step.rejected { color:#ef4444; }
+.md-pt-arrow { font-size:.7rem; color:#9ca3af; }
 
 @media (max-width:580px) {
     .md-overlay  { padding:0; align-items:flex-start; }
@@ -411,6 +461,7 @@ const _HDR = {
     'menunggu-verifikasi' : { label:'VERIFIKASI LAPORAN',   bg:'linear-gradient(135deg,#7c3aed,#5b21b6)', icon:'shield' },
     'proses-laporan'      : { label:'PROSES TINDAK LANJUT', bg:'linear-gradient(135deg,#f59e0b,#d97706)', icon:'bolt' },
     'laporan-selesai'     : { label:'LAPORAN SELESAI',      bg:'linear-gradient(135deg,#10b981,#047857)', icon:'check' },
+    'laporan-ditolak'     : { label:'LAPORAN DITOLAK',      bg:'linear-gradient(135deg,#ef4444,#b91c1c)', icon:'ban' },
 };
 const _ICONS = {
     clip:   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`,
@@ -418,6 +469,8 @@ const _ICONS = {
     bolt:   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
     check:  `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
     cross:  `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`,
+    ban:    `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
+    undo:   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>`,
 };
 
 /* Footer buttons per tipe halaman */
@@ -439,6 +492,10 @@ const _FOOTER = {
     ],
     'laporan-selesai'     : [
         { c:'md-btn-cancel', l:'Tutup', i:'', a:'closeDetailModal()' },
+    ],
+    'laporan-ditolak'     : [
+        { c:'md-btn-cancel',  l:'Tutup',    i:'',     a:'closeDetailModal()' },
+        { c:'md-btn-pulihkan',l:'Pulihkan', i:'undo', a:"_fromDetailTrigger('pulihkan')" },
     ],
 };
 
@@ -474,7 +531,11 @@ function openDetailModal(data, type, rowEl) {
     _T('mdKelas', data.kelas);
     _T('mdEmail', data.email);
 
-    const isLM = _currentType === 'laporan-masuk';
+    /* Untuk laporan-ditolak, tampilkan data selengkap tahap terakhirnya */
+    const isDitolak = _currentType === 'laporan-ditolak';
+    const lastType  = isDitolak ? (data.tahapTerakhir || 'laporan-masuk') : _currentType;
+    const isLM      = lastType === 'laporan-masuk';
+
     _V('sectionWaktu', !isLM);
     _V('sectionPihak', !isLM);
     if (!isLM) {
@@ -487,19 +548,21 @@ function openDetailModal(data, type, rowEl) {
 
     _T('mdDeskripsi', data.deskripsi);
 
-    const hasTindak = _currentType === 'proses-laporan' || _currentType === 'laporan-selesai';
+    /* Section tindak lanjut: tampil jika tahap terakhir = proses/selesai */
+    const hasTindak = lastType === 'proses-laporan' || lastType === 'laporan-selesai';
     _V('sectionTindakLanjut', hasTindak);
     if (hasTindak) {
-        const isS = _currentType === 'laporan-selesai';
-        _V('mdJenisTindakan',        !isS);
-        _V('mdJenisTindakanDisplay',  isS);
-        _V('mdTanggalTindak',        !isS);
-        _V('mdTanggalTindakDisplay',  isS);
-        _V('mdDeskripsiTindakan',    !isS);
-        _V('mdDeskripsiTindakanDisplay', isS);
-        _V('mdUploadArea',           !isS);
-        _V('mdDokumenDisplay',        isS);
-        if (isS) {
+        /* Selalu display-only untuk laporan-ditolak & laporan-selesai */
+        const isDisplay = isDitolak || lastType === 'laporan-selesai';
+        _V('mdJenisTindakan',            !isDisplay);
+        _V('mdJenisTindakanDisplay',      isDisplay);
+        _V('mdTanggalTindak',            !isDisplay);
+        _V('mdTanggalTindakDisplay',      isDisplay);
+        _V('mdDeskripsiTindakan',        !isDisplay);
+        _V('mdDeskripsiTindakanDisplay',  isDisplay);
+        _V('mdUploadArea',               !isDisplay);
+        _V('mdDokumenDisplay',            isDisplay);
+        if (isDisplay) {
             _T('mdJenisTindakanText',        data.jenisTindakan);
             _T('mdTanggalTindakText',        data.tanggalTindak);
             _T('mdDeskripsiTindakanDisplay', data.deskripsiTindakan);
@@ -509,6 +572,23 @@ function openDetailModal(data, type, rowEl) {
                 if (el) el.value = '';
             });
         }
+    }
+
+    /* Section penolakan — hanya untuk laporan-ditolak */
+    _V('sectionPenolakan', isDitolak);
+    if (isDitolak) {
+        /* Label tahap terakhir */
+        const tahapLabel = {
+            'laporan-masuk':       'Laporan Masuk',
+            'menunggu-verifikasi': 'Menunggu Verifikasi',
+            'proses-laporan':      'Proses Laporan',
+        };
+        _T('mdTahapDitolak', tahapLabel[data.tahapTerakhir] || data.tahapTerakhir || '—');
+        _T('mdTglDitolak',   data.tglDitolak   || '—');
+        _T('mdAlasanTolak',  data.alasanTolak  || '—');
+
+        /* Progress trail */
+        _renderProgressTrail(data.tahapTerakhir);
     }
 
     /* Footer buttons */
@@ -521,6 +601,33 @@ function openDetailModal(data, type, rowEl) {
     overlay.scrollTop = 0;
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+}
+
+/* Render progress trail badge di atas section penolakan */
+function _renderProgressTrail(tahapTerakhir) {
+    const STEPS = [
+        { key:'laporan-masuk',       label:'Laporan Masuk' },
+        { key:'menunggu-verifikasi', label:'Verifikasi' },
+        { key:'proses-laporan',      label:'Proses' },
+    ];
+    const idx = STEPS.findIndex(s => s.key === tahapTerakhir);
+    const wrap = document.getElementById('sectionPenolakan');
+    /* Hapus trail lama kalau ada */
+    const old = wrap.querySelector('.md-progress-trail');
+    if (old) old.remove();
+
+    const trail = document.createElement('div');
+    trail.className = 'md-progress-trail';
+    trail.innerHTML = `<span class="md-pt-label">PROGRESS:</span>`;
+    STEPS.forEach((s, i) => {
+        const isDone     = i < idx;
+        const isRejected = i === idx;
+        const cls        = isDone ? 'done' : isRejected ? 'rejected' : '';
+        const icon       = isDone ? '✓' : isRejected ? '✕' : '○';
+        trail.innerHTML += `<span class="md-pt-step ${cls}">${icon} ${s.label}</span>`;
+        if (i < STEPS.length - 1) trail.innerHTML += `<span class="md-pt-arrow">›</span>`;
+    });
+    wrap.insertBefore(trail, wrap.querySelector('.md-sh').nextSibling);
 }
 
 /* =========================================================
