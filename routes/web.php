@@ -14,6 +14,10 @@ Route::get('/lacak', function () {
     return view('pages.user.track-page.track');
 })->name('lapor.lacak');
 
+Route::get('/contact', function () {
+    return view('pages.user.contact-page.contact');
+})->name('lapor.contact');
+
 //DASHBOARD
 
 Route::get('/dashboard', function () {

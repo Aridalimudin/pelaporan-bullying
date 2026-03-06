@@ -29,7 +29,8 @@
                     Lacak
                 </a>
 
-                <a href="#kontak" class="ml-2 px-6 py-2.5 bg-gradient-to-r from-primary-green to-dark-green text-white rounded-full text-sm font-bold hover-lift shadow-md transition-all">
+                <a href="{{ route('lapor.contact') }}" 
+                class="ml-2 px-6 py-2.5 bg-gradient-to-r from-primary-green to-dark-green text-white rounded-full text-sm font-bold hover-lift shadow-md transition-all">
                     Kontak
                 </a>
             </div>
