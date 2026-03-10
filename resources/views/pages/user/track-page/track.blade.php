@@ -23,6 +23,8 @@
 @include('components.modal-lacak')
 @include('components.footer')
 
-<link rel="stylesheet" href="{{ asset('css/track-page.css') }}">
-<script src="{{ asset('js/track-page.js') }}"></script>
+@push('scripts')
+    <script src="{{ asset('js/track-user-page.js') }}"></script>
+@endpush
+
 @endsection

@@ -170,9 +170,6 @@
 </style>
 
 <script>
-/* =========================================================
-   KONFIRMASI CONFIG
-   ========================================================= */
 const _KFG = {
     terima: {
         topbarBg    : 'linear-gradient(135deg,#10b981,#047857)',
@@ -251,44 +248,29 @@ const _KFG = {
     },
 };
 
-/* =========================================================
-   STATE (shared dengan detail modal)
-   ========================================================= */
-/* _currentRow & _currentData di-declare di details-modal-admin */
-
 let _mkActiveCfg = null;
 
-/* =========================================================
-   TRIGGER KONFIRMASI
-   Dipanggil dari:
-     1. Tombol quick approve di tabel         → handleQuickApprove()
-     2. Tombol aksi di footer detail modal    → triggerKonfirmasi('tolak'/'terima'/dll)
-   ========================================================= */
 function triggerKonfirmasi(action) {
     const cfg = _KFG[action];
     if (!cfg) return;
     _mkActiveCfg = cfg;
 
-    /* Tutup detail modal dulu (jika terbuka) */
     const detailOverlay = document.getElementById('modalDetail');
     if (detailOverlay) {
         detailOverlay.style.display = 'none';
     }
     document.body.style.overflow = 'hidden';
 
-    /* Isi topbar */
     document.getElementById('mkTopbar').style.background    = cfg.topbarBg;
     document.getElementById('mkTopbarIcon').innerHTML       = cfg.topbarIcon;
     document.getElementById('mkTopbarSub').textContent      = cfg.topbarSub;
     document.getElementById('mkTopbarTitle').textContent    = cfg.topbarTitle;
 
-    /* Isi alert */
     const alertEl = document.getElementById('mkAlert');
     alertEl.className = 'mk-alert ' + cfg.alertType;
     document.getElementById('mkAlertIcon').innerHTML        = cfg.alertIcon;
     document.getElementById('mkAlertText').innerHTML        = cfg.alertText;
 
-    /* Isi card data laporan */
     const d = _currentData || {};
     document.getElementById('mkCardKode').textContent   = d.kode  || '—';
     document.getElementById('mkCardNama').textContent   = d.nama  || '—';
@@ -299,40 +281,31 @@ function triggerKonfirmasi(action) {
     urEl.textContent = urgensi.charAt(0).toUpperCase() + urgensi.slice(1);
     urEl.className   = 'mk-card-val mk-urgensi-' + urgensi.toLowerCase();
 
-    /* Isi note */
     document.getElementById('mkNoteText').textContent = cfg.note;
 
-    /* Tombol konfirmasi */
     const btn = document.getElementById('mkBtnConfirm');
     btn.className = 'mk-btn-confirm ' + cfg.btnClass;
     btn.innerHTML = cfg.btnIcon + ' ' + cfg.btnLabel;
     btn.onclick   = () => _doConfirm(cfg);
 
-    /* Tampilkan modal */
     document.getElementById('modalKonfirmasi').style.display = 'flex';
 }
 
-/* =========================================================
-   EKSEKUSI KONFIRMASI
-   ========================================================= */
 function _doConfirm(cfg) {
     closeKonfirmasi();
 
     if (_currentRow) {
-        /* Update badge status di baris tabel */
         const badge = _currentRow.querySelector('.status-badge');
         if (badge) {
             badge.textContent = cfg.newStatus;
             badge.className   = 'status-badge ' + cfg.newClass;
         }
 
-        /* Disable tombol aksi non-view */
         _currentRow.querySelectorAll('.btn-aksi:not(.view)').forEach(b => {
             b.disabled     = true;
             b.style.opacity = '.35';
         });
 
-        /* Highlight baris sebentar */
         const hiColor = cfg.toastType === 'success' ? '#f0fdf4'
                       : cfg.toastType === 'error'   ? '#fef2f2' : '#fffbeb';
         _currentRow.style.transition  = 'background .5s';
@@ -340,19 +313,14 @@ function _doConfirm(cfg) {
         setTimeout(() => { if (_currentRow) _currentRow.style.background = ''; }, 1600);
     }
 
-    /* Toast notifikasi */
     setTimeout(() => Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg), 200);
 }
 
-/* =========================================================
-   TUTUP MODAL KONFIRMASI
-   ========================================================= */
 function closeKonfirmasi() {
     document.getElementById('modalKonfirmasi').style.display = 'none';
     document.body.style.overflow = '';
 }
 
-/* Klik overlay untuk tutup */
 document.getElementById('modalKonfirmasi').addEventListener('click', function(e) {
     if (e.target === this) closeKonfirmasi();
 });

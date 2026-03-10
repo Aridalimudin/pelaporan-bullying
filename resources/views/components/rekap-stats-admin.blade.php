@@ -1,13 +1,3 @@
-{{--
-    COMPONENT: rekap-stats
-    ──────────────────────
-    Props:
-      $totalLaporan        → angka total laporan
-      $rataRata            → rata-rata laporan (string, mis: "8.3")
-      $tingkatPenyelesaian → persentase string, mis: "76" (tanpa %)
-      $periodeLabel        → teks periode, mis: "Maret 2026"
---}}
-
 @php
     $totalLaporan        = $totalLaporan        ?? 0;
     $rataRata            = $rataRata            ?? '0';
@@ -15,7 +5,6 @@
     $periodeLabel        = $periodeLabel        ?? '—';
     $pct                 = (int) $tingkatPenyelesaian;
 
-    // Tentukan kelas CSS berdasarkan nilai — tidak perlu inline style dinamis
     if ($pct >= 75) {
         $pctClass   = 'rs-pct-good';
         $pctLabel   = 'Baik';
@@ -27,13 +16,11 @@
         $pctLabel   = 'Rendah';
     }
 
-    // Progress bar width sebagai integer — aman di inline style
     $pctWidth = min(100, max(0, $pct));
 @endphp
 
 <div class="rs-grid">
 
-    {{-- Total Laporan --}}
     <div class="rs-card rs-blue">
         <div class="rs-icon-wrap">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +35,6 @@
         </div>
     </div>
 
-    {{-- Rata-rata --}}
     <div class="rs-card rs-amber">
         <div class="rs-icon-wrap">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +49,6 @@
         </div>
     </div>
 
-    {{-- Tingkat Penyelesaian --}}
     <div class="rs-card rs-green">
         <div class="rs-icon-wrap">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +59,6 @@
         <div class="rs-body">
             <div class="rs-pct-row">
                 <span class="rs-val">{{ $pct }}<small>%</small></span>
-                {{-- Gunakan class CSS, bukan inline style dinamis --}}
                 <span class="rs-pct-badge {{ $pctClass }}">{{ $pctLabel }}</span>
             </div>
             <span class="rs-lbl">Tingkat Penyelesaian</span>
@@ -128,7 +112,6 @@
 .rs-pct-row { display: flex; align-items: center; gap: 8px; }
 .rs-pct-badge { font-size: .65rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; }
 
-/* Badge & bar color classes — tidak pakai inline style dinamis */
 .rs-pct-good { background: #ecfdf5; color: #059669; }
 .rs-pct-mid  { background: #fffbeb; color: #d97706; }
 .rs-pct-low  { background: #fef2f2; color: #dc2626; }
@@ -142,7 +125,6 @@
 .rs-progress-bar.rs-pct-low { background: #ef4444; }
 </style>
 
-<!-- Apply dynamic widths from data attributes -->
 <script>
 document.querySelectorAll('.rs-progress-bar[data-width]').forEach(bar => {
     const width = Math.min(100, Math.max(0, parseInt(bar.dataset.width) || 0));

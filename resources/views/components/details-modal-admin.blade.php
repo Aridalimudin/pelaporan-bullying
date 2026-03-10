@@ -219,7 +219,6 @@
 
         </div>
 
-        {{-- Section khusus laporan-ditolak --}}
         <div class="md-section md-section-tolak" id="sectionPenolakan" style="display:none">
             <div class="md-sh">
                 <div class="md-sh-icon" style="background:#fef2f2">
@@ -421,7 +420,6 @@
 .md-btn-selesai  { background:#10b981; color:white; box-shadow:0 3px 12px rgba(16,185,129,.28); }
 .md-btn-pulihkan { background:#3b82f6; color:white; box-shadow:0 3px 12px rgba(59,130,246,.28); }
 
-/* Progress trail badge */
 .md-progress-trail {
     display:flex; align-items:center; gap:6px; flex-wrap:wrap;
     padding:10px 13px; background:#fff7ed; border:1.5px solid #fed7aa;
@@ -446,16 +444,10 @@
 </style>
 
 <script>
-/* =========================================================
-   SHARED STATE — digunakan oleh detail modal DAN konfirmasi
-   ========================================================= */
 var _currentRow  = null;
 var _currentType = null;
 var _currentData = null;
 
-/* =========================================================
-   HEADER & FOOTER CONFIG
-   ========================================================= */
 const _HDR = {
     'laporan-masuk'       : { label:'LAPORAN MASUK',        bg:'linear-gradient(135deg,#3b82f6,#1d4ed8)', icon:'clip' },
     'menunggu-verifikasi' : { label:'VERIFIKASI LAPORAN',   bg:'linear-gradient(135deg,#7c3aed,#5b21b6)', icon:'shield' },
@@ -473,7 +465,6 @@ const _ICONS = {
     undo:   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>`,
 };
 
-/* Footer buttons per tipe halaman */
 const _FOOTER = {
     'laporan-masuk'       : [
         { c:'md-btn-cancel', l:'Batal',         i:'',      a:'closeDetailModal()' },
@@ -499,22 +490,13 @@ const _FOOTER = {
     ],
 };
 
-/* =========================================================
-   TRIGGER DARI FOOTER DETAIL MODAL
-   Tutup detail dulu, lalu buka konfirmasi
-   ========================================================= */
 function _fromDetailTrigger(action) {
-    /* Tutup detail modal */
     document.getElementById('modalDetail').style.display = 'none';
-    /* Buka konfirmasi setelah 1 frame agar animasi tidak bentrok */
     requestAnimationFrame(() => {
         triggerKonfirmasi(action);
     });
 }
 
-/* =========================================================
-   OPEN DETAIL MODAL
-   ========================================================= */
 function openDetailModal(data, type, rowEl) {
     _currentRow  = rowEl  || null;
     _currentType = type   || 'laporan-masuk';
@@ -531,7 +513,6 @@ function openDetailModal(data, type, rowEl) {
     _T('mdKelas', data.kelas);
     _T('mdEmail', data.email);
 
-    /* Untuk laporan-ditolak, tampilkan data selengkap tahap terakhirnya */
     const isDitolak = _currentType === 'laporan-ditolak';
     const lastType  = isDitolak ? (data.tahapTerakhir || 'laporan-masuk') : _currentType;
     const isLM      = lastType === 'laporan-masuk';
@@ -548,11 +529,9 @@ function openDetailModal(data, type, rowEl) {
 
     _T('mdDeskripsi', data.deskripsi);
 
-    /* Section tindak lanjut: tampil jika tahap terakhir = proses/selesai */
     const hasTindak = lastType === 'proses-laporan' || lastType === 'laporan-selesai';
     _V('sectionTindakLanjut', hasTindak);
     if (hasTindak) {
-        /* Selalu display-only untuk laporan-ditolak & laporan-selesai */
         const isDisplay = isDitolak || lastType === 'laporan-selesai';
         _V('mdJenisTindakan',            !isDisplay);
         _V('mdJenisTindakanDisplay',      isDisplay);
@@ -574,10 +553,8 @@ function openDetailModal(data, type, rowEl) {
         }
     }
 
-    /* Section penolakan — hanya untuk laporan-ditolak */
     _V('sectionPenolakan', isDitolak);
     if (isDitolak) {
-        /* Label tahap terakhir */
         const tahapLabel = {
             'laporan-masuk':       'Laporan Masuk',
             'menunggu-verifikasi': 'Menunggu Verifikasi',
@@ -587,11 +564,9 @@ function openDetailModal(data, type, rowEl) {
         _T('mdTglDitolak',   data.tglDitolak   || '—');
         _T('mdAlasanTolak',  data.alasanTolak  || '—');
 
-        /* Progress trail */
         _renderProgressTrail(data.tahapTerakhir);
     }
 
-    /* Footer buttons */
     const footer = document.getElementById('mdFooter');
     footer.innerHTML = (_FOOTER[_currentType] || []).map(b =>
         `<button class="md-btn ${b.c}" onclick="${b.a}">${b.i ? _ICONS[b.i] : ''} ${b.l}</button>`
@@ -603,7 +578,6 @@ function openDetailModal(data, type, rowEl) {
     document.body.style.overflow = 'hidden';
 }
 
-/* Render progress trail badge di atas section penolakan */
 function _renderProgressTrail(tahapTerakhir) {
     const STEPS = [
         { key:'laporan-masuk',       label:'Laporan Masuk' },
@@ -612,7 +586,6 @@ function _renderProgressTrail(tahapTerakhir) {
     ];
     const idx = STEPS.findIndex(s => s.key === tahapTerakhir);
     const wrap = document.getElementById('sectionPenolakan');
-    /* Hapus trail lama kalau ada */
     const old = wrap.querySelector('.md-progress-trail');
     if (old) old.remove();
 
@@ -630,22 +603,15 @@ function _renderProgressTrail(tahapTerakhir) {
     wrap.insertBefore(trail, wrap.querySelector('.md-sh').nextSibling);
 }
 
-/* =========================================================
-   CLOSE DETAIL MODAL
-   ========================================================= */
 function closeDetailModal() {
     document.getElementById('modalDetail').style.display = 'none';
     document.body.style.overflow = '';
 }
 
-/* Klik overlay untuk tutup */
 document.getElementById('modalDetail').addEventListener('click', function(e) {
     if (e.target === this) closeDetailModal();
 });
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
 function _T(id, v) {
     const e = document.getElementById(id);
     if (e) e.textContent = v || '—';

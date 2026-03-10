@@ -18,17 +18,17 @@ Route::get('/contact', function () {
     return view('pages.user.contact-page.contact');
 })->name('lapor.contact');
 
-//DASHBOARD
-
-Route::get('/dashboard', function () {
-    return view('pages.administrator.dashboard-page.dashboard');
-})->name('administrator.dashboard');
-
 //ADMINISTRATOR 
 
 Route::get('/login', function () {
     return view('pages.administrator.login-page.login');
 })->name('administrator.login');
+
+//DASHBOARD
+
+Route::get('/dashboard', function () {
+    return view('pages.administrator.dashboard-page.dashboard');
+})->name('administrator.dashboard');
 
 //REPORT CENTRAL
 

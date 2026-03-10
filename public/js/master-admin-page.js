@@ -1,35 +1,3 @@
-function openSidebar() {
-    document.getElementById('adminSidebar').classList.add('open');
-    document.getElementById('sidebarOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-    document.getElementById('adminSidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-}
-function toggleNavGroup(id) {
-    const group  = document.getElementById(id);
-    const isOpen = group.classList.contains('open');
-    document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
-    if (!isOpen) group.classList.add('open');
-}
-
-function toggleNotif() {
-    document.getElementById('notifDropdown').classList.toggle('open');
-    document.getElementById('avatarDropdown').classList.remove('open');
-}
-function toggleAvatar() {
-    document.getElementById('avatarDropdown').classList.toggle('open');
-    document.getElementById('notifDropdown').classList.remove('open');
-}
-document.addEventListener('click', function (e) {
-    if (!e.target.closest('#notifWrap'))  document.getElementById('notifDropdown')?.classList.remove('open');
-    if (!e.target.closest('#avatarWrap')) document.getElementById('avatarDropdown')?.classList.remove('open');
-});
-
-function ucfirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
-
 function makePagBtn(label, disabled, fn) {
     const b = document.createElement('button');
     b.className   = 'page-btn';
@@ -79,11 +47,22 @@ function buildPagination(wrap, currentPage, filteredCount, perPage, goPageFn) {
     wrap.appendChild(makePagBtn('›', currentPage === total, () => goPageFn(currentPage + 1)));
 }
 
-function buildTableInfo(el, currentPage, filteredRows, perPage) {
+function buildTableInfo(el, currentPage, filteredRows, perPage, satuan = 'data') {
     if (!el) return;
     const s = (currentPage - 1) * perPage + 1;
     const e = Math.min(currentPage * perPage, filteredRows.length);
     el.textContent = filteredRows.length === 0
-        ? 'Tidak ada laporan ditemukan'
-        : `Menampilkan ${s}–${e} dari ${filteredRows.length} laporan`;
+        ? `Tidak ada ${satuan} ditemukan`
+        : `Menampilkan ${s}–${e} dari ${filteredRows.length} ${satuan}`;
 }
+
+function mdOpenOverlay(id) {
+    document.getElementById(id).style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function mdCloseOverlay(id) {
+    document.getElementById(id).style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function ucfirst(str) { return str.charAt(0).toUpperCase() + str.slice(1); }

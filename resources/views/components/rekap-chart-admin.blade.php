@@ -1,14 +1,3 @@
-{{--
-    COMPONENT: rekap-chart
-    ──────────────────────
-    Props (semua opsional, ada default):
-      $chartId     → id unik canvas, default 'rekapChart'
-      $chartLabels → array label sumbu X
-      $chartData   → array angka data
-      $chartLabel  → nama dataset, default 'Laporan Masuk'
-      $chartHeight → tinggi canvas px, default 220
---}}
-
 @php
     $chartId     = $chartId     ?? 'rekapChart';
     $chartLabel  = $chartLabel  ?? 'Laporan Masuk';
@@ -16,7 +5,6 @@
     $chartLabels = $chartLabels ?? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
     $chartData   = $chartData   ?? [4,7,5,9,12,10,14,11,8,13,9,6];
 
-    // Encode ke JSON sekali di PHP — tidak ada Blade di dalam blok JS
     $labelsJson  = json_encode($chartLabels);
     $dataJson    = json_encode($chartData);
     $labelEsc    = e($chartLabel);
@@ -32,7 +20,6 @@
 </div>
 
 <script>
-// @ts-nocheck
 (function() {
     function initChart() {
         if (typeof Chart === 'undefined') {
@@ -138,7 +125,6 @@
 .rc-wrap canvas { width: 100% !important; display: block; }
 </style>
 
-<!-- Apply dynamic height from data attributes -->
 <script>
 document.querySelectorAll('[data-height]').forEach(canvas => {
     canvas.style.height = parseInt(canvas.dataset.height) + 'px';

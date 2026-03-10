@@ -1,21 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Decorative Background Elements -->
 <div class="decorative-circle" style="top: 5%; left: 5%; width: 250px; height: 250px; background: #10b981;"></div>
 <div class="decorative-circle" style="bottom: 5%; right: 5%; width: 300px; height: 300px; background: #059669;"></div>
 
-<!-- Navigation Component -->
 @include('components.navbar')
 
-<!-- Hero Section - Full Screen -->
 <main id="home" class="hero-section relative px-4 sm:px-6 lg:px-8 bg-pattern">
     <div class="max-w-7xl mx-auto h-full flex items-center">
         <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
             
-            <!-- Left Content -->
             <div class="space-y-4 delay-3 animate-slide-up">
-                <!-- Badge -->
                 <div class="inline-block">
                     <span class="px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold inline-flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

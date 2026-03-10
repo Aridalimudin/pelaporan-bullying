@@ -1,7 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.app-admin')
 
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/report-admin-page.css') }}">
+<link rel="stylesheet" href="{{ asset('css/recapitulation-admin-page.css') }}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 @include('components.sidebar-admin', ['activePage' => 'rekap-bulan'])
@@ -14,7 +15,6 @@
 
     <main class="admin-main">
 
-        {{-- Heading + Filter Bulan --}}
         <div class="content-heading animate-fade-in">
             <div>
                 <h2 class="content-title">Rekapitulasi Per Bulan</h2>
@@ -49,7 +49,6 @@
             </div>
         </div>
 
-        {{-- Stat Cards --}}
         <div class="animate-fade-in" style="animation-delay:.05s" id="statsWrap">
             @include('components.rekap-stats-admin', [
                 'totalLaporan'        => 42,
@@ -59,7 +58,6 @@
             ])
         </div>
 
-        {{-- Grafik --}}
         <div class="rekap-chart-card animate-fade-in" style="animation-delay:.1s">
             <div class="rekap-chart-header">
                 <div>
@@ -81,7 +79,6 @@
             ])
         </div>
 
-        {{-- Tabel Rekapitulasi --}}
         <div class="table-card animate-fade-in" style="animation-delay:.15s; margin-top:20px">
             <div class="rekap-table-header">
                 <div>
@@ -123,77 +120,43 @@
         </div>
 
     </main>
-
-    <footer class="footer-compact" style="text-align:center;font-size:.72rem;color:#9ca3af;margin-top:28px">
-        <strong style="color:#6b7280">SMK Muhammadiyah 3 Kadungora</strong> · Bersama Sekolah Aman. Semua Hak Terlindungi.
-    </footer>
-
+    
+    @include('components.footer', ['type' => 'admin'])
     @include('components.toast')
 </div>
 
-<style>
-html,body{height:100%;overflow:auto;}
-.admin-wrapper{min-height:100vh;overflow-y:auto;margin-left:var(--sidebar-width,260px);}
-.admin-main{overflow:visible;padding-bottom:40px;}
-@media(max-width:768px){.admin-wrapper{margin-left:0!important;}}
-
-.btn-export{display:flex;align-items:center;gap:7px;padding:9px 16px;background:#10b981;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;}
-.btn-export svg{width:15px;height:15px;}
-.btn-export:hover{background:#059669;}
-
-/* Chart card */
-.rekap-chart-card{background:white;border-radius:16px;border:1.5px solid #f3f4f6;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.rekap-chart-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
-.rekap-chart-title{font-size:.9rem;font-weight:800;color:#111827;}
-.rekap-chart-sub{font-size:.72rem;color:#9ca3af;margin-top:2px;}
-.rekap-chart-peak{text-align:right;flex-shrink:0;}
-.peak-label{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
-.peak-val{display:block;font-size:1.1rem;font-weight:800;color:#10b981;line-height:1.1;}
-.peak-date{display:block;font-size:.68rem;color:#9ca3af;}
-
-/* Table header inside card */
-.rekap-table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;gap:14px;flex-wrap:wrap;}
-
-/* Tingkat selesai inline */
-.selesai-cell{display:flex;align-items:center;gap:8px;}
-.selesai-bar-wrap{width:60px;height:6px;background:#f3f4f6;border-radius:99px;overflow:hidden;flex-shrink:0;}
-.selesai-bar{height:100%;border-radius:99px;}
-.selesai-pct{font-size:.75rem;font-weight:700;min-width:34px;}
-</style>
-
 <script>
-/* ─── Dummy data per kelas ─── */
 const REKAP_BULAN = [
-    { periode:'Maret 2026', kelas:'X AKL-1',   total:8,  selesai:7  },
-    { periode:'Maret 2026', kelas:'X RPL-1',   total:6,  selesai:5  },
-    { periode:'Maret 2026', kelas:'XI TKJ-1',  total:7,  selesai:6  },
-    { periode:'Maret 2026', kelas:'XI MM-2',   total:5,  selesai:4  },
-    { periode:'Maret 2026', kelas:'XII AKL-1', total:4,  selesai:3  },
-    { periode:'Maret 2026', kelas:'XII TKJ-1', total:6,  selesai:4  },
-    { periode:'Maret 2026', kelas:'X MM-1',    total:3,  selesai:3  },
-    { periode:'Maret 2026', kelas:'XI AKL-1',  total:3,  selesai:0  },
+    { periode:'Maret 2026', kelas:'X AKL-1',   total:8,  selesai:7 },
+    { periode:'Maret 2026', kelas:'X RPL-1',   total:6,  selesai:5 },
+    { periode:'Maret 2026', kelas:'XI TKJ-1',  total:7,  selesai:6 },
+    { periode:'Maret 2026', kelas:'XI MM-2',   total:5,  selesai:4 },
+    { periode:'Maret 2026', kelas:'XII AKL-1', total:4,  selesai:3 },
+    { periode:'Maret 2026', kelas:'XII TKJ-1', total:6,  selesai:4 },
+    { periode:'Maret 2026', kelas:'X MM-1',    total:3,  selesai:3 },
+    { periode:'Maret 2026', kelas:'XI AKL-1',  total:3,  selesai:0 },
 ];
 
 let _filtered = [...REKAP_BULAN];
 
-function pctColor(p){ return p>=75?'#10b981':p>=50?'#f59e0b':'#ef4444'; }
+function pctColor(p) { return p >= 75 ? '#10b981' : p >= 50 ? '#f59e0b' : '#ef4444'; }
 
-function renderTable(){
-    const body = document.getElementById('rekapTableBody');
+function renderTable() {
+    const body  = document.getElementById('rekapTableBody');
     const noRes = document.getElementById('noResultsRekap');
     const info  = document.getElementById('tableInfoRekap');
-    if(!_filtered.length){
-        body.innerHTML='';
+    if (!_filtered.length) {
+        body.innerHTML = '';
         noRes.classList.remove('hidden');
-        info.textContent='Tidak ada data';
+        info.textContent = 'Tidak ada data';
         return;
     }
     noRes.classList.add('hidden');
-    body.innerHTML = _filtered.map((d,i)=>{
-        const pct = Math.round(d.selesai/d.total*100);
+    body.innerHTML = _filtered.map((d, i) => {
+        const pct = Math.round(d.selesai / d.total * 100);
         const c   = pctColor(pct);
         return `<tr class="table-row">
-            <td class="col-no">${i+1}</td>
+            <td class="col-no">${i + 1}</td>
             <td>${d.periode}</td>
             <td><span class="kelas-tag">${d.kelas}</span></td>
             <td><strong>${d.total}</strong></td>
@@ -219,13 +182,13 @@ function renderTable(){
     info.textContent = `Menampilkan ${_filtered.length} dari ${REKAP_BULAN.length} kelas`;
 }
 
-document.getElementById('searchTable')?.addEventListener('input', function(){
+document.getElementById('searchTable')?.addEventListener('input', function () {
     const q = this.value.toLowerCase();
     _filtered = REKAP_BULAN.filter(d => d.kelas.toLowerCase().includes(q) || d.periode.toLowerCase().includes(q));
     renderTable();
 });
 
-function exportRekap(){ alert('Fitur export akan tersambung ke backend.'); }
+function exportRekap() { alert('Fitur export akan tersambung ke backend.'); }
 
 document.addEventListener('DOMContentLoaded', renderTable);
 </script>

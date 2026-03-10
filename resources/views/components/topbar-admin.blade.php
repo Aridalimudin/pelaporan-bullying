@@ -23,7 +23,6 @@
     </div>
 
     <div class="topbar-right">
-        {{-- Notification --}}
         <div class="notif-wrap" id="notifWrap">
             <button class="topbar-icon-btn" onclick="toggleNotif()">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

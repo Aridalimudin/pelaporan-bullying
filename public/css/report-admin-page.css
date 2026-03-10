@@ -1,4 +1,4 @@
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 
     :root {
         --green:        #10b981;
@@ -249,11 +249,42 @@
     }
     .search-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
     .filter-select {
-        padding: 8px 12px; border: 1.5px solid var(--gray-200); border-radius: 10px;
-        font-family: inherit; font-size: .8rem; color: var(--gray-700);
-        background: white; outline: none; cursor: pointer; transition: border-color .2s;
+        padding: 8px 36px 8px 14px;
+        border: 1.5px solid var(--gray-200);
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: .8rem;
+        color: var(--gray-700);
+        background:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+            no-repeat right 10px center,
+            white;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        outline: none;
+        cursor: pointer;
+        transition:
+            border-color     .25s ease,
+            box-shadow       .25s ease,
+            background-color .25s ease,
+            color            .25s ease;
     }
-    .filter-select:focus { border-color: var(--green); }
+    .filter-select:hover {
+        border-color: var(--gray-300);
+        background-color: var(--gray-50);
+    }
+    .filter-select:focus {
+        border-color: var(--green);
+        box-shadow:
+            0 0 0 3px rgba(16, 185, 129, .12),
+            0 2px 8px rgba(16, 185, 129, .08);
+        background:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+            no-repeat right 10px center,
+            white;
+        color: var(--gray-900);
+    }
 
     .table-card { background: white; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); overflow: hidden; }
     .table-scroll { overflow-x: auto; }
@@ -274,13 +305,11 @@
     .text-mono { font-family: monospace; font-size: .8rem; }
     .kelas-tag { font-size: .72rem; font-weight: 600; background: var(--gray-100); color: var(--gray-600); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
 
-    /* Urgensi */
     .urgensi-badge { display: inline-flex; align-items: center; font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
     .urgensi-badge.tinggi { background: #fef2f2; color: #dc2626; }
     .urgensi-badge.sedang { background: #fffbeb; color: #d97706; }
     .urgensi-badge.rendah { background: var(--green-faint); color: var(--green-deeper); }
 
-    /* Status */
     .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
     .status-badge.menunggu   { background: #eff6ff; color: #2563eb; }
     .status-badge.verifikasi { background: #f5f3ff; color: #7c3aed; }
@@ -293,7 +322,6 @@
     .no-results svg { width: 40px; height: 40px; margin: 0 auto 10px; display: block; }
     .no-results p { font-size: .85rem; }
 
-    /* Aksi */
     .aksi-wrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-aksi { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; }
     .btn-aksi svg { width: 15px; height: 15px; }
@@ -309,7 +337,6 @@
     .btn-aksi.done    { background: var(--green-faint); color: var(--green-deeper); }
     .btn-aksi.done:hover    { background: var(--green-light); }
 
-    /* Pagination */
     .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--gray-100); flex-wrap: wrap; gap: 10px; }
     .table-info { font-size: .75rem; color: var(--gray-500); }
     .pagination { display: flex; align-items: center; gap: 4px; }
@@ -358,3 +385,57 @@
     @media (min-width: 1024px) {
         .avatar-info { display: block; }
     }
+
+html, body { height: 100%; overflow: auto; }
+.admin-wrapper { min-height: 100vh; overflow-y: auto; }
+.admin-main { overflow: visible; padding-bottom: 40px; }
+.table-card { overflow: visible; }
+.table-scroll { overflow-x: auto; overflow-y: visible; }
+.data-table { overflow: visible; }
+
+.tgl-selesai { font-size: .78rem; color: #6b7280; font-family: monospace; }
+
+.tahap-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .7rem; font-weight: 700; padding: 3px 9px;
+    border-radius: 6px; white-space: nowrap;
+}
+.tahap-badge.dari-masuk      { background: #dbeafe; color: #1d4ed8; }
+.tahap-badge.dari-verifikasi { background: #ede9fe; color: #5b21b6; }
+.tahap-badge.dari-proses     { background: #fef9c3; color: #b45309; }
+
+.btn-aksi.restore { background: #eff6ff; color: #3b82f6; border: 1.5px solid #bfdbfe; }
+.btn-aksi.restore:hover { background: #dbeafe; }
+
+.page-footer {
+    margin-top: auto;
+    padding: 14px 28px;
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+    text-align: center;
+    font-size: .75rem;
+    color: #9ca3af;
+    letter-spacing: .01em;
+}
+.page-footer strong {
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.footer-compact {
+    padding: 20px 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+    text-align: center;
+}
+.footer-compact p {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+@media (min-width: 640px) {
+    .footer-compact p { font-size: 1.125rem; }
+}
+

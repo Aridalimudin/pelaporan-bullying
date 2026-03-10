@@ -56,7 +56,6 @@
 .toast-close:hover { color: #374151; }
 .toast-close svg { width: 14px; height: 14px; }
 
-/* Progress bar */
 .toast-progress {
     position: absolute; bottom: 0; left: 0; height: 3px;
     animation: toastProgress linear forwards;

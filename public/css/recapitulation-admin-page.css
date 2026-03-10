@@ -1,0 +1,22 @@
+html, body { height: 100%; overflow: auto; }
+.admin-wrapper { min-height: 100vh; }
+
+.btn-export { display: flex; align-items: center; gap: 7px; padding: 9px 16px; background: #10b981; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s; flex-shrink: 0; }
+.btn-export svg { width: 15px; height: 15px; }
+.btn-export:hover { background: #059669; }
+
+.rekap-chart-card { background: white; border-radius: 16px; border: 1.5px solid #f3f4f6; padding: 22px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.rekap-chart-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.rekap-chart-title { font-size: .9rem; font-weight: 800; color: #111827; }
+.rekap-chart-sub { font-size: .72rem; color: #9ca3af; margin-top: 2px; }
+.rekap-chart-peak { text-align: right; flex-shrink: 0; }
+.peak-label { display: block; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; }
+.peak-val   { display: block; font-size: 1.1rem; font-weight: 800; color: #10b981; line-height: 1.1; }
+.peak-date  { display: block; font-size: .68rem; color: #9ca3af; }
+
+.rekap-table-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; gap: 14px; flex-wrap: wrap; }
+
+.selesai-cell { display: flex; align-items: center; gap: 8px; }
+.selesai-bar-wrap { width: 60px; height: 6px; background: #f3f4f6; border-radius: 99px; overflow: hidden; flex-shrink: 0; }
+.selesai-bar { height: 100%; border-radius: 99px; }
+.selesai-pct { font-size: .75rem; font-weight: 700; min-width: 34px; }

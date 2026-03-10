@@ -3,12 +3,10 @@
 <div class="table-footer">
     <p class="table-info" id="{{ $tableInfoId ?? 'tableInfo' }}">Memuat data...</p>
     <div class="pagination" id="{{ $paginationId ?? 'paginationWrap' }}">
-        {{-- Diisi oleh renderPagination() via JS --}}
     </div>
 </div>
 
 <style>
-/* ---- Table Footer & Pagination ---- */
 .table-footer {
     display: flex;
     align-items: center;

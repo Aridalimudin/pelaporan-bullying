@@ -41,7 +41,6 @@
             </div>
         </div>
 
-        {{-- Stats --}}
         <div class="stats-row animate-fade-in" style="animation-delay:.05s">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#f5f3ff;color:#7c3aed">
@@ -81,7 +80,6 @@
             </div>
         </div>
 
-        {{-- Group Sections --}}
         <div id="permContent" class="animate-fade-in" style="animation-delay:.1s"></div>
 
         <div class="no-results hidden" id="noResults" style="margin-top:40px">
@@ -93,7 +91,6 @@
     @include('components.toast')
 </div>
 
-{{-- Modal Permission --}}
 <div class="um-overlay" id="modalPerm" style="display:none">
     <div class="um-panel" style="max-width:460px">
         <div class="um-header">
@@ -161,7 +158,6 @@
     </div>
 </div>
 
-{{-- Modal Hapus --}}
 <div class="um-overlay" id="modalHapusPerm" style="display:none">
     <div class="um-panel" style="max-width:380px">
         <div class="um-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
@@ -197,7 +193,6 @@ html,body{height:100%;overflow:auto;}
 .btn-tambah svg{width:15px;height:15px;}
 .btn-tambah:hover{background:#6d28d9;}
 
-/* Stats */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
 @media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr);}}
 .stat-card{background:white;border:1.5px solid #f3f4f6;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
@@ -206,16 +201,13 @@ html,body{height:100%;overflow:auto;}
 .stat-val{font-size:22px;font-weight:800;color:#111827;display:block;line-height:1;}
 .stat-lbl{font-size:11px;color:#6b7280;font-weight:500;margin-top:3px;display:block;}
 
-/* Group Section */
 .perm-group-section{margin-bottom:24px;}
 .perm-group-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .perm-group-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;padding:4px 12px;border-radius:20px;}
 .perm-group-count{font-size:11px;color:#9ca3af;font-weight:500;}
 
-/* Permission Grid */
 .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
 
-/* Permission Card */
 .perm-card{background:white;border:1.5px solid #f3f4f6;border-radius:14px;padding:16px;transition:box-shadow .2s,transform .2s,border-color .2s;position:relative;animation:fadeUp .3s ease both;}
 .perm-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.07);transform:translateY(-2px);border-color:#e9d5ff;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -243,7 +235,6 @@ html,body{height:100%;overflow:auto;}
 .perm-protected{position:absolute;top:10px;right:10px;width:18px;height:18px;background:#fef9c3;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .perm-protected svg{width:10px;height:10px;color:#ca8a04;}
 
-/* Btn aksi */
 .btn-aksi{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .btn-aksi svg{width:14px;height:14px;}
 .btn-aksi.edit{background:#eff6ff;color:#3b82f6;border:1.5px solid #bfdbfe;}
@@ -251,7 +242,6 @@ html,body{height:100%;overflow:auto;}
 .btn-aksi.delete{background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;}
 .btn-aksi.delete:hover{background:#fee2e2;}
 
-/* Role check pills */
 .role-check-row{display:flex;flex-wrap:wrap;gap:8px;}
 .role-check-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:20px;cursor:pointer;transition:all .15s;font-size:12px;font-weight:600;color:#374151;}
 .role-check-pill:hover{border-color:#c4b5fd;}
@@ -260,7 +250,6 @@ html,body{height:100%;overflow:auto;}
 .role-check-pill .pill-dot{width:8px;height:8px;border-radius:50%;background:#d1d5db;transition:background .15s;}
 .role-check-pill.checked .pill-dot{background:#7c3aed;}
 
-/* Modal shared */
 .um-overlay{position:fixed;left:var(--sidebar-width,260px);top:0;right:0;bottom:0;z-index:700;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;}
 @media(max-width:768px){.um-overlay{left:0;}}
 .um-panel{background:white;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,0,0,.22);overflow:hidden;animation:umIn .3s cubic-bezier(.16,1,.3,1) both;max-height:90vh;display:flex;flex-direction:column;}
@@ -295,22 +284,17 @@ html,body{height:100%;overflow:auto;}
 
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
 <script>
-/* ── Data ── */
 const PERM_DATA = {
-    /* Laporan */
     'p1':  { nama:'Lihat Laporan',       slug:'view-laporan',      group:'Laporan',  aksi:'read',   deskripsi:'Melihat daftar dan detail laporan bullying yang masuk.',      roles:['r1','r2','r3','r4'], protected:true  },
     'p2':  { nama:'Buat Laporan',        slug:'create-laporan',    group:'Laporan',  aksi:'write',  deskripsi:'Membuat dan mengajukan laporan bullying baru ke sistem.',      roles:['r1','r2','r4'],      protected:false },
     'p3':  { nama:'Verifikasi Laporan',  slug:'verify-laporan',    group:'Laporan',  aksi:'write',  deskripsi:'Memverifikasi laporan yang masuk sebelum diproses lebih lanjut.',roles:['r1','r2'],          protected:false },
     'p4':  { nama:'Proses Laporan',      slug:'process-laporan',   group:'Laporan',  aksi:'manage', deskripsi:'Melakukan tindak lanjut dan menyelesaikan laporan bullying.',  roles:['r1','r2','r3'],      protected:false },
     'p5':  { nama:'Tolak Laporan',       slug:'reject-laporan',    group:'Laporan',  aksi:'write',  deskripsi:'Menolak laporan dengan alasan yang valid dan terdokumentasi.', roles:['r1','r2'],           protected:false },
-    /* User */
     'p6':  { nama:'Kelola User',         slug:'manage-user',       group:'User',     aksi:'manage', deskripsi:'Menambah, mengedit, dan menghapus akun pengguna sistem.',      roles:['r1'],                protected:true  },
     'p7':  { nama:'Kelola Role',         slug:'manage-role',       group:'User',     aksi:'manage', deskripsi:'Menambah dan mengatur role beserta hak akses yang dimiliki.', roles:['r1'],                protected:true  },
     'p8':  { nama:'Kelola Permission',   slug:'manage-permission', group:'User',     aksi:'manage', deskripsi:'Menambah dan mengatur permission yang tersedia di sistem.',    roles:['r1'],                protected:true  },
-    /* Analitik */
     'p9':  { nama:'Lihat Rekapitulasi',  slug:'view-rekap',        group:'Analitik', aksi:'read',   deskripsi:'Melihat laporan rekapitulasi kasus per bulan dan semester.',  roles:['r1','r2'],           protected:false },
     'p10': { nama:'Export Data',         slug:'export-data',       group:'Analitik', aksi:'read',   deskripsi:'Mengunduh data laporan dalam format Excel atau PDF.',          roles:['r1','r2'],           protected:false },
-    /* Sistem */
     'p11': { nama:'Pengaturan Sistem',   slug:'system-settings',   group:'Sistem',   aksi:'manage', deskripsi:'Mengakses dan mengubah pengaturan umum aplikasi.',             roles:['r1'],                protected:true  },
     'p12': { nama:'Log Aktivitas',       slug:'view-logs',         group:'Sistem',   aksi:'read',   deskripsi:'Melihat riwayat aktivitas dan audit log seluruh pengguna.',   roles:['r1'],                protected:true  },
 };
@@ -338,7 +322,6 @@ const AKSI_ICONS = {
 
 let _editPermId=null,_hapusPermId=null,_checkedRoles=new Set();
 
-/* ── Render ── */
 function renderContent(){
     const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
     const gf=(document.getElementById('filterGroup')?.value||'');
@@ -400,7 +383,6 @@ function renderContent(){
     document.getElementById('statSystem').textContent=Object.values(PERM_DATA).filter(d=>d.protected).length;
 }
 
-/* ── Role check pills ── */
 function buildRolePills(checked=[]){
     _checkedRoles=new Set(checked);
     const row=document.getElementById('roleCheckRow'); if(!row)return;
@@ -429,7 +411,6 @@ function toggleRolePill(el,id){
     }
 }
 
-/* ── Modal Perm ── */
 function openPermModal(id=null){
     _editPermId=id;
     document.getElementById('permTitleModal').textContent=id?'Edit Permission':'Tambah Permission';

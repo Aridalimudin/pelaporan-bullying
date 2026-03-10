@@ -1,7 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.app-admin')
 
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/report-admin-page.css') }}">
+<link rel="stylesheet" href="{{ asset('css/master-admin-page.css') }}">
 
 @include('components.sidebar-admin', ['activePage' => 'jenis-pelanggaran'])
 
@@ -85,10 +86,10 @@
             <p>Tidak ada jenis pelanggaran ditemukan</p>
         </div>
     </main>
+    @include('components.footer', ['type' => 'admin'])
     @include('components.toast')
 </div>
 
-{{-- Modal Tambah/Edit --}}
 <div class="jp-overlay" id="modalJp" style="display:none">
     <div class="jp-panel">
         <div class="jp-modal-header" id="jpModalHeaderBar">
@@ -156,7 +157,6 @@
     </div>
 </div>
 
-{{-- Modal Hapus --}}
 <div class="jp-overlay" id="modalHapusJp" style="display:none">
     <div class="jp-panel" style="max-width:380px">
         <div class="jp-modal-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
@@ -183,99 +183,8 @@
     </div>
 </div>
 
-<style>
-html,body{height:100%;overflow:auto;}
-.admin-wrapper{min-height:100vh;overflow-y:auto;}
-.admin-main{overflow:visible;padding-bottom:40px;}
-.jp-btn-tambah{display:flex;align-items:center;gap:7px;padding:9px 16px;background:#7c3aed;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;}
-.jp-btn-tambah svg{width:15px;height:15px;}
-.jp-btn-tambah:hover{background:#6d28d9;}
-.jp-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-@media(max-width:768px){.jp-stats-row{grid-template-columns:repeat(2,1fr);}}
-.jp-stat-card{background:white;border:1.5px solid #f3f4f6;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s;}
-.jp-stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.07);}
-.jp-stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.jp-stat-icon svg{width:22px;height:22px;}
-.jp-stat-val{font-size:24px;font-weight:800;color:#111827;display:block;line-height:1;}
-.jp-stat-lbl{font-size:11px;color:#6b7280;font-weight:500;margin-top:3px;display:block;}
-.jp-group{margin-bottom:30px;}
-.jp-group-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-.jp-group-badge{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:6px 16px;border-radius:20px;}
-.jp-group-badge svg{width:14px;height:14px;}
-.jp-group-badge.Verbal{background:#fdf4ff;color:#7c3aed;border:1.5px solid #e9d5ff;}
-.jp-group-badge.Non-Verbal{background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;}
-.jp-group-line{flex:1;height:1px;background:#f3f4f6;}
-.jp-group-count{font-size:11.5px;color:#9ca3af;font-weight:500;white-space:nowrap;}
-.jp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}
-.jp-card{background:white;border:1.5px solid #f3f4f6;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s;animation:jpCardIn .3s ease both;}
-.jp-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.08);transform:translateY(-2px);}
-@keyframes jpCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.jp-card.Verbal{border-top:3px solid #7c3aed;}
-.jp-card.Non-Verbal{border-top:3px solid #dc2626;}
-.jp-card-top{padding:14px 16px 12px;border-bottom:1px solid #f9fafb;}
-.jp-card-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
-.jp-card-icon-wrap{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.jp-card-icon-wrap svg{width:17px;height:17px;}
-.jp-card-name{font-size:13.5px;font-weight:700;color:#111827;margin-bottom:3px;}
-.jp-card-kat{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;letter-spacing:.04em;}
-.jp-card-kat.Verbal{background:#fdf4ff;color:#7c3aed;}
-.jp-card-kat.Non-Verbal{background:#fef2f2;color:#dc2626;}
-.jp-card-actions{display:flex;gap:5px;flex-shrink:0;}
-.jp-card-body{padding:12px 16px 14px;}
-.jp-card-desc{font-size:12px;color:#6b7280;line-height:1.65;margin-bottom:10px;min-height:36px;}
-.jp-card-contoh{font-size:11px;color:#9ca3af;background:#f9fafb;border-radius:6px;padding:6px 8px;line-height:1.5;margin-bottom:10px;}
-.jp-card-contoh strong{color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px;}
-.jp-card-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
-.jp-urgensi-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;}
-.jp-urgensi-badge.tinggi{background:#fef2f2;color:#dc2626;}
-.jp-urgensi-badge.sedang{background:#fffbeb;color:#d97706;}
-.jp-urgensi-badge.rendah{background:#f0fdf4;color:#16a34a;}
-.jp-status-dot{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;}
-.jp-status-dot::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.jp-status-dot.aktif{color:#16a34a;}
-.jp-status-dot.aktif::before{background:#16a34a;}
-.jp-status-dot.nonaktif{color:#9ca3af;}
-.jp-status-dot.nonaktif::before{background:#d1d5db;}
-.jp-kasus-count{font-size:11px;color:#9ca3af;}
-.btn-aksi{width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
-.btn-aksi svg{width:14px;height:14px;}
-.btn-aksi.edit{background:#eff6ff;color:#3b82f6;border:1.5px solid #bfdbfe;}
-.btn-aksi.edit:hover{background:#dbeafe;}
-.btn-aksi.delete{background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;}
-.btn-aksi.delete:hover{background:#fee2e2;}
-.jp-overlay{position:fixed;left:var(--sidebar-width,260px);top:0;right:0;bottom:0;z-index:700;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;}
-@media(max-width:768px){.jp-overlay{left:0;}}
-.jp-panel{background:white;border-radius:20px;width:100%;max-width:500px;box-shadow:0 32px 80px rgba(0,0,0,.22);overflow:hidden;animation:jpIn .3s cubic-bezier(.16,1,.3,1) both;max-height:90vh;display:flex;flex-direction:column;}
-@keyframes jpIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.jp-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);flex-shrink:0;transition:background .3s;}
-.jp-modal-header-left{display:flex;align-items:center;gap:12px;}
-.jp-modal-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.jp-modal-icon svg{width:20px;height:20px;color:white;}
-.jp-modal-sub{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:3px;}
-.jp-modal-title{font-size:1.05rem;font-weight:800;color:white;}
-.jp-modal-close{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.22);cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;transition:background .15s;}
-.jp-modal-close:hover{background:rgba(255,255,255,.28);}
-.jp-modal-close svg{width:15px;height:15px;}
-.jp-modal-body{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
-.jp-modal-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-@media(max-width:480px){.jp-modal-grid2{grid-template-columns:1fr;}}
-.jp-field{display:flex;flex-direction:column;gap:5px;}
-.jp-label{font-size:11.5px;font-weight:700;color:#374151;letter-spacing:.02em;}
-.jp-req{color:#ef4444;}
-.jp-input{padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:9px;font-family:inherit;font-size:13px;color:#111827;background:white;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;box-sizing:border-box;}
-.jp-input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
-.jp-modal-footer{display:flex;gap:8px;padding:14px 20px;border-top:1px solid #f3f4f6;background:#fafafa;flex-shrink:0;}
-.jp-btn-cancel{padding:10px 20px;border-radius:10px;border:1.5px solid #d1d5db;background:white;color:#374151;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
-.jp-btn-cancel:hover{background:#f9fafb;}
-.jp-btn-save{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:10px;border:none;background:#7c3aed;color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
-.jp-btn-save svg{width:15px;height:15px;}
-.jp-btn-save:hover{background:#6d28d9;}
-.jp-btn-hapus{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:10px;border:none;background:#ef4444;color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
-.jp-btn-hapus:hover{background:#dc2626;}
-.jp-btn-hapus svg{width:15px;height:15px;}
-</style>
-
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
+<script src="{{ asset('js/master-admin-page.js') }}"></script>
 <script>
 const JP_DATA = {
     'jp1': { nama:'Penghinaan & Ejekan',        kategori:'Verbal',     urgensi:'sedang', status:'aktif', kasus:15, deskripsi:'Menghina, mengejek, atau merendahkan korban melalui kata-kata secara langsung.',         contoh:'Memanggil dengan julukan buruk, mengejek fisik, melontarkan kata-kata kasar.' },
@@ -296,26 +205,33 @@ const KAT_META = {
     'Non-Verbal': { bg:'#fef2f2', c:'#dc2626', label:'Bullying Non-Verbal', icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' },
 };
 
-let _editJpId=null,_hapusJpId=null;
+let _editJpId = null, _hapusJpId = null;
 
-function renderContent(){
-    const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
-    const kf=(document.getElementById('filterKategori')?.value||'');
-    const content=document.getElementById('jpContent');
-    const noRes=document.getElementById('noResults');
-    const filtered=Object.entries(JP_DATA).filter(([,d])=>(!q||d.nama.toLowerCase().includes(q)||d.deskripsi.toLowerCase().includes(q))&&(!kf||d.kategori===kf));
-    if(!filtered.length){content.innerHTML='';noRes.classList.remove('hidden');return;}
+function renderContent() {
+    const q   = (document.getElementById('searchInput')?.value  || '').toLowerCase();
+    const kf  = (document.getElementById('filterKategori')?.value || '');
+    const content = document.getElementById('jpContent');
+    const noRes   = document.getElementById('noResults');
+
+    const filtered = Object.entries(JP_DATA).filter(([, d]) =>
+        (!q  || d.nama.toLowerCase().includes(q) || d.deskripsi.toLowerCase().includes(q)) &&
+        (!kf || d.kategori === kf)
+    );
+
+    if (!filtered.length) { content.innerHTML = ''; noRes.classList.remove('hidden'); return; }
     noRes.classList.add('hidden');
-    const groups={};
-    filtered.forEach(([id,d])=>{if(!groups[d.kategori])groups[d.kategori]=[];groups[d.kategori].push([id,d]);});
-    content.innerHTML=['Verbal','Non-Verbal'].filter(k=>groups[k]).map(kat=>{
-        const km=KAT_META[kat];
-        const cards=groups[kat].map(([id,d],i)=>`
-            <div class="jp-card ${kat}" style="animation-delay:${i*.05}s">
+
+    const groups = {};
+    filtered.forEach(([id, d]) => { if (!groups[d.kategori]) groups[d.kategori] = []; groups[d.kategori].push([id, d]); });
+
+    content.innerHTML = ['Verbal', 'Non-Verbal'].filter(k => groups[k]).map(kat => {
+        const km    = KAT_META[kat];
+        const cards = groups[kat].map(([id, d], i) => `
+            <div class="jp-card ${kat}" style="animation-delay:${i * .05}s">
                 <div class="jp-card-top">
                     <div class="jp-card-top-row">
                         <div style="display:flex;align-items:center;gap:10px">
-                            <div class="jp-card-icon-wrap" style="background:${km.bg}">${km.icon.replace('stroke="currentColor"','stroke="'+km.c+'"')}</div>
+                            <div class="jp-card-icon-wrap" style="background:${km.bg}">${km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"')}</div>
                             <div><div class="jp-card-name">${d.nama}</div><span class="jp-card-kat ${kat}">${km.label}</span></div>
                         </div>
                         <div class="jp-card-actions">
@@ -326,65 +242,81 @@ function renderContent(){
                 </div>
                 <div class="jp-card-body">
                     <p class="jp-card-desc">${d.deskripsi}</p>
-                    ${d.contoh?`<div class="jp-card-contoh"><strong>Contoh Perilaku</strong>${d.contoh}</div>`:''}
+                    ${d.contoh ? `<div class="jp-card-contoh"><strong>Contoh Perilaku</strong>${d.contoh}</div>` : ''}
                     <div class="jp-card-footer">
-                        <span class="jp-urgensi-badge ${d.urgensi}">${d.urgensi.charAt(0).toUpperCase()+d.urgensi.slice(1)}</span>
+                        <span class="jp-urgensi-badge ${d.urgensi}">${ucfirst(d.urgensi)}</span>
                         <span class="jp-kasus-count">${d.kasus}x kasus</span>
-                        <span class="jp-status-dot ${d.status}">${d.status==='aktif'?'Aktif':'Nonaktif'}</span>
+                        <span class="jp-status-dot ${d.status}">${d.status === 'aktif' ? 'Aktif' : 'Nonaktif'}</span>
                     </div>
                 </div>
             </div>`).join('');
+
         return `<div class="jp-group">
             <div class="jp-group-header">
-                <span class="jp-group-badge ${kat}">${km.icon.replace('stroke="currentColor"','stroke="'+km.c+'"')} ${km.label}</span>
+                <span class="jp-group-badge ${kat}">${km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"')} ${km.label}</span>
                 <div class="jp-group-line"></div>
                 <span class="jp-group-count">${groups[kat].length} jenis</span>
             </div>
             <div class="jp-grid">${cards}</div>
         </div>`;
     }).join('');
-    const all=Object.values(JP_DATA);
-    document.getElementById('statTotal').textContent=all.length;
-    document.getElementById('statVerbal').textContent=all.filter(d=>d.kategori==='Verbal').length;
-    document.getElementById('statNonVerbal').textContent=all.filter(d=>d.kategori==='Non-Verbal').length;
-    document.getElementById('statTotalKasus').textContent=all.reduce((s,d)=>s+d.kasus,0);
+
+    const all = Object.values(JP_DATA);
+    document.getElementById('statTotal').textContent      = all.length;
+    document.getElementById('statVerbal').textContent     = all.filter(d => d.kategori === 'Verbal').length;
+    document.getElementById('statNonVerbal').textContent  = all.filter(d => d.kategori === 'Non-Verbal').length;
+    document.getElementById('statTotalKasus').textContent = all.reduce((s, d) => s + d.kasus, 0);
 }
 
-function updateModalColor(){
-    const kat=document.getElementById('jpKategori').value;
-    const h=document.getElementById('jpModalHeaderBar');
-    const b=document.getElementById('jpBtnSave');
-    if(kat==='Non-Verbal'){h.style.background='linear-gradient(135deg,#dc2626,#991b1b)';b.style.background='#dc2626';}
-    else{h.style.background='linear-gradient(135deg,#7c3aed,#5b21b6)';b.style.background='#7c3aed';}
+function updateModalColor() {
+    const kat = document.getElementById('jpKategori').value;
+    const h   = document.getElementById('jpModalHeaderBar');
+    const b   = document.getElementById('jpBtnSave');
+    if (kat === 'Non-Verbal') { h.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)'; b.style.background = '#dc2626'; }
+    else                      { h.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)'; b.style.background = '#7c3aed'; }
 }
 
-function openJpModal(id=null){
-    _editJpId=id;
-    document.getElementById('jpModalTitle').textContent=id?'Edit Jenis Pelanggaran':'Tambah Jenis Pelanggaran';
-    if(id){const d=JP_DATA[id];document.getElementById('jpNama').value=d.nama;document.getElementById('jpKategori').value=d.kategori;document.getElementById('jpUrgensi').value=d.urgensi;document.getElementById('jpStatus').value=d.status;document.getElementById('jpDeskripsi').value=d.deskripsi;document.getElementById('jpContoh').value=d.contoh;}
-    else{['jpNama','jpDeskripsi','jpContoh'].forEach(i=>document.getElementById(i).value='');document.getElementById('jpKategori').value='';document.getElementById('jpUrgensi').value='sedang';document.getElementById('jpStatus').value='aktif';}
+function openJpModal(id = null) {
+    _editJpId = id;
+    document.getElementById('jpModalTitle').textContent = id ? 'Edit Jenis Pelanggaran' : 'Tambah Jenis Pelanggaran';
+    if (id) {
+        const d = JP_DATA[id];
+        document.getElementById('jpNama').value      = d.nama;
+        document.getElementById('jpKategori').value  = d.kategori;
+        document.getElementById('jpUrgensi').value   = d.urgensi;
+        document.getElementById('jpStatus').value    = d.status;
+        document.getElementById('jpDeskripsi').value = d.deskripsi;
+        document.getElementById('jpContoh').value    = d.contoh;
+    } else {
+        ['jpNama', 'jpDeskripsi', 'jpContoh'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('jpKategori').value = '';
+        document.getElementById('jpUrgensi').value  = 'sedang';
+        document.getElementById('jpStatus').value   = 'aktif';
+    }
     updateModalColor();
-    document.getElementById('modalJp').style.display='flex';
-    document.body.style.overflow='hidden';
+    mdOpenOverlay('modalJp');
 }
-function closeJpModal(){document.getElementById('modalJp').style.display='none';document.body.style.overflow='';}
-function saveJp(){
-    const nama=document.getElementById('jpNama').value.trim();
-    const kategori=document.getElementById('jpKategori').value;
-    if(!nama||!kategori){alert('Nama dan Kategori wajib diisi.');return;}
-    const data={nama,kategori,urgensi:document.getElementById('jpUrgensi').value,status:document.getElementById('jpStatus').value,deskripsi:document.getElementById('jpDeskripsi').value.trim(),contoh:document.getElementById('jpContoh').value.trim(),kasus:0};
-    if(_editJpId){Object.assign(JP_DATA[_editJpId],data);}else{JP_DATA['jp'+(Object.keys(JP_DATA).length+1)]=data;}
-    closeJpModal();renderContent();
-    if(typeof Toast!=='undefined')Toast.show('success','Berhasil',_editJpId?'Data diperbarui.':'Jenis pelanggaran ditambahkan.');
-}
-function openHapusJp(id){_hapusJpId=id;document.getElementById('hapusJpNama').textContent=JP_DATA[id]?.nama||id;document.getElementById('modalHapusJp').style.display='flex';document.body.style.overflow='hidden';}
-function closeHapusJp(){document.getElementById('modalHapusJp').style.display='none';document.body.style.overflow='';}
-function doHapusJp(){if(!_hapusJpId)return;delete JP_DATA[_hapusJpId];closeHapusJp();renderContent();if(typeof Toast!=='undefined')Toast.show('success','Dihapus','Jenis pelanggaran dihapus.');}
+function closeJpModal()  { mdCloseOverlay('modalJp'); }
 
-document.getElementById('searchInput')?.addEventListener('input',renderContent);
-document.getElementById('filterKategori')?.addEventListener('change',renderContent);
-document.getElementById('modalJp').addEventListener('click',function(e){if(e.target===this)closeJpModal();});
-document.getElementById('modalHapusJp').addEventListener('click',function(e){if(e.target===this)closeHapusJp();});
-document.addEventListener('DOMContentLoaded',()=>renderContent());
+function saveJp() {
+    const nama     = document.getElementById('jpNama').value.trim();
+    const kategori = document.getElementById('jpKategori').value;
+    if (!nama || !kategori) { alert('Nama dan Kategori wajib diisi.'); return; }
+    const data = { nama, kategori, urgensi: document.getElementById('jpUrgensi').value, status: document.getElementById('jpStatus').value, deskripsi: document.getElementById('jpDeskripsi').value.trim(), contoh: document.getElementById('jpContoh').value.trim(), kasus: 0 };
+    if (_editJpId) { Object.assign(JP_DATA[_editJpId], data); }
+    else { JP_DATA['jp' + (Object.keys(JP_DATA).length + 1)] = data; }
+    closeJpModal(); renderContent();
+    if (typeof Toast !== 'undefined') Toast.show('success', 'Berhasil', _editJpId ? 'Data diperbarui.' : 'Jenis pelanggaran ditambahkan.');
+}
+
+function openHapusJp(id) { _hapusJpId = id; document.getElementById('hapusJpNama').textContent = JP_DATA[id]?.nama || id; mdOpenOverlay('modalHapusJp'); }
+function closeHapusJp()  { mdCloseOverlay('modalHapusJp'); }
+function doHapusJp()     { if (!_hapusJpId) return; delete JP_DATA[_hapusJpId]; closeHapusJp(); renderContent(); if (typeof Toast !== 'undefined') Toast.show('success', 'Dihapus', 'Jenis pelanggaran dihapus.'); }
+
+document.getElementById('searchInput')?.addEventListener('input', renderContent);
+document.getElementById('filterKategori')?.addEventListener('change', renderContent);
+document.getElementById('modalJp').addEventListener('click', function (e) { if (e.target === this) closeJpModal(); });
+document.getElementById('modalHapusJp').addEventListener('click', function (e) { if (e.target === this) closeHapusJp(); });
+document.addEventListener('DOMContentLoaded', () => renderContent());
 </script>
 @endsection

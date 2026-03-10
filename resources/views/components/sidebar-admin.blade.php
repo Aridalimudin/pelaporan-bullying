@@ -1,6 +1,5 @@
 <aside class="admin-sidebar" id="adminSidebar">
 
-    {{-- Brand --}}
     <div class="sidebar-brand">
         <div class="sidebar-brand-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,10 +17,8 @@
         </button>
     </div>
 
-    {{-- Nav --}}
     <nav class="sidebar-nav">
 
-        {{-- Dashboard --}}
         <div class="nav-section-label">Dashboard</div>
         <a href="dashboard" class="nav-item {{ ($activePage ?? '') === 'dashboard' ? 'active' : '' }}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +27,6 @@
             <span>Beranda</span>
         </a>
 
-        {{-- Pelaporan --}}
         <div class="nav-section-label">Pelaporan</div>
         <div class="nav-group {{ in_array($activePage ?? '', ['laporan-masuk','menunggu-verifikasi','proses-laporan','laporan-selesai','laporan-ditolak']) ? 'open' : '' }}" id="groupPelaporan">
             <button class="nav-group-trigger" onclick="toggleNavGroup('groupPelaporan')">
@@ -51,11 +47,6 @@
                     </svg>
                     <span>Laporan Masuk</span>
                     @php
-                        /*
-                         * BADGE LAPORAN MASUK
-                         * Sementara: ganti angka 12 sesuai kebutuhan
-                         * Nanti pakai DB: $__badgeLM = \App\Models\NamaModel::where('status','masuk')->count();
-                         */
                         $__badgeLM = $countLaporanMasuk ?? 12;
                     @endphp
                     @if($__badgeLM > 0)
@@ -105,7 +96,6 @@
             </div>
         </div>
 
-        {{-- Administrasi --}}
         <div class="nav-section-label">Administrasi</div>
 
        <div class="nav-group {{ in_array($activePage ?? '', ['data-siswa','jenis-pelanggaran','tindakan-disiplin']) ? 'open' : '' }}" id="groupMasterData">
@@ -176,7 +166,6 @@
             </div>
         </div>
 
-        {{-- Analitik --}}
         <div class="nav-section-label">Analitik</div>
         <div class="nav-group {{ in_array($activePage ?? '', ['rekap-bulan','rekap-semester']) ? 'open' : '' }}" id="groupAnalitik">
             <button class="nav-group-trigger" onclick="toggleNavGroup('groupAnalitik')">
@@ -208,7 +197,6 @@
 
     </nav>
 
-    {{-- Footer / Profile + Logout --}}
     <div class="sidebar-footer">
         <div class="sidebar-profile">
             <div class="sidebar-profile-avatar">A</div>
@@ -233,10 +221,7 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-
-{{-- ===================== STYLE ===================== --}}
 <style>
-    /* ---- Root Variables ---- */
     :root {
         --sidebar-bg: #ffffff;
         --sidebar-width: 260px;
@@ -255,7 +240,6 @@
         --shadow: 0 4px 24px rgba(0,0,0,0.08);
     }
 
-    /* ---- Sidebar Base ---- */
     .admin-sidebar {
         width: var(--sidebar-width);
         height: 100vh;
@@ -272,7 +256,6 @@
         transition: transform 0.3s ease;
     }
 
-    /* ---- Brand ---- */
     .sidebar-brand {
         display: flex;
         align-items: center;
@@ -334,7 +317,6 @@
 
     .sidebar-close-btn svg { width: 18px; height: 18px; }
 
-    /* ---- Nav ---- */
     .sidebar-nav {
         flex: 1;
         overflow-y: auto;
@@ -350,7 +332,6 @@
     .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
     .sidebar-nav::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
 
-    /* Section Labels */
     .nav-section-label {
         font-size: 9.5px;
         font-weight: 800;
@@ -361,7 +342,6 @@
         margin-top: 2px;
     }
 
-    /* Nav Item (single link) */
     .nav-item {
         display: flex;
         align-items: center;
@@ -389,7 +369,6 @@
         font-weight: 600;
     }
 
-    /* Active left bar */
     .nav-item.active::before {
         content: '';
         position: absolute;
@@ -402,7 +381,6 @@
         border-radius: 0 3px 3px 0;
     }
 
-    /* Nav Group */
     .nav-group {
         display: flex;
         flex-direction: column;
@@ -452,7 +430,6 @@
 
     .nav-group.open .nav-chevron { transform: rotate(180deg); }
 
-    /* Group Children */
     .nav-group-children {
         overflow: hidden;
         max-height: 0;
@@ -467,7 +444,6 @@
 
     .nav-group.open .nav-group-children { max-height: 500px; }
 
-    /* Child Item */
     .nav-child {
         display: flex;
         align-items: center;
@@ -501,7 +477,6 @@
         font-weight: 600;
     }
 
-    /* Child Icon — plain SVG, no box, no border */
     .child-icon {
         width: 15px;
         height: 15px;
@@ -513,7 +488,6 @@
     .nav-child:hover .child-icon { color: var(--green-primary); }
     .nav-child.active .child-icon { color: var(--green-primary); }
 
-    /* Badge */
     .nav-badge {
         margin-left: auto;
         flex-shrink: 0;
@@ -528,7 +502,6 @@
         line-height: 1.6;
     }
 
-    /* ---- Footer: Profile + Logout ---- */
     .sidebar-footer {
         border-top: 1px solid var(--border-color);
         padding: 14px 12px;
@@ -538,7 +511,6 @@
         gap: 8px;
     }
 
-    /* Profile Card */
     .sidebar-profile {
         display: flex;
         align-items: center;
@@ -584,7 +556,6 @@
         font-weight: 500;
     }
 
-    /* Logout Button */
     .btn-logout {
         display: flex;
         align-items: center;
@@ -608,7 +579,6 @@
         border-color: #f87171;
     }
 
-    /* ---- Overlay (mobile) ---- */
     .sidebar-overlay {
         display: none;
         position: fixed;
@@ -617,7 +587,6 @@
         z-index: 999;
     }
 
-    /* ---- Mobile ---- */
     @media (max-width: 768px) {
         .admin-sidebar { transform: translateX(-100%); }
         .admin-sidebar.open { transform: translateX(0); }

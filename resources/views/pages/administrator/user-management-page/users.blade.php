@@ -41,7 +41,6 @@
             </div>
         </div>
 
-        {{-- Stats Cards --}}
         <div class="stats-row animate-fade-in" style="animation-delay:.05s">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#eff6ff;color:#3b82f6">
@@ -111,7 +110,6 @@
     @include('components.toast')
 </div>
 
-{{-- ===================== MODAL USER ===================== --}}
 <div class="um-overlay" id="modalUser" style="display:none">
     <div class="um-panel">
         <div class="um-header" id="umHeader">
@@ -200,7 +198,6 @@
     </div>
 </div>
 
-{{-- Modal Hapus --}}
 <div class="um-overlay" id="modalHapus" style="display:none">
     <div class="um-panel" style="max-width:400px">
         <div class="um-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
@@ -246,12 +243,10 @@ html,body{height:100%;overflow:auto;}
 .table-card{overflow:visible;}
 .table-scroll{overflow-x:auto;overflow-y:visible;}
 
-/* Btn tambah */
 .btn-tambah{display:flex;align-items:center;gap:7px;padding:9px 16px;background:#16a34a;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;}
 .btn-tambah svg{width:15px;height:15px;}
 .btn-tambah:hover{background:#15803d;}
 
-/* Stats */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 @media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr);}}
 .stat-card{background:white;border:1.5px solid #f3f4f6;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
@@ -260,32 +255,27 @@ html,body{height:100%;overflow:auto;}
 .stat-val{font-size:22px;font-weight:800;color:#111827;display:block;line-height:1;}
 .stat-lbl{font-size:11px;color:#6b7280;font-weight:500;margin-top:3px;display:block;}
 
-/* User avatar in table */
 .user-cell{display:flex;align-items:center;gap:10px;}
 .user-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
 .user-name{font-weight:600;font-size:13px;color:#111827;}
 .user-uname{font-size:11px;color:#9ca3af;}
 
-/* Role badge */
 .role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
 .role-badge.superadmin{background:#fdf4ff;color:#9333ea;}
 .role-badge.kesiswaan{background:#f0fdf4;color:#16a34a;}
 .role-badge.guru-bk{background:#eff6ff;color:#3b82f6;}
 .role-badge.wali-kelas{background:#fff7ed;color:#ea580c;}
 
-/* Status */
 .status-user{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 .status-user.aktif{background:#f0fdf4;color:#16a34a;}
 .status-user::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
 .status-user.nonaktif{background:#f9fafb;color:#6b7280;}
 
-/* Aksi */
 .btn-aksi.edit{background:#eff6ff;color:#3b82f6;border:1.5px solid #bfdbfe;}
 .btn-aksi.edit:hover{background:#dbeafe;}
 .btn-aksi.delete{background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;}
 .btn-aksi.delete:hover{background:#fee2e2;}
 
-/* ---- Modal User ---- */
 .um-overlay{position:fixed;left:var(--sidebar-width,260px);top:0;right:0;bottom:0;z-index:700;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;}
 @media(max-width:768px){.um-overlay{left:0;}}
 .um-panel{background:white;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,0,0,.22);overflow:hidden;animation:umIn .3s cubic-bezier(.16,1,.3,1) both;max-height:90vh;display:flex;flex-direction:column;}
@@ -335,7 +325,6 @@ html,body{height:100%;overflow:auto;}
 
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
 <script>
-/* Pastikan toggleNavGroup dari sidebar tidak ditimpa */
 if (typeof toggleNavGroup === 'undefined') {
     function toggleNavGroup(id) {
         const group = document.getElementById(id);

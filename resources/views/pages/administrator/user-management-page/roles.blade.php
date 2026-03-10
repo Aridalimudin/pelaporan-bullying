@@ -34,7 +34,6 @@
             </div>
         </div>
 
-        {{-- Role Cards Grid --}}
         <div class="role-grid animate-fade-in" id="roleGrid" style="animation-delay:.05s"></div>
 
         <div class="no-results hidden" id="noResults" style="margin-top:40px">
@@ -46,7 +45,6 @@
     @include('components.toast')
 </div>
 
-{{-- Modal Role --}}
 <div class="um-overlay" id="modalRole" style="display:none">
     <div class="um-panel" style="max-width:500px">
         <div class="um-header" id="roleHeader">
@@ -106,7 +104,6 @@
     </div>
 </div>
 
-{{-- Modal Hapus Role --}}
 <div class="um-overlay" id="modalHapusRole" style="display:none">
     <div class="um-panel" style="max-width:380px">
         <div class="um-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
@@ -144,10 +141,8 @@ html,body{height:100%;overflow:auto;}
 .btn-tambah svg{width:15px;height:15px;}
 .btn-tambah:hover{background:#15803d;}
 
-/* Role Grid */
 .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:20px;}
 
-/* Role Card */
 .role-card{background:white;border:1.5px solid #f3f4f6;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s;animation:fadeInUp .3s ease both;}
 .role-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px);}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -176,13 +171,11 @@ html,body{height:100%;overflow:auto;}
 .btn-aksi.delete{background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;}
 .btn-aksi.delete:hover{background:#fee2e2;}
 
-/* Color picker */
 .color-picker-row{display:flex;gap:8px;flex-wrap:wrap;}
 .color-opt{width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative;}
 .color-opt.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:700;}
 .color-opt:hover{transform:scale(1.15);}
 
-/* Perm checkbox grid */
 .perm-check-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:160px;overflow-y:auto;padding:4px;}
 .perm-check-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;transition:all .15s;}
 .perm-check-item:hover{border-color:#86efac;background:#f0fdf4;}
@@ -190,7 +183,6 @@ html,body{height:100%;overflow:auto;}
 .perm-check-item input{width:15px;height:15px;accent-color:#16a34a;cursor:pointer;flex-shrink:0;}
 .perm-check-label{font-size:12px;font-weight:500;color:#374151;}
 
-/* Modal shared */
 .um-overlay{position:fixed;left:var(--sidebar-width,260px);top:0;right:0;bottom:0;z-index:700;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;}
 @media(max-width:768px){.um-overlay{left:0;}}
 .um-panel{background:white;border-radius:20px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,0,0,.22);overflow:hidden;animation:umIn .3s cubic-bezier(.16,1,.3,1) both;max-height:90vh;display:flex;flex-direction:column;}

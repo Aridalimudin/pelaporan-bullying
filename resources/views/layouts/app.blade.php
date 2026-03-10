@@ -28,13 +28,13 @@
             }
         }
     </script>
-    
+
     <style>
         h1, h2, h3, h4, h5, h6 {
             overflow: visible !important;
             line-height: 1.3 !important;
         }
-        
+
         .gradient-text {
             padding: 2px 0;
             display: inline-block;
@@ -42,8 +42,14 @@
     </style>
 
     <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/report-user-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/track-user-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/contact-user-page.css') }}">
+    
+    @stack('styles')
 </head>
-<body>
+<body class="bg-gray-50 font-sans">
+
     @yield('content')
 
     <script>
@@ -58,7 +64,7 @@
             const mobileMenu = document.getElementById('mobileMenu');
             const menuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
             const isClickInsideMenu = event.target.closest('#mobileMenu');
-            
+
             if (mobileMenu && !mobileMenu.classList.contains('hidden') && !menuButton && !isClickInsideMenu) {
                 mobileMenu.classList.add('hidden');
             }
@@ -76,5 +82,7 @@
             }
         });
     </script>
+
+    @stack('scripts')
 </body>
 </html>
