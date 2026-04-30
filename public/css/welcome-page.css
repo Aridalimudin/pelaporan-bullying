@@ -20,15 +20,15 @@ body {
     background: var(--bg-soft);
     color: var(--text-dark);
     line-height: 1.5;
-    overflow: hidden;
     -webkit-font-smoothing: antialiased;
-    height: 100vh;
+    /* DIPERBAIKI: hapus overflow:hidden dan height:100vh dari body global
+       agar halaman lain (laporan, dsb.) tetap bisa scroll.
+       Khusus halaman landing dikunci via class .page-landing di bawah. */
 }
 
 html {
     scroll-behavior: smooth;
-    height: 100vh;
-    overflow: hidden;
+    /* DIPERBAIKI: hapus overflow:hidden dan height:100vh dari html global */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -83,8 +83,8 @@ h1, h2, h3, h4, h5, h6 {
     bottom: -4px;
     left: 0;
     width: 0;
-    height: 2px; 
-    background: var(--primary); 
+    height: 2px;
+    background: var(--primary);
     transition: width 0.3s ease;
     border-radius: 2px;
 }
@@ -163,7 +163,7 @@ h1, h2, h3, h4, h5, h6 {
     background: white;
     border-radius: 24px;
     padding: 24px;
-    box-shadow: 
+    box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.06),
         0 0 0 1px rgba(0, 0, 0, 0.02);
     position: relative;
@@ -215,106 +215,78 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
 }
 
-.animate-fade-in {
-    animation: fadeIn 0.6s ease-out;
-}
-
-.animate-slide-up {
-    animation: slideUp 0.6s ease-out;
-    animation-fill-mode: both;
-}
-
-.animate-float {
-    animation: float 3s ease-in-out infinite;
-}
+.animate-fade-in  { animation: fadeIn 0.6s ease-out; }
+.animate-slide-up { animation: slideUp 0.6s ease-out; animation-fill-mode: both; }
+.animate-float    { animation: float 3s ease-in-out infinite; }
 
 .delay-1 { animation-delay: 0.1s; }
 .delay-2 { animation-delay: 0.2s; }
 .delay-3 { animation-delay: 0.3s; }
 .delay-4 { animation-delay: 0.4s; }
 
+/* ═══════════════════════════════════════
+   HALAMAN LANDING — dikunci scroll di sini
+   (pakai class .page-landing pada <body> di blade landing)
+═══════════════════════════════════════ */
+body.page-landing {
+    overflow: hidden;
+    height: 100vh;
+}
+
+html:has(body.page-landing) {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
 @media (max-width: 1024px) {
     .hero-section {
         padding-top: 60px;
         padding-bottom: 60px;
     }
-    
-    .stat-number {
-        font-size: 20px;
-    }
-    
-    .stat-label {
-        font-size: 11px;
-    }
+
+    .stat-number { font-size: 20px; }
+    .stat-label  { font-size: 11px; }
 }
 
 @media (max-width: 768px) {
-    body, html {
-        overflow-y: auto;
-        height: auto;
-    }
-    
     .hero-section {
         height: auto;
         min-height: 100vh;
         padding-top: 80px;
         padding-bottom: 60px;
     }
-    
-    .footer-compact {
-        position: relative;
-    }
-    
+
+    .footer-compact { position: relative; }
+
     .stats-compact {
         grid-template-columns: 1fr;
         gap: 12px;
         margin-top: 12px;
         padding-top: 12px;
     }
-    
-    .stat-number {
-        font-size: 20px;
-    }
-    
-    .stat-label {
-        font-size: 11px;
-    }
-    
-    .illustration-card {
-        padding: 20px;
-    }
-    
-    .floating-badge {
-        padding: 6px 10px;
-    }
+
+    .stat-number { font-size: 20px; }
+    .stat-label  { font-size: 11px; }
+
+    .illustration-card  { padding: 20px; }
+    .floating-badge     { padding: 6px 10px; }
 }
 
 @media (max-width: 640px) {

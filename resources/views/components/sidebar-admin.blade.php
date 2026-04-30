@@ -111,19 +111,19 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/data-siswa" class="nav-child {{ ($activePage ?? '') === 'data-siswa' ? 'active' : '' }}">
+                <a href="/SIP-Bullying/data-siswa" class="nav-child {{ ($activePage ?? '') === 'data-siswa' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
                     <span>Data Siswa</span>
                 </a>
-                <a href="/jenis-pelanggaran" class="nav-child {{ ($activePage ?? '') === 'jenis-pelanggaran' ? 'active' : '' }}">
+                <a href="/SIP-Bullying/jenis-pelanggaran" class="nav-child {{ ($activePage ?? '') === 'jenis-pelanggaran' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                     <span>Jenis Pelanggaran</span>
                 </a>
-                <a href="/tindakan-disiplin" class="nav-child {{ ($activePage ?? '') === 'tindakan-disiplin' ? 'active' : '' }}">
+                <a href="/SIP-Bullying/tindakan-disiplin" class="nav-child {{ ($activePage ?? '') === 'tindakan-disiplin' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                     </svg>
@@ -205,16 +205,12 @@
                 <span class="sidebar-profile-role">Kesiswaan</span>
             </div>
         </div>
-
-        <form method="POST" action="#">
-            @csrf
-            <button type="submit" class="btn-logout">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span>Keluar</span>
-            </button>
-        </form>
+        <button onclick="doLogout()" class="btn-logout" style="text-decoration:none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span>Keluar</span>
+        </button>
     </div>
 
 </aside>

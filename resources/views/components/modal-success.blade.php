@@ -59,85 +59,59 @@
                 </p>
             </div>
 
+            {{-- Tombol tutup → redirect ke progress --}}
             <button 
                 onclick="closeReportModal()" 
-                class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-green-700 transition-all active:scale-[0.98] shadow-md hover:shadow-lg"
+                class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-green-700 transition-all active:scale-[0.98] shadow-md hover:shadow-lg flex items-center justify-center gap-2"
             >
-                Tutup
+                <span>Pantau Status Laporan</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
             </button>
         </div>
     </div>
 </div>
 
 <style>
-
 @keyframes scale-in {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0%   { transform: scale(0); opacity: 0; }
+    50%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
 }
-
 @keyframes check-draw {
-    0% {
-        stroke-dasharray: 0, 100;
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        stroke-dasharray: 100, 0;
-        opacity: 1;
-    }
+    0%   { stroke-dasharray: 0, 100; opacity: 0; }
+    50%  { opacity: 1; }
+    100% { stroke-dasharray: 100, 0; opacity: 1; }
 }
-
 @keyframes pulse-subtle {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.8;
-    }
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.8; }
 }
-
-.animate-scale-in {
-    animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.animate-check-draw {
-    animation: check-draw 0.6s ease-in-out 0.2s both;
-}
-
-.animate-pulse-subtle {
-    animation: pulse-subtle 2s ease-in-out infinite;
-}
+.animate-scale-in    { animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-check-draw  { animation: check-draw 0.6s ease-in-out 0.2s both; }
+.animate-pulse-subtle{ animation: pulse-subtle 2s ease-in-out infinite; }
 
 @media (max-width: 640px) {
-    #reportCode {
-        font-size: 0.875rem;
-        letter-spacing: 0.1em;
-    }
+    #reportCode { font-size: 0.875rem; letter-spacing: 0.1em; }
 }
 </style>
 
 <script>
+    // Simpan kode tiket aktif agar closeReportModal tahu ke mana redirect
+    let _activeTicketCode = null;
+
     function openReportModal(code) {
-        const modal = document.getElementById('successModal');
-        const content = document.getElementById('modalContent');
-        const codeElement = document.getElementById('reportCode');
-        
-        codeElement.innerText = code;
+        const modal      = document.getElementById('successModal');
+        const content    = document.getElementById('modalContent');
+        const codeEl     = document.getElementById('reportCode');
+
+        // Simpan kode untuk dipakai saat redirect
+        _activeTicketCode = code;
+
+        codeEl.innerText = code;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-
         document.body.style.overflow = 'hidden';
 
         setTimeout(() => {
@@ -147,62 +121,60 @@
     }
 
     function closeReportModal() {
-        const modal = document.getElementById('successModal');
+        const modal   = document.getElementById('successModal');
         const content = document.getElementById('modalContent');
-        
+
+        // Animasi keluar
         content.classList.add('scale-95', 'opacity-0');
         content.classList.remove('scale-100', 'opacity-100');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-
             document.body.style.overflow = '';
-        }, 300);
+
+            // Redirect ke halaman progress jika ada kode
+            if (_activeTicketCode) {
+                window.location.href = `/progress-laporan?code=${encodeURIComponent(_activeTicketCode)}`;
+            }
+        }, 300); // tunggu animasi selesai baru redirect
     }
 
     function copyToClipboard() {
-        const code = document.getElementById('reportCode').innerText;
+        const code     = document.getElementById('reportCode').innerText;
         const feedback = document.getElementById('copyFeedback');
-        
-        navigator.clipboard.writeText(code).then(() => {
 
+        const _showFeedback = () => {
             feedback.classList.remove('opacity-0');
             feedback.classList.add('opacity-100');
-
             setTimeout(() => {
                 feedback.classList.remove('opacity-100');
                 feedback.classList.add('opacity-0');
             }, 2000);
-        }).catch(err => {
-            const textArea = document.createElement('textarea');
-            textArea.value = code;
-            document.body.appendChild(textArea);
-            textArea.select();
+        };
+
+        navigator.clipboard.writeText(code).then(_showFeedback).catch(() => {
+            // Fallback untuk browser lama
+            const ta = document.createElement('textarea');
+            ta.value = code;
+            document.body.appendChild(ta);
+            ta.select();
             document.execCommand('copy');
-            document.body.removeChild(textArea);
-            
-            feedback.classList.remove('opacity-0');
-            feedback.classList.add('opacity-100');
-            setTimeout(() => {
-                feedback.classList.remove('opacity-100');
-                feedback.classList.add('opacity-0');
-            }, 2000);
+            document.body.removeChild(ta);
+            _showFeedback();
         });
     }
 
-    document.addEventListener('keydown', function(e) {
+    // ESC → tutup & redirect
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             const modal = document.getElementById('successModal');
-            if (!modal.classList.contains('hidden')) {
-                closeReportModal();
-            }
+            if (!modal.classList.contains('hidden')) closeReportModal();
         }
     });
 
-    document.getElementById('successModal')?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeReportModal();
-        }
+    // Klik backdrop → tutup & redirect
+    document.getElementById('successModal')?.addEventListener('click', function (e) {
+        if (e.target === this) closeReportModal();
     });
 </script>

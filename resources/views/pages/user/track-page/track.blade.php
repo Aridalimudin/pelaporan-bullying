@@ -1,6 +1,11 @@
 @extends('layouts.app') @section('content')
 @include('components.navbar')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/track-user-page.css') }}">
+@endpush
+
 <main class="tracking-page relative bg-pattern min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div class="tracking-header animate-fade-in">

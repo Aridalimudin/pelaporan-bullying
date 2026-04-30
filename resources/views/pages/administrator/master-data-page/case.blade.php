@@ -68,15 +68,6 @@
                     <span class="jp-stat-lbl">Bullying Non-Verbal</span>
                 </div>
             </div>
-            <div class="jp-stat-card">
-                <div class="jp-stat-icon" style="background:#fef9c3;color:#ca8a04">
-                    <svg fill="none" stroke="#ca8a04" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/></svg>
-                </div>
-                <div>
-                    <span class="jp-stat-val" id="statTotalKasus">0</span>
-                    <span class="jp-stat-lbl">Total Kasus Tercatat</span>
-                </div>
-            </div>
         </div>
 
         <div id="jpContent" class="animate-fade-in" style="animation-delay:.1s"></div>
@@ -90,6 +81,7 @@
     @include('components.toast')
 </div>
 
+{{-- Modal Tambah/Edit --}}
 <div class="jp-overlay" id="modalJp" style="display:none">
     <div class="jp-panel">
         <div class="jp-modal-header" id="jpModalHeaderBar">
@@ -111,40 +103,21 @@
                 <div class="jp-field">
                     <label class="jp-label">Nama Pelanggaran <span class="jp-req">*</span></label>
                     <input class="jp-input" type="text" id="jpNama" placeholder="Contoh: Penghinaan Verbal">
+                    {{-- Pesan error muncul di sini secara dinamis --}}
                 </div>
                 <div class="jp-field">
                     <label class="jp-label">Kategori <span class="jp-req">*</span></label>
-                    <select class="jp-input" id="jpKategori" onchange="updateModalColor()">
+                    <select class="jp-input" id="jpKategori">
                         <option value="">Pilih Kategori...</option>
                         <option value="Verbal">Bullying Verbal</option>
                         <option value="Non-Verbal">Bullying Non-Verbal</option>
                     </select>
-                </div>
-            </div>
-            <div class="jp-modal-grid2">
-                <div class="jp-field">
-                    <label class="jp-label">Tingkat Urgensi</label>
-                    <select class="jp-input" id="jpUrgensi">
-                        <option value="rendah">Rendah</option>
-                        <option value="sedang" selected>Sedang</option>
-                        <option value="tinggi">Tinggi</option>
-                    </select>
-                </div>
-                <div class="jp-field">
-                    <label class="jp-label">Status</label>
-                    <select class="jp-input" id="jpStatus">
-                        <option value="aktif">Aktif</option>
-                        <option value="nonaktif">Nonaktif</option>
-                    </select>
+                    {{-- Pesan error muncul di sini secara dinamis --}}
                 </div>
             </div>
             <div class="jp-field">
-                <label class="jp-label">Deskripsi</label>
+                <label class="jp-label">Deskripsi <span style="font-size:10.5px;color:#9ca3af;font-weight:500">(opsional)</span></label>
                 <textarea class="jp-input" id="jpDeskripsi" rows="3" placeholder="Jelaskan definisi dan ciri-ciri pelanggaran ini..." style="resize:vertical"></textarea>
-            </div>
-            <div class="jp-field">
-                <label class="jp-label">Contoh Perilaku</label>
-                <textarea class="jp-input" id="jpContoh" rows="2" placeholder="Contoh perilaku yang termasuk kategori ini..." style="resize:vertical"></textarea>
             </div>
         </div>
         <div class="jp-modal-footer">
@@ -157,6 +130,7 @@
     </div>
 </div>
 
+{{-- Modal Hapus --}}
 <div class="jp-overlay" id="modalHapusJp" style="display:none">
     <div class="jp-panel" style="max-width:380px">
         <div class="jp-modal-header" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
@@ -175,7 +149,7 @@
         </div>
         <div class="jp-modal-footer">
             <button class="jp-btn-cancel" onclick="closeHapusJp()">Batal</button>
-            <button class="jp-btn-hapus" onclick="doHapusJp()">
+            <button class="jp-btn-hapus" id="btnDoHapusJp" onclick="doHapusJp()">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 Ya, Hapus
             </button>
@@ -183,140 +157,376 @@
     </div>
 </div>
 
+<style>
+.btn-loading{opacity:.6;pointer-events:none;cursor:not-allowed}
+
+/* ── Validasi Inline — sama persis dengan halaman Data Siswa ── */
+.sm-input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12) !important;
+    background: #fff8f8 !important;
+}
+.sm-field-error {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #dc2626;
+    margin-top: 4px;
+    animation: errSlideIn .2s ease both;
+}
+.sm-field-error::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dc2626' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+@keyframes errSlideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.jp-req { color: #ef4444; }
+</style>
+
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
 <script src="{{ asset('js/master-admin-page.js') }}"></script>
 <script>
-const JP_DATA = {
-    'jp1': { nama:'Penghinaan & Ejekan',        kategori:'Verbal',     urgensi:'sedang', status:'aktif', kasus:15, deskripsi:'Menghina, mengejek, atau merendahkan korban melalui kata-kata secara langsung.',         contoh:'Memanggil dengan julukan buruk, mengejek fisik, melontarkan kata-kata kasar.' },
-    'jp2': { nama:'Ancaman & Intimidasi Lisan', kategori:'Verbal',     urgensi:'tinggi', status:'aktif', kasus:7,  deskripsi:'Mengancam atau mengintimidasi korban secara lisan untuk memaksanya menuruti keinginan pelaku.', contoh:'Mengancam akan memukul, mengancam menyebarkan rahasia, membentak untuk menakut-nakuti.' },
-    'jp3': { nama:'Gosip & Fitnah',             kategori:'Verbal',     urgensi:'sedang', status:'aktif', kasus:9,  deskripsi:'Menyebarkan rumor atau informasi palsu tentang korban untuk merusak reputasinya.',       contoh:'Menyebarkan kabar bohong, memfitnah di depan teman, menceritakan rahasia pribadi.' },
-    'jp4': { nama:'Membentak & Meneriaki',      kategori:'Verbal',     urgensi:'rendah', status:'aktif', kasus:4,  deskripsi:'Berteriak atau membentak korban di depan umum untuk mempermalukan dan merendahkan.',      contoh:'Membentak di kelas, meneriaki di koridor, berteriak kasar atas kesalahan kecil.' },
-    'jp5': { nama:'Meremehkan & Merendahkan',   kategori:'Verbal',     urgensi:'rendah', status:'aktif', kasus:6,  deskripsi:'Secara verbal meremehkan kemampuan atau latar belakang korban untuk menurunkan kepercayaan dirinya.', contoh:'Mengatakan korban tidak berguna, meledek nilai, menghina keluarga korban.' },
-    'jp6': { nama:'Kekerasan Fisik',            kategori:'Non-Verbal', urgensi:'tinggi', status:'aktif', kasus:8,  deskripsi:'Tindakan menyakiti secara fisik seperti memukul, menendang, atau mendorong yang menyebabkan rasa sakit.', contoh:'Memukul, menendang, mendorong hingga jatuh, mencubit dengan keras.' },
-    'jp7': { nama:'Merusak / Mengambil Barang', kategori:'Non-Verbal', urgensi:'sedang', status:'aktif', kasus:3,  deskripsi:'Sengaja merusak, menyembunyikan, atau mengambil barang milik korban sebagai bentuk intimidasi.', contoh:'Merobek buku, memecahkan kacamata, mengambil uang atau barang berharga.' },
-    'jp8': { nama:'Pengucilan Sosial',          kategori:'Non-Verbal', urgensi:'sedang', status:'aktif', kasus:6,  deskripsi:'Mengasingkan korban dari kelompok pertemanan melalui tindakan non-verbal secara sengaja.', contoh:'Tidak mengajak bergabung, melarang orang lain berteman, silent treatment kolektif.' },
-    'jp9': { nama:'Gestur & Ekspresi Mengancam',kategori:'Non-Verbal', urgensi:'sedang', status:'aktif', kasus:5,  deskripsi:'Menggunakan gestur tubuh atau mimik wajah yang bersifat mengancam atau merendahkan korban.', contoh:'Memelototkan mata, mengacungkan tinju, membuat gestur kasar, wajah mengintimidasi.' },
-    'jp10':{ nama:'Cyberbullying',              kategori:'Non-Verbal', urgensi:'tinggi', status:'aktif', kasus:11, deskripsi:'Perundungan melalui media sosial, pesan digital, atau platform online.',                 contoh:'Komentar jahat di medsos, menyebarkan foto tanpa izin, membuat akun palsu.' },
-    'jp11':{ nama:'Manipulasi & Pengisolasian', kategori:'Non-Verbal', urgensi:'sedang', status:'aktif', kasus:3,  deskripsi:'Memanipulasi hubungan sosial korban untuk mengisolasinya dari lingkungan pertemanan.',   contoh:'Mempengaruhi teman agar menjauh, menyebarkan sinyal negatif non-verbal tentang korban.' },
+/* ─────────────────────────────────────────
+   API ENDPOINTS
+───────────────────────────────────────── */
+var API_JP_LIST   = '{{ route("violation-types.api.list") }}';
+var API_JP_SAVE   = '{{ route("violation-types.api.save") }}';
+var API_JP_DELETE = '{{ route("violation-types.api.delete", ":id") }}'.replace('/:id', '');
+/* ─────────────────────────────────────────
+   CSRF TOKEN
+───────────────────────────────────────── */
+var CSRF_TOKEN_JP = document.querySelector('meta[name="csrf-token"]')
+    ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : '';
+
+/* ─────────────────────────────────────────
+   FETCH HELPER
+───────────────────────────────────────── */
+async function apiFetchJp(url, options) {
+    options = options || {};
+    var headers = options.headers || {};
+    headers['X-CSRF-TOKEN'] = CSRF_TOKEN_JP;
+    headers['Accept']       = 'application/json';
+    if (options.body && typeof options.body === 'object') {
+        headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(options.body);
+    }
+    options.headers = headers;
+    try {
+        var res = await fetch(url, options);
+        return await res.json();
+    } catch (err) {
+        console.error('[apiFetchJp]', url, err);
+        return { status: 'error', message: 'Terjadi kesalahan jaringan.' };
+    }
+}
+
+/* ─────────────────────────────────────────
+   STATE
+───────────────────────────────────────── */
+var _jpAll     = [];
+var _editJpId  = null;
+var _hapusJpId = null;
+
+var KAT_META = {
+    'Verbal':     { bg:'#fdf4ff', c:'#7c3aed', label:'Bullying Verbal',
+        icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
+    'Non-Verbal': { bg:'#fef2f2', c:'#dc2626', label:'Bullying Non-Verbal',
+        icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' }
 };
 
-const KAT_META = {
-    'Verbal':     { bg:'#fdf4ff', c:'#7c3aed', label:'Bullying Verbal',     icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
-    'Non-Verbal': { bg:'#fef2f2', c:'#dc2626', label:'Bullying Non-Verbal', icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' },
-};
+var SVG_EDIT   = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+var SVG_DELETE = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
 
-let _editJpId = null, _hapusJpId = null;
+/* ─────────────────────────────────────────
+   VALIDASI INLINE — Jenis Pelanggaran
+   (Deskripsi dikecualikan karena opsional)
+───────────────────────────────────────── */
+function jpSetError(fieldId, message) {
+    var field = document.getElementById(fieldId);
+    if (!field) return;
+    field.classList.add('sm-input-error');
 
+    var errId = fieldId + '_err';
+    var errEl = document.getElementById(errId);
+    if (!errEl) {
+        errEl           = document.createElement('span');
+        errEl.id        = errId;
+        errEl.className = 'sm-field-error';
+        field.parentNode.appendChild(errEl);
+    }
+    errEl.textContent   = message;
+    errEl.style.display = 'flex';
+}
+
+function jpClearError(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (field) field.classList.remove('sm-input-error');
+    var errEl = document.getElementById(fieldId + '_err');
+    if (errEl) errEl.style.display = 'none';
+}
+
+function jpClearAllErrors() {
+    ['jpNama', 'jpKategori'].forEach(function(id) { jpClearError(id); });
+}
+
+function jpValidateAll() {
+    jpClearAllErrors();
+    var valid = true;
+
+    var nama     = (document.getElementById('jpNama').value     || '').trim();
+    var kategori = (document.getElementById('jpKategori').value || '').trim();
+
+    // ── Nama: wajib, minimal 3 karakter ──
+    if (!nama) {
+        jpSetError('jpNama', 'Nama pelanggaran wajib diisi.');
+        valid = false;
+    } else if (nama.length < 3) {
+        jpSetError('jpNama', 'Nama pelanggaran minimal 3 karakter.');
+        valid = false;
+    }
+
+    // ── Kategori: wajib dipilih ──
+    if (!kategori) {
+        jpSetError('jpKategori', 'Kategori wajib dipilih.');
+        valid = false;
+    }
+
+    return valid;
+}
+
+/* ─────────────────────────────────────────
+   LOAD FROM DB
+───────────────────────────────────────── */
+async function loadJp() {
+    var res = await apiFetchJp(API_JP_LIST);
+    _jpAll  = Array.isArray(res) ? res : [];
+    renderContent();
+}
+
+/* ─────────────────────────────────────────
+   RENDER
+───────────────────────────────────────── */
 function renderContent() {
-    const q   = (document.getElementById('searchInput')?.value  || '').toLowerCase();
-    const kf  = (document.getElementById('filterKategori')?.value || '');
-    const content = document.getElementById('jpContent');
-    const noRes   = document.getElementById('noResults');
+    var q       = (document.getElementById('searchInput').value || '').toLowerCase();
+    var kf      = document.getElementById('filterKategori').value || '';
+    var content = document.getElementById('jpContent');
+    var noRes   = document.getElementById('noResults');
 
-    const filtered = Object.entries(JP_DATA).filter(([, d]) =>
-        (!q  || d.nama.toLowerCase().includes(q) || d.deskripsi.toLowerCase().includes(q)) &&
-        (!kf || d.kategori === kf)
-    );
+    var filtered = _jpAll.filter(function(d) {
+        return (!q  || d.name.toLowerCase().indexOf(q) !== -1 || (d.description || '').toLowerCase().indexOf(q) !== -1) &&
+               (!kf || d.category === kf);
+    });
 
-    if (!filtered.length) { content.innerHTML = ''; noRes.classList.remove('hidden'); return; }
+    if (!filtered.length) { content.innerHTML = ''; noRes.classList.remove('hidden'); updateStats(); return; }
     noRes.classList.add('hidden');
 
-    const groups = {};
-    filtered.forEach(([id, d]) => { if (!groups[d.kategori]) groups[d.kategori] = []; groups[d.kategori].push([id, d]); });
+    var groups = {};
+    filtered.forEach(function(d) {
+        if (!groups[d.category]) groups[d.category] = [];
+        groups[d.category].push(d);
+    });
 
-    content.innerHTML = ['Verbal', 'Non-Verbal'].filter(k => groups[k]).map(kat => {
-        const km    = KAT_META[kat];
-        const cards = groups[kat].map(([id, d], i) => `
-            <div class="jp-card ${kat}" style="animation-delay:${i * .05}s">
-                <div class="jp-card-top">
-                    <div class="jp-card-top-row">
-                        <div style="display:flex;align-items:center;gap:10px">
-                            <div class="jp-card-icon-wrap" style="background:${km.bg}">${km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"')}</div>
-                            <div><div class="jp-card-name">${d.nama}</div><span class="jp-card-kat ${kat}">${km.label}</span></div>
-                        </div>
-                        <div class="jp-card-actions">
-                            <button class="btn-aksi edit" onclick="openJpModal('${id}')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-                            <button class="btn-aksi delete" onclick="openHapusJp('${id}')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="jp-card-body">
-                    <p class="jp-card-desc">${d.deskripsi}</p>
-                    ${d.contoh ? `<div class="jp-card-contoh"><strong>Contoh Perilaku</strong>${d.contoh}</div>` : ''}
-                    <div class="jp-card-footer">
-                        <span class="jp-urgensi-badge ${d.urgensi}">${ucfirst(d.urgensi)}</span>
-                        <span class="jp-kasus-count">${d.kasus}x kasus</span>
-                        <span class="jp-status-dot ${d.status}">${d.status === 'aktif' ? 'Aktif' : 'Nonaktif'}</span>
-                    </div>
-                </div>
-            </div>`).join('');
+    content.innerHTML = ['Verbal', 'Non-Verbal'].filter(function(k) { return groups[k]; }).map(function(kat) {
+        var km           = KAT_META[kat];
+        var iconColored  = km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"');
 
-        return `<div class="jp-group">
-            <div class="jp-group-header">
-                <span class="jp-group-badge ${kat}">${km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"')} ${km.label}</span>
-                <div class="jp-group-line"></div>
-                <span class="jp-group-count">${groups[kat].length} jenis</span>
-            </div>
-            <div class="jp-grid">${cards}</div>
-        </div>`;
+        var cards = groups[kat].map(function(d, i) {
+            var namaSafe = (d.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return '<div class="jp-card ' + kat + '" style="animation-delay:' + (i * 0.05) + 's">' +
+                '<div class="jp-card-top">' +
+                    '<div class="jp-card-top-row">' +
+                        '<div style="display:flex;align-items:center;gap:10px">' +
+                            '<div class="jp-card-icon-wrap" style="background:' + km.bg + '">' + iconColored + '</div>' +
+                            '<div>' +
+                                '<div class="jp-card-name">' + d.name + '</div>' +
+                                '<span class="jp-card-kat ' + kat + '">' + km.label + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="jp-card-actions">' +
+                            '<button class="btn-aksi edit" onclick="openJpModal(' + d.id + ')">' + SVG_EDIT + '</button>' +
+                            '<button class="btn-aksi delete" onclick="openHapusJp(' + d.id + ', \'' + namaSafe + '\')">' + SVG_DELETE + '</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="jp-card-body">' +
+                    '<p class="jp-card-desc">' + (d.description || '<em style="color:#d1d5db">Tidak ada deskripsi</em>') + '</p>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        return '<div class="jp-group">' +
+            '<div class="jp-group-header">' +
+                '<span class="jp-group-badge ' + kat + '">' + iconColored + ' ' + km.label + '</span>' +
+                '<div class="jp-group-line"></div>' +
+                '<span class="jp-group-count">' + groups[kat].length + ' jenis</span>' +
+            '</div>' +
+            '<div class="jp-grid">' + cards + '</div>' +
+        '</div>';
     }).join('');
 
-    const all = Object.values(JP_DATA);
-    document.getElementById('statTotal').textContent      = all.length;
-    document.getElementById('statVerbal').textContent     = all.filter(d => d.kategori === 'Verbal').length;
-    document.getElementById('statNonVerbal').textContent  = all.filter(d => d.kategori === 'Non-Verbal').length;
-    document.getElementById('statTotalKasus').textContent = all.reduce((s, d) => s + d.kasus, 0);
+    updateStats();
 }
 
+function updateStats() {
+    document.getElementById('statTotal').textContent     = _jpAll.length;
+    document.getElementById('statVerbal').textContent    = _jpAll.filter(function(d) { return d.category === 'Verbal'; }).length;
+    document.getElementById('statNonVerbal').textContent = _jpAll.filter(function(d) { return d.category === 'Non-Verbal'; }).length;
+}
+
+/* ─────────────────────────────────────────
+   MODAL WARNA
+───────────────────────────────────────── */
 function updateModalColor() {
-    const kat = document.getElementById('jpKategori').value;
-    const h   = document.getElementById('jpModalHeaderBar');
-    const b   = document.getElementById('jpBtnSave');
-    if (kat === 'Non-Verbal') { h.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)'; b.style.background = '#dc2626'; }
-    else                      { h.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)'; b.style.background = '#7c3aed'; }
+    var kat = document.getElementById('jpKategori').value;
+    var h   = document.getElementById('jpModalHeaderBar');
+    var b   = document.getElementById('jpBtnSave');
+    if (kat === 'Non-Verbal') {
+        h.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)';
+        b.style.background = '#dc2626';
+    } else {
+        h.style.background = 'linear-gradient(135deg,#7c3aed,#5b21b6)';
+        b.style.background = '#7c3aed';
+    }
 }
 
-function openJpModal(id = null) {
+/* ─────────────────────────────────────────
+   MODAL TAMBAH / EDIT
+───────────────────────────────────────── */
+function openJpModal(id) {
+    id = id || null;
     _editJpId = id;
     document.getElementById('jpModalTitle').textContent = id ? 'Edit Jenis Pelanggaran' : 'Tambah Jenis Pelanggaran';
+
+    // Bersihkan semua error setiap kali modal dibuka
+    jpClearAllErrors();
+
     if (id) {
-        const d = JP_DATA[id];
-        document.getElementById('jpNama').value      = d.nama;
-        document.getElementById('jpKategori').value  = d.kategori;
-        document.getElementById('jpUrgensi').value   = d.urgensi;
-        document.getElementById('jpStatus').value    = d.status;
-        document.getElementById('jpDeskripsi').value = d.deskripsi;
-        document.getElementById('jpContoh').value    = d.contoh;
+        var d = _jpAll.find(function(x) { return x.id == id; });
+        if (d) {
+            document.getElementById('jpNama').value      = d.name;
+            document.getElementById('jpKategori').value  = d.category;
+            document.getElementById('jpDeskripsi').value = d.description || '';
+        }
     } else {
-        ['jpNama', 'jpDeskripsi', 'jpContoh'].forEach(i => document.getElementById(i).value = '');
-        document.getElementById('jpKategori').value = '';
-        document.getElementById('jpUrgensi').value  = 'sedang';
-        document.getElementById('jpStatus').value   = 'aktif';
+        document.getElementById('jpNama').value      = '';
+        document.getElementById('jpKategori').value  = '';
+        document.getElementById('jpDeskripsi').value = '';
     }
     updateModalColor();
     mdOpenOverlay('modalJp');
 }
-function closeJpModal()  { mdCloseOverlay('modalJp'); }
 
-function saveJp() {
-    const nama     = document.getElementById('jpNama').value.trim();
-    const kategori = document.getElementById('jpKategori').value;
-    if (!nama || !kategori) { alert('Nama dan Kategori wajib diisi.'); return; }
-    const data = { nama, kategori, urgensi: document.getElementById('jpUrgensi').value, status: document.getElementById('jpStatus').value, deskripsi: document.getElementById('jpDeskripsi').value.trim(), contoh: document.getElementById('jpContoh').value.trim(), kasus: 0 };
-    if (_editJpId) { Object.assign(JP_DATA[_editJpId], data); }
-    else { JP_DATA['jp' + (Object.keys(JP_DATA).length + 1)] = data; }
-    closeJpModal(); renderContent();
-    if (typeof Toast !== 'undefined') Toast.show('success', 'Berhasil', _editJpId ? 'Data diperbarui.' : 'Jenis pelanggaran ditambahkan.');
+function closeJpModal() {
+    // Bersihkan error saat modal ditutup
+    jpClearAllErrors();
+    mdCloseOverlay('modalJp');
 }
 
-function openHapusJp(id) { _hapusJpId = id; document.getElementById('hapusJpNama').textContent = JP_DATA[id]?.nama || id; mdOpenOverlay('modalHapusJp'); }
-function closeHapusJp()  { mdCloseOverlay('modalHapusJp'); }
-function doHapusJp()     { if (!_hapusJpId) return; delete JP_DATA[_hapusJpId]; closeHapusJp(); renderContent(); if (typeof Toast !== 'undefined') Toast.show('success', 'Dihapus', 'Jenis pelanggaran dihapus.'); }
+async function saveJp() {
+    // Validasi client-side dulu — jika ada error, hentikan dan scroll ke field bermasalah
+    if (!jpValidateAll()) {
+        var firstErr = document.querySelector('.sm-input-error');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
 
-document.getElementById('searchInput')?.addEventListener('input', renderContent);
-document.getElementById('filterKategori')?.addEventListener('change', renderContent);
-document.getElementById('modalJp').addEventListener('click', function (e) { if (e.target === this) closeJpModal(); });
-document.getElementById('modalHapusJp').addEventListener('click', function (e) { if (e.target === this) closeHapusJp(); });
-document.addEventListener('DOMContentLoaded', () => renderContent());
+    var btn = document.getElementById('jpBtnSave');
+    btn.classList.add('btn-loading');
+    btn.textContent = 'Menyimpan...';
+
+    var res = await apiFetchJp(API_JP_SAVE, {
+        method : 'POST',
+        body   : {
+            id          : _editJpId || null,
+            name        : document.getElementById('jpNama').value.trim(),
+            category    : document.getElementById('jpKategori').value,
+            description : document.getElementById('jpDeskripsi').value.trim()
+        }
+    });
+
+    btn.classList.remove('btn-loading');
+    btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Simpan';
+
+    if (res.status === 'success') {
+        closeJpModal();
+        await loadJp();
+        if (typeof Toast !== 'undefined') Toast.show('success', 'Berhasil', _editJpId ? 'Data diperbarui.' : 'Jenis pelanggaran ditambahkan.');
+    } else {
+        // Tampilkan error validasi dari server (Laravel) secara inline per field
+        if (res.errors) {
+            var fieldMap = { name: 'jpNama', category: 'jpKategori' };
+            Object.keys(res.errors).forEach(function(key) {
+                var htmlId = fieldMap[key];
+                if (htmlId) jpSetError(htmlId, res.errors[key][0]);
+            });
+            var firstErr = document.querySelector('.sm-input-error');
+            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            alert(res.message || 'Gagal menyimpan.');
+        }
+    }
+}
+
+/* ─────────────────────────────────────────
+   MODAL HAPUS
+───────────────────────────────────────── */
+function openHapusJp(id, nama) {
+    _hapusJpId = id;
+    document.getElementById('hapusJpNama').textContent = nama || id;
+    mdOpenOverlay('modalHapusJp');
+}
+
+function closeHapusJp() { mdCloseOverlay('modalHapusJp'); }
+
+async function doHapusJp() {
+    if (!_hapusJpId) return;
+    var btn = document.getElementById('btnDoHapusJp');
+    btn.classList.add('btn-loading');
+    btn.textContent = 'Menghapus...';
+
+    var res = await apiFetchJp(API_JP_DELETE + '/' + _hapusJpId, { method: 'DELETE' });
+
+    btn.classList.remove('btn-loading');
+    btn.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Ya, Hapus';
+
+    if (res.status === 'success') {
+        closeHapusJp();
+        await loadJp();
+        if (typeof Toast !== 'undefined') Toast.show('success', 'Dihapus', 'Jenis pelanggaran dihapus.');
+    } else {
+        alert(res.message || 'Gagal menghapus.');
+    }
+}
+
+/* ─────────────────────────────────────────
+   EVENT LISTENERS & INIT
+───────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', renderContent);
+document.getElementById('filterKategori').addEventListener('change', renderContent);
+document.getElementById('modalJp').addEventListener('click', function(e) { if (e.target === this) closeJpModal(); });
+document.getElementById('modalHapusJp').addEventListener('click', function(e) { if (e.target === this) closeHapusJp(); });
+
+// Listener realtime: error hilang otomatis saat user mengetik / memilih
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('jpNama').addEventListener('input', function() {
+        jpClearError('jpNama');
+    });
+    document.getElementById('jpKategori').addEventListener('change', function() {
+        jpClearError('jpKategori');
+        updateModalColor(); // tetap update warna header saat pilih kategori
+    });
+
+    loadJp();
+});
 </script>
 @endsection

@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/report-user-page.css') }}">
+@endpush
+
 @section('content')
 <div class="decorative-circle" style="top: 5%; left: 5%; width: 250px; height: 250px; background: #10b981;"></div>
 <div class="decorative-circle" style="bottom: 5%; right: 5%; width: 300px; height: 300px; background: #059669;"></div>
@@ -25,61 +30,89 @@
                     </p>
                 </div>
 
-                <form id="reportForm" class="space-y-5" novalidate>
+                <form id="reportForm" class="space-y-5" novalidate enctype="multipart/form-data">
+                    @csrf
+
+                    {{-- Hidden field untuk student_id --}}
+                    <input type="hidden" id="student_id" name="student_id" value="">
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                        {{-- NISN + tombol cari --}}
                         <div class="form-group">
                             <label for="nisn" class="form-label">
                                 <span class="text-gray-800 font-semibold text-sm">NISN</span>
                                 <span class="text-red-500 text-sm">*</span>
                             </label>
-                            <input 
-                                type="text" 
-                                id="nisn" 
-                                name="nisn" 
-                                class="form-input" 
-                                placeholder="Nomor Induk Siswa Nasional"
-                                required
-                                pattern="[0-9]*"
-                                maxlength="6"
-                                inputmode="numeric"
-                            >
+                            <div class="nisn-wrap">
+                                <input
+                                    type="text"
+                                    id="nisn"
+                                    name="nisn"
+                                    class="form-input nisn-input"
+                                    placeholder="Nomor Induk Siswa"
+                                    required
+                                    pattern="[0-9]*"
+                                    maxlength="6"
+                                    inputmode="numeric"
+                                >
+                                <button type="button" class="btn-cari-nisn" id="btnCariNisn" onclick="cariSiswa()" title="Cari siswa">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </button>
+                            </div>
                             <p id="nisn-error" class="text-xs text-red-600 mt-1.5 hidden"></p>
+
+                            {{-- Info siswa ditemukan --}}
+                            <div id="student-info" class="student-found hidden">
+                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-xs font-semibold text-emerald-800" id="student-name">-</p>
+                                    <p class="text-xs text-emerald-600" id="student-class">-</p>
+                                </div>
+                            </div>
                         </div>
-                        
+
+                        {{-- Email --}}
                         <div class="form-group">
                             <label for="email" class="form-label">
                                 <span class="text-gray-800 font-semibold text-sm">Email</span>
                                 <span class="text-red-500 text-sm">*</span>
                             </label>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                name="email" 
-                                class="form-input" 
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-input"
                                 placeholder="emailanda@example.com"
                                 required
                             >
                             <p id="email-error" class="text-xs text-red-600 mt-1.5 hidden"></p>
+                            <p id="email-hint" class="text-xs text-gray-400 mt-1 hidden">Email diisi otomatis dari data siswa. Ubah jika perlu.</p>
                         </div>
                     </div>
 
+                    {{-- Deskripsi --}}
                     <div class="form-group">
                         <label for="deskripsi" class="form-label">
                             <span class="text-gray-800 font-semibold text-sm">Deskripsi Kejadian</span>
                             <span class="text-red-500 text-sm">*</span>
                         </label>
-                        <textarea 
-                            id="deskripsi" 
-                            name="deskripsi" 
-                            rows="5" 
-                            class="form-input resize-none" 
+                        <textarea
+                            id="deskripsi"
+                            name="deskripsi"
+                            rows="5"
+                            class="form-input resize-none"
                             placeholder="Ceritakan kejadian yang anda alami dengan detail..."
                             required
                             minlength="20"
                         ></textarea>
                         <div class="flex justify-between items-center mt-1.5">
                             <p id="deskripsi-error" class="text-xs text-red-600 hidden"></p>
-                            <p class="text-xs text-gray-500">Minimal 20 karakter</p>
+                            <p class="text-xs text-gray-500 ml-auto">Minimal 20 karakter</p>
                         </div>
                     </div>
 
@@ -100,8 +133,8 @@
                     </div>
 
                     <div class="pt-2">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             class="btn-submit w-full"
                             id="submitBtn"
                         >
@@ -113,12 +146,29 @@
                     </div>
                 </form>
             </div>
-            
+
         </div>
     </div>
 </main>
 
 @include('components.modal-success')
+
+{{-- Modal: NISN tidak ditemukan --}}
+<div id="modalNisnNotFound" class="modal-overlay hidden" onclick="closeNisnModal(event)">
+    <div class="modal-box-sm">
+        <div class="modal-icon-wrap" style="background:#fef2f2">
+            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <h3 class="modal-box-title">NISN Tidak Ditemukan</h3>
+        <p class="modal-box-desc" id="nisnNotFoundMsg">NISN tidak ditemukan dalam database. Periksa kembali atau hubungi wali kelas Anda.</p>
+        <button class="btn-modal-close" onclick="document.getElementById('modalNisnNotFound').classList.add('hidden')">
+            Tutup
+        </button>
+    </div>
+</div>
+
 @include('components.footer')
 
 <script src="{{ asset('js/report-user-page.js') }}"></script>

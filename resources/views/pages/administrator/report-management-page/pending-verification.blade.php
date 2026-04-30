@@ -73,23 +73,37 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/master-admin-page.css') }}">
     <link rel="stylesheet" href="{{ asset('css/report-admin-page.css') }}">
 @endpush
 
 @push('scripts')
     <script src="{{ asset('js/report-admin-page.js') }}"></script>
     <script>
-    const LAPORAN_DATA = {
-        'row-1': { kode:'KRF-280226-T1U2', nama:'Siti Nurhaliza',  nis:'10234', kelas:'X AKL-1',   urgensi:'tinggi', email:'siti.n@student.smkm3.sch.id',  tanggal:'28 Feb 2026', tempat:'Belakang Lapangan', pelaku:'Siswa Kelas XI (anonim)', korban:'Siti Nurhaliza',  saksi:'Tidak ada',       deskripsi:'Saya mendapat perlakuan tidak menyenangkan dari sekelompok siswa kelas XI yang sering menghalangi jalan saya.' },
-        'row-2': { kode:'KRF-270226-V3W4', nama:'Budi Santoso',    nis:'11456', kelas:'XI TKJ-1',  urgensi:'sedang', email:'budi.s@student.smkm3.sch.id',   tanggal:'27 Feb 2026', tempat:'Kelas XI TKJ-1',   pelaku:'Rekan Sekelas',           korban:'Budi Santoso',   saksi:'3 teman sekelas', deskripsi:'Ada teman sekelas yang sering menyebarkan rumor tidak benar tentang saya.' },
-        'row-3': { kode:'KRF-260226-X5Y6', nama:'Dewi Rahayu',     nis:'12678', kelas:'XII MM-2',  urgensi:'rendah', email:'dewi.r@student.smkm3.sch.id',   tanggal:'26 Feb 2026', tempat:'Ruang Kelas',       pelaku:'Teman Sekelas',           korban:'Dewi Rahayu',    saksi:'Tidak ada',       deskripsi:'Beberapa teman sering mencoret-coret buku dan peralatan sekolah milik saya.' },
-        'row-4': { kode:'KRF-250226-Y7Z8', nama:'Andi Saputra',    nis:'10345', kelas:'X RPL-1',   urgensi:'tinggi', email:'andi.s@student.smkm3.sch.id',   tanggal:'25 Feb 2026', tempat:'Kantin',            pelaku:'Kakak Kelas',             korban:'Andi Saputra',   saksi:'Penjaga Kantin',  deskripsi:'Saya dipaksa memberikan sebagian uang jajan setiap hari dengan ancaman kekerasan.' },
-        'row-5': { kode:'KRF-240226-A2B3', nama:'Fitri Handayani', nis:'11567', kelas:'XI MM-2',   urgensi:'sedang', email:'fitri.h@student.smkm3.sch.id',  tanggal:'24 Feb 2026', tempat:'Lorong Kelas',      pelaku:'Teman Sekelas',           korban:'Fitri Handayani',saksi:'2 teman',         deskripsi:'Saya sering dijahili dengan cara menyembunyikan tas dan buku saya.' },
-        'row-6': { kode:'KRF-230226-C4D5', nama:'Reza Firmansyah', nis:'12789', kelas:'XII TKJ-1', urgensi:'rendah', email:'reza.f@student.smkm3.sch.id',   tanggal:'23 Feb 2026', tempat:'Ruang Komputer',    pelaku:'Teman Sekelas',           korban:'Reza Firmansyah',saksi:'Guru Piket',      deskripsi:'Hasil tugas saya diklaim sebagai milik teman lain dan diserahkan ke guru.' },
-        'row-7': { kode:'KRF-220226-E6F7', nama:'Lina Marlina',    nis:'10456', kelas:'X MM-1',    urgensi:'tinggi', email:'lina.m@student.smkm3.sch.id',   tanggal:'22 Feb 2026', tempat:'Toilet Sekolah',    pelaku:'Siswa Kelas XI',          korban:'Lina Marlina',   saksi:'Tidak ada',       deskripsi:'Saya diancam dan dipaksa mengerjakan PR teman di toilet sekolah.' },
-        'row-8': { kode:'KRF-210226-G8H9', nama:'Doni Pratama',    nis:'11678', kelas:'XI AKL-1',  urgensi:'sedang', email:'doni.p@student.smkm3.sch.id',   tanggal:'21 Feb 2026', tempat:'Kelas XI AKL-1',   pelaku:'Beberapa teman',          korban:'Doni Pratama',   saksi:'Wali Kelas',      deskripsi:'Nama saya sering dijadikan bahan lelucon di depan kelas secara berulang-ulang.' },
-    };
+    let LAPORAN_DATA = {}; 
+    let _allRows = [];
+    let _filteredRows = [];
+    let _currentPage = 1;
+    const PER_PAGE = 10;
+
+    // FUNGSI AMBIL DATA DARI DB
+    async function loadRealData() {
+        const infoEl = document.getElementById('tableInfo');
+        if (infoEl) infoEl.textContent = "Memuat data...";
+
+        try {
+            const res = await fetchAdminJson('/api/admin/reports?status=menunggu');
+
+            if (res.success) {
+                LAPORAN_DATA = res.data;
+                _allRows = Object.keys(LAPORAN_DATA);
+                _filteredRows = [..._allRows];
+                renderTable();
+            }
+        } catch (error) {
+            console.error("Gagal load data:", error);
+        }
+    }
 
     const AVATAR_COLORS = [
         {bg:'#fee2e2',color:'#ef4444'},{bg:'#fef9c3',color:'#ca8a04'},
@@ -98,15 +112,10 @@
     ];
     function avatarColor(i) { return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
 
-    const PER_PAGE = 10;
-    let _allRows      = Object.keys(LAPORAN_DATA);
-    let _filteredRows = [..._allRows];
-    let _currentPage  = 1;
-
     function renderTable() {
-        const tbody    = document.getElementById('tableBody');
-        const noRes    = document.getElementById('noResults');
-        const start    = (_currentPage - 1) * PER_PAGE;
+        const tbody = document.getElementById('tableBody');
+        const noRes = document.getElementById('noResults');
+        const start = (_currentPage - 1) * PER_PAGE;
         const pageRows = _filteredRows.slice(start, start + PER_PAGE);
 
         if (_filteredRows.length === 0) {
@@ -115,7 +124,7 @@
             noRes.classList.add('hidden');
             tbody.innerHTML = pageRows.map((rowId, idx) => {
                 const d = LAPORAN_DATA[rowId], av = avatarColor(idx);
-                return `<tr class="table-row" id="${rowId}" data-urgensi="${d.urgensi}">
+                return `<tr class="table-row animate-fade-in" id="${rowId}">
                     <td class="col-no">${start + idx + 1}</td>
                     <td><span class="kode-badge">${d.kode}</span></td>
                     <td><div class="pelapor-cell"><div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div><span>${d.nama}</span></div></td>
@@ -123,14 +132,18 @@
                     <td><span class="kelas-tag">${d.kelas}</span></td>
                     <td><span class="urgensi-badge ${d.urgensi}">${ucfirst(d.urgensi)}</span></td>
                     <td><span class="status-badge verifikasi">Menunggu Verifikasi</span></td>
-                    <td class="col-aksi"><div class="aksi-wrap">
-                        <button class="btn-aksi view" title="Lihat Detail" onclick="showDetail('${rowId}','menunggu-verifikasi')">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        </button>
-                        <button class="btn-aksi verify" title="Proses Laporan" onclick="handleQuickAction('proses','${rowId}')">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        </button>
-                    </div></td>
+                    <td class="col-aksi">
+                        <div class="aksi-wrap" style="display: flex; gap: 8px;">
+                            <button class="btn-aksi view" title="Lihat Detail" onclick="showDetail('${rowId}','menunggu-verifikasi')" 
+                                style="background: #eff6ff; color: #2563eb; border-radius: 12px; padding: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </button>
+                            <button class="btn-aksi reminder" title="Kirim Reminder" onclick="handleQuickAction('reminder','${rowId}')"
+                                style="background: #fffbeb; color: #d97706; border-radius: 12px; padding: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -171,6 +184,6 @@
         triggerKonfirmasi(action);
     }
 
-    document.addEventListener('DOMContentLoaded', () => renderTable());
-    </script>
-@endpush
+    // LOAD DATA SAAT BUKA HALAMAN
+    document.addEventListener('DOMContentLoaded', () => loadRealData());
+</script>

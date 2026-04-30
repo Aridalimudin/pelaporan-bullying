@@ -73,21 +73,36 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/master-admin-page.css') }}">
     <link rel="stylesheet" href="{{ asset('css/report-admin-page.css') }}">
 @endpush
 
 @push('scripts')
     <script src="{{ asset('js/report-admin-page.js') }}"></script>
     <script>
-    const LAPORAN_DATA = {
-        'row-1': { kode:'KRF-250226-P1Q2', nama:'Anisa Putri',    nis:'10567', kelas:'X MM-3',   urgensi:'tinggi', email:'anisa.p@student.smkm3.sch.id',  tanggal:'25 Feb 2026', tempat:'Kantin Sekolah',   pelaku:'Siswa Kelas XII',        korban:'Anisa Putri',    saksi:'Penjaga Kantin',  deskripsi:'Saya dipaksa memberikan uang jajan saya setiap hari oleh kakak kelas.' },
-        'row-2': { kode:'KRF-240226-R3S4', nama:'Muhammad Rizki', nis:'11789', kelas:'XI RPL-2',  urgensi:'sedang', email:'m.rizki@student.smkm3.sch.id',   tanggal:'24 Feb 2026', tempat:'Kelas XI RPL-2',  pelaku:'Beberapa teman sekelas', korban:'Muhammad Rizki', saksi:'2 teman sekelas', deskripsi:'Saya sering diejek dan dipermalukan di depan teman-teman ketika pelajaran berlangsung.' },
-        'row-3': { kode:'KRF-230226-T5U6', nama:'Yoga Pratama',   nis:'12345', kelas:'XII AKL-2', urgensi:'rendah', email:'yoga.p@student.smkm3.sch.id',    tanggal:'23 Feb 2026', tempat:'Lorong Kelas',    pelaku:'Teman Sekelas',          korban:'Yoga Pratama',   saksi:'Tidak ada',       deskripsi:'Teman saya sering menggunakan nama saya untuk hal-hal yang tidak baik.' },
-        'row-4': { kode:'KRF-220226-U7V8', nama:'Hani Pertiwi',   nis:'10678', kelas:'X AKL-2',   urgensi:'tinggi', email:'hani.p@student.smkm3.sch.id',    tanggal:'22 Feb 2026', tempat:'Ruang Kelas',     pelaku:'Teman Sebangku',         korban:'Hani Pertiwi',   saksi:'Guru Mapel',      deskripsi:'Saya dipaksa memberikan jawaban ujian secara berulang kali dengan ancaman.' },
-        'row-5': { kode:'KRF-210226-W9X0', nama:'Fajar Setiawan', nis:'11890', kelas:'XI TKJ-2',  urgensi:'sedang', email:'fajar.s@student.smkm3.sch.id',   tanggal:'21 Feb 2026', tempat:'Parkiran Sekolah',pelaku:'Siswa Kelas XII',        korban:'Fajar Setiawan', saksi:'Tidak ada',       deskripsi:'Motor saya sering diganggu dan kunci helm hilang beberapa kali.' },
-        'row-6': { kode:'KRF-200226-Y1Z2', nama:'Novi Anggraini', nis:'12890', kelas:'XII RPL-2', urgensi:'rendah', email:'novi.a@student.smkm3.sch.id',    tanggal:'20 Feb 2026', tempat:'Perpustakaan',    pelaku:'Teman Sekelas',          korban:'Novi Anggraini', saksi:'Petugas Pustaka', deskripsi:'Buku-buku perpustakaan yang saya pinjam sering diambil paksa.' },
-    };
+    let LAPORAN_DATA = {};
+    let _allRows = [];
+    let _filteredRows = [];
+    let _currentPage = 1;
+    const PER_PAGE = 10;
+
+    async function loadRealData() {
+        const infoEl = document.getElementById('tableInfo');
+        if (infoEl) infoEl.textContent = "Memuat data...";
+
+        try {
+            const res = await fetchAdminJson('/api/admin/reports?status=diproses');
+
+            if (res.success) {
+                LAPORAN_DATA = res.data;
+                _allRows = Object.keys(LAPORAN_DATA);
+                _filteredRows = [..._allRows];
+                renderTable();
+            }
+        } catch (error) {
+            console.error("Gagal load data:", error);
+        }
+    }
 
     const AVATAR_COLORS = [
         {bg:'#fce7f3',color:'#db2777'},{bg:'#e0e7ff',color:'#4338ca'},
@@ -96,15 +111,10 @@
     ];
     function avatarColor(i) { return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
 
-    const PER_PAGE = 10;
-    let _allRows      = Object.keys(LAPORAN_DATA);
-    let _filteredRows = [..._allRows];
-    let _currentPage  = 1;
-
     function renderTable() {
-        const tbody    = document.getElementById('tableBody');
-        const noRes    = document.getElementById('noResults');
-        const start    = (_currentPage - 1) * PER_PAGE;
+        const tbody = document.getElementById('tableBody');
+        const noRes = document.getElementById('noResults');
+        const start = (_currentPage - 1) * PER_PAGE;
         const pageRows = _filteredRows.slice(start, start + PER_PAGE);
 
         if (_filteredRows.length === 0) {
@@ -113,22 +123,36 @@
             noRes.classList.add('hidden');
             tbody.innerHTML = pageRows.map((rowId, idx) => {
                 const d = LAPORAN_DATA[rowId], av = avatarColor(idx);
-                return `<tr class="table-row" id="${rowId}" data-urgensi="${d.urgensi}">
+                return `<tr class="table-row animate-fade-in" id="${rowId}">
                     <td class="col-no">${start + idx + 1}</td>
                     <td><span class="kode-badge">${d.kode}</span></td>
-                    <td><div class="pelapor-cell"><div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div><span>${d.nama}</span></div></td>
+                    <td><div class="pelapor-cell">
+                        <div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div>
+                        <span>${d.nama}</span>
+                    </div></td>
                     <td class="text-mono">${d.nis}</td>
                     <td><span class="kelas-tag">${d.kelas}</span></td>
                     <td><span class="urgensi-badge ${d.urgensi}">${ucfirst(d.urgensi)}</span></td>
                     <td><span class="status-badge proses">Sedang Diproses</span></td>
-                    <td class="col-aksi"><div class="aksi-wrap">
-                        <button class="btn-aksi view" title="Lihat Detail" onclick="showDetail('${rowId}','proses-laporan')">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        </button>
-                        <button class="btn-aksi done" title="Tandai Selesai" onclick="handleQuickAction('selesai','${rowId}')">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </button>
-                    </div></td>
+                    <td class="col-aksi">
+                        <div class="aksi-wrap" style="display:flex;gap:8px;">
+                            <button class="btn-aksi view" title="Lihat Detail"
+                                onclick="showDetail('${rowId}','proses-laporan')"
+                                style="background:#eff6ff;color:#2563eb;border-radius:12px;padding:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-aksi done" title="Isi Tindak Lanjut"
+                            onclick="showDetail('${rowId}','proses-laporan', true)"
+                                style="background:#f0fdf4;color:#16a34a;border-radius:12px;padding:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -147,7 +171,8 @@
         const u = (document.getElementById('filterUrgensi')?.value || '').toLowerCase();
         _filteredRows = _allRows.filter(id => {
             const d = LAPORAN_DATA[id];
-            return (!q || d.kode.toLowerCase().includes(q) || d.nama.toLowerCase().includes(q) || d.nis.includes(q)) && (!u || d.urgensi === u);
+            return (!q || d.kode.toLowerCase().includes(q) || d.nama.toLowerCase().includes(q) || d.nis.includes(q))
+                && (!u || d.urgensi === u);
         });
         _currentPage = 1; renderTable();
     }
@@ -155,10 +180,11 @@
     document.getElementById('searchInput')?.addEventListener('input', applyFilter);
     document.getElementById('filterUrgensi')?.addEventListener('change', applyFilter);
 
-    function showDetail(rowId, type) {
+    function showDetail(rowId, type, scrollToTindak = false) {
         const d = LAPORAN_DATA[rowId]; if (!d) return;
-        _currentRow = document.getElementById(rowId); _currentData = d;
-        openDetailModal(d, type, _currentRow);
+        _currentRow  = document.getElementById(rowId);
+        _currentData = d;
+        openDetailModal(d, type, _currentRow, scrollToTindak);
     }
 
     function handleQuickAction(action, rowId) {
@@ -169,6 +195,6 @@
         triggerKonfirmasi(action);
     }
 
-    document.addEventListener('DOMContentLoaded', () => renderTable());
+    document.addEventListener('DOMContentLoaded', () => loadRealData());
     </script>
 @endpush

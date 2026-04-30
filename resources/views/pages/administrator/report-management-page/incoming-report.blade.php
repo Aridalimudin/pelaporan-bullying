@@ -73,27 +73,39 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/master-admin-page.css') }}">
     <link rel="stylesheet" href="{{ asset('css/report-admin-page.css') }}">
 @endpush
 
 @push('scripts')
     <script src="{{ asset('js/report-admin-page.js') }}"></script>
     <script>
-    const LAPORAN_DATA = {
-        'row-1':  { kode:'KRF-040326-X9A1', nama:'Keonho',          nis:'12345', kelas:'XI MM-1',    urgensi:'sedang', email:'keonho@student.smkm3.sch.id',    deskripsi:'Saya mengalami perundungan secara verbal oleh beberapa teman sekelas.' },
-        'row-2':  { kode:'KRF-030326-B2C4', nama:'Rina Marlina',    nis:'11089', kelas:'X TKJ-2',    urgensi:'tinggi', email:'rina.m@student.smkm3.sch.id',     deskripsi:'Saya menerima pesan ancaman melalui media sosial dari kakak kelas.' },
-        'row-3':  { kode:'KRF-020326-D5E7', nama:'Fahri Ramadan',   nis:'12901', kelas:'XII RPL-1',  urgensi:'rendah', email:'fahri.r@student.smkm3.sch.id',    deskripsi:'Ada beberapa teman yang sering mengambil alat tulis saya tanpa izin.' },
-        'row-4':  { kode:'KRF-010326-G8H2', nama:'Siti Rahayu',     nis:'13201', kelas:'X AKL-1',    urgensi:'tinggi', email:'siti.r@student.smkm3.sch.id',     deskripsi:'Saya dipaksa memberikan jawaban ulangan oleh teman sebangku.' },
-        'row-5':  { kode:'KRF-280226-K1L9', nama:'Bagas Pratama',   nis:'11450', kelas:'XI TKJ-1',   urgensi:'sedang', email:'bagas.p@student.smkm3.sch.id',    deskripsi:'Sering diejek karena penampilan fisik saya oleh sekelompok siswa.' },
-        'row-6':  { kode:'KRF-270226-M3N7', nama:'Dewi Kusuma',     nis:'12670', kelas:'XII MM-2',   urgensi:'rendah', email:'dewi.k@student.smkm3.sch.id',     deskripsi:'Teman saya menyebarkan foto saya tanpa izin ke grup kelas.' },
-        'row-7':  { kode:'KRF-260226-P5Q3', nama:'Arif Hidayat',    nis:'11980', kelas:'X RPL-2',    urgensi:'tinggi', email:'arif.h@student.smkm3.sch.id',     deskripsi:'Saya dipukul oleh kakak kelas saat jam istirahat di depan kantin.' },
-        'row-8':  { kode:'KRF-250226-R2S6', nama:'Nurul Aini',      nis:'13450', kelas:'XI AKL-2',   urgensi:'sedang', email:'nurul.a@student.smkm3.sch.id',    deskripsi:'Ada teman yang terus menggangu saya ketika sedang belajar.' },
-        'row-9':  { kode:'KRF-240226-T8U1', nama:'Rizky Firmansyah',nis:'12100', kelas:'XII TKJ-1',  urgensi:'rendah', email:'rizky.f@student.smkm3.sch.id',    deskripsi:'Saya dikucilkan dari kelompok teman karena menolak ikut membolos.' },
-        'row-10': { kode:'KRF-230226-V4W9', nama:'Anggi Permata',   nis:'11230', kelas:'X MM-2',     urgensi:'sedang', email:'anggi.p@student.smkm3.sch.id',    deskripsi:'Seseorang memposting status berisi hinaan tentang saya di media sosial.' },
-        'row-11': { kode:'KRF-220226-X6Y2', nama:'Dimas Saputra',   nis:'13670', kelas:'XI RPL-1',   urgensi:'tinggi', email:'dimas.s@student.smkm3.sch.id',    deskripsi:'Saya mendapat ancaman dari sekelompok siswa yang meminta uang setiap minggu.' },
-        'row-12': { kode:'KRF-210226-Z0A5', nama:'Putri Handayani', nis:'12340', kelas:'XII AKL-1',  urgensi:'rendah', email:'putri.h@student.smkm3.sch.id',    deskripsi:'Tas saya sering disembunyikan oleh teman sekelas.' },
-    };
+    // Variabel Global
+    let LAPORAN_DATA = {}; 
+    let _allRows = [];
+    let _filteredRows = [];
+    let _currentPage = 1;
+    const PER_PAGE = 10;
+
+    // FUNGSI UTAMA: Ambil Data dari Database
+    async function loadRealData() {
+        const infoEl = document.getElementById('tableInfo');
+        if (infoEl) infoEl.textContent = "Memuat data dari database...";
+
+        try {
+            const res = await fetchAdminJson('/api/admin/reports?status=masuk');
+
+            if (res.success) {
+                LAPORAN_DATA = res.data;
+                _allRows = Object.keys(LAPORAN_DATA);
+                _filteredRows = [..._allRows];
+                renderTable(); // Gambar tabel
+            }
+        } catch (error) {
+            console.error("Gagal memuat data:", error);
+            if (infoEl) infoEl.textContent = "Gagal mengambil data dari server.";
+        }
+    }
 
     const AVATAR_COLORS = [
         {bg:'#dcfce7',color:'#15803d'},{bg:'#fee2e2',color:'#ef4444'},
@@ -102,15 +114,10 @@
     ];
     function avatarColor(i) { return AVATAR_COLORS[i % AVATAR_COLORS.length]; }
 
-    const PER_PAGE = 10;
-    let _allRows      = Object.keys(LAPORAN_DATA);
-    let _filteredRows = [..._allRows];
-    let _currentPage  = 1;
-
     function renderTable() {
-        const tbody    = document.getElementById('tableBody');
-        const noRes    = document.getElementById('noResults');
-        const start    = (_currentPage - 1) * PER_PAGE;
+        const tbody = document.getElementById('tableBody');
+        const noRes = document.getElementById('noResults');
+        const start = (_currentPage - 1) * PER_PAGE;
         const pageRows = _filteredRows.slice(start, start + PER_PAGE);
 
         if (_filteredRows.length === 0) {
@@ -119,7 +126,7 @@
             noRes.classList.add('hidden');
             tbody.innerHTML = pageRows.map((rowId, idx) => {
                 const d = LAPORAN_DATA[rowId], av = avatarColor(idx);
-                return `<tr class="table-row" id="${rowId}" data-urgensi="${d.urgensi}">
+                return `<tr class="table-row animate-fade-in" id="${rowId}" data-urgensi="${d.urgensi}">
                     <td class="col-no">${start + idx + 1}</td>
                     <td><span class="kode-badge">${d.kode}</span></td>
                     <td><div class="pelapor-cell"><div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div><span>${d.nama}</span></div></td>
@@ -175,6 +182,7 @@
         triggerKonfirmasi(action);
     }
 
-    document.addEventListener('DOMContentLoaded', () => renderTable());
+    // Jalankan saat halaman siap
+    document.addEventListener('DOMContentLoaded', () => loadRealData());
     </script>
 @endpush

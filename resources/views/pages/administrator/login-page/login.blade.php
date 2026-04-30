@@ -80,15 +80,12 @@
                 <h1 class="welcome-title">Selamat <em>Datang</em></h1>
                 <p class="welcome-sub">Masuk untuk mengelola laporan bullying siswa.</p>
 
-                <div class="hint-box">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>Demo: username <strong>admin</strong> · password <strong>admin123</strong></span>
-                </div>
+                <form id="loginForm" novalidate autocomplete="off">
 
-                <form id="loginForm" novalidate>
+                    {{-- Field honeypot tersembunyi untuk mencegah autofill browser --}}
+                    <input type="text" name="fake_user" style="display:none" tabindex="-1" autocomplete="off">
+                    <input type="password" name="fake_pass" style="display:none" tabindex="-1" autocomplete="off">
+
                     <div class="form-group">
                         <label class="form-label" for="username">Username / Email</label>
                         <div class="input-wrap">
@@ -98,10 +95,10 @@
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
                             </span>
-                            <input class="form-input" type="text" id="username"
-                                placeholder="Masukkan username" autocomplete="username">
+                            <input class="form-input" type="text" id="username" name="username"
+                                placeholder="Masukkan username" autocomplete="new-password">
                         </div>
-                        <p class="error-msg" id="username-err">Username wajib diisi.</p>
+                        <p class="error-msg" id="username-err" style="display:none">Username wajib diisi.</p>
                     </div>
 
                     <div class="form-group">
@@ -113,8 +110,8 @@
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
                             </span>
-                            <input class="form-input" type="password" id="password"
-                                placeholder="Masukkan password" autocomplete="current-password">
+                            <input class="form-input" type="password" id="password" name="password"
+                                placeholder="Masukkan password" autocomplete="new-password">
                             <button type="button" class="toggle-pw" id="togglePw" aria-label="Toggle password">
                                 <svg id="eyeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -124,12 +121,11 @@
                                 </svg>
                             </button>
                         </div>
-                        <p class="error-msg" id="password-err">Password wajib diisi.</p>
+                        <p class="error-msg" id="password-err" style="display:none">Password wajib diisi.</p>
                     </div>
 
-                    <p class="error-msg" id="cred-err" style="margin-bottom:14px; font-size:.8rem;">
-                        Username atau password salah.
-                    </p>
+                    {{-- Error kredensial dari server, tersembunyi by default --}}
+                    <p class="error-msg" id="cred-err" style="display:none; margin-bottom:14px; font-size:.8rem;"></p>
 
                     <button type="submit" class="btn-masuk" id="btnMasuk">
                         <div class="spinner"></div>

@@ -99,14 +99,39 @@
                     Pengaturan
                 </a>
                 <div class="avatar-dropdown-divider"></div>
-                <form method="POST" action="#">
-                    @csrf
-                    <button type="submit" class="avatar-dropdown-item danger">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        Logout
-                    </button>
-                </form>
+                <button type="button" class="avatar-dropdown-item danger" onclick="doLogout()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Logout
+                </button>
             </div>
         </div>
     </div>
 </header>
+
+<script>
+async function doLogout() {
+    const logoutUrl = '{{ route("api.admin.logout") }}';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    if (!csrfToken) {
+        console.error('CSRF token not found for logout.');
+        window.location.href = '/login';
+        return;
+    }
+
+    const response = await fetch(logoutUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    });
+
+    if (!response.ok) {
+        console.error('Logout failed with status', response.status);
+    }
+
+    window.location.href = '/login';
+}
+</script>

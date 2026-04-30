@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Sekolah Aman - Stop Bullying' }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,11 +41,6 @@
             display: inline-block;
         }
     </style>
-
-    <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/report-user-page.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/track-user-page.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/contact-user-page.css') }}">
     
     @stack('styles')
 </head>

@@ -1,5 +1,10 @@
 @extends('layouts.app')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/contact-user-page.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
+@endpush
+
 @section('content')
 
 <div class="decorative-circle" style="top: 5%; left: 5%; width: 250px; height: 250px; background: #10b981;"></div>

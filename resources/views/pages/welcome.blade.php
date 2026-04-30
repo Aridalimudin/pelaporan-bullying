@@ -114,3 +114,7 @@
 @include('components.footer')
 
 @endsection
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/welcome-page.css') }}">
+@endpush    

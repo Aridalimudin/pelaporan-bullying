@@ -220,3 +220,226 @@ html, body { height: 100%; overflow: auto; }
 .sm-btn-hapus   { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px; border-radius: 10px; border: none; background: #ef4444; color: white; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; }
 .sm-btn-hapus svg { width: 15px; height: 15px; }
 .sm-btn-hapus:hover { background: #dc2626; }
+
+
+.btn-manage-kelas{display:flex;align-items:center;gap:6px;padding:9px 14px;background:#eff6ff;color:#3b82f6;border:1.5px solid #bfdbfe;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0}
+.btn-manage-kelas:hover{background:#dbeafe}
+.btn-manage-kelas svg{width:14px;height:14px}
+.mgr-section-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.mgr-section-title svg{width:14px;height:14px;color:#6b7280;flex-shrink:0}
+.mgr-tag-wrap{display:flex;flex-wrap:wrap;gap:8px;min-height:38px;padding:4px 0}
+.mgr-info-box{display:flex;align-items:flex-start;gap:8px;background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:10px 12px;font-size:12px;color:#0369a1;line-height:1.6}
+.mgr-info-box svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:#0ea5e9}
+.mgr-btn-add{display:flex;align-items:center;gap:6px;flex:0 0 auto;padding:9px 16px;background:#3b82f6;color:white;border:none;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap}
+.mgr-btn-add:hover{background:#2563eb}
+.mgr-btn-add svg{width:13px;height:13px}
+.mgr-btn-green{background:#16a34a}
+.mgr-btn-green:hover{background:#15803d}
+.kelas-mgr-tag{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:20px;font-size:12px;font-weight:600}
+.kelas-mgr-tag button{background:none;border:none;cursor:pointer;color:#93c5fd;padding:0;line-height:1;font-size:16px;font-weight:700;transition:color .15s}
+.kelas-mgr-tag button:hover{color:#ef4444}
+.jurusan-tag{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:20px;font-size:12px;font-weight:600}
+.jurusan-tag button{background:none;border:none;cursor:pointer;color:#86efac;padding:0;line-height:1;font-size:16px;font-weight:700;transition:color .15s}
+.jurusan-tag button:hover{color:#ef4444}
+.empty-tag-hint{font-size:12px;color:#9ca3af;font-style:italic}
+.btn-loading{opacity:.6;pointer-events:none;cursor:not-allowed}
+
+
+
+.kmgr-tabs {
+    display: flex;
+    gap: 6px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 4px;
+}
+.kmgr-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.kmgr-tab svg { width: 14px; height: 14px; }
+.kmgr-tab.active {
+    background: #fff;
+    color: #1d4ed8;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.kmgr-tab-badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 20px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+}
+ 
+/* ── Jurusan Table ── */
+.kmgr-jurusan-table {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.kmgr-jurusan-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    transition: border-color .15s;
+}
+.kmgr-jurusan-row:hover { border-color: #bfdbfe; background: #eff6ff; }
+.kmgr-jurusan-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+.kmgr-jurusan-meta {
+    font-size: 11.5px;
+    color: #6b7280;
+    margin-top: 1px;
+}
+.kmgr-jurusan-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.kmgr-btn-goto {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #3b82f6;
+    background: #dbeafe;
+    border: none;
+    border-radius: 7px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background .15s;
+}
+.kmgr-btn-goto:hover { background: #bfdbfe; }
+.kmgr-btn-del {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #d1d5db;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    transition: color .15s;
+    padding: 0 2px;
+}
+.kmgr-btn-del:hover { color: #ef4444; }
+ 
+/* ── Form Tambah Kelas ── */
+.kmgr-add-kelas-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 4px;
+}
+.kmgr-form-step { display: flex; flex-direction: column; gap: 6px; }
+.kmgr-step-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+}
+.kmgr-step-num {
+    width: 20px; height: 20px;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+ 
+/* Preview badge hasil "XA - RPL" */
+.kmgr-preview-badge {
+    white-space: nowrap;
+    padding: 5px 12px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+ 
+.kmgr-hint {
+    font-size: 11.5px;
+    color: #6b7280;
+    margin: 0;
+}
+ 
+/* Error inline di form kelas */
+.kmgr-err {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+    border-radius: 8px;
+    padding: 7px 12px;
+    margin-top: 4px;
+}
+ 
+/* Tag kelas dengan warna jurusan */
+.kmgr-kelas-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 12px;
+    background: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1d4ed8;
+}
+.kmgr-kelas-tag .kmgr-tag-major {
+    font-size: 10.5px;
+    font-weight: 700;
+    background: #1d4ed8;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 7px;
+}
+.kmgr-kelas-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #93c5fd;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    transition: color .15s;
+    padding: 0;
+}
+.kmgr-kelas-tag button:hover { color: #ef4444; }

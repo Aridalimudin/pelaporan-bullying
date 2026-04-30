@@ -47,6 +47,10 @@
                 </svg>
                 <p id="mkNoteText">—</p>
             </div>
+            <div id="mkReasonArea" style="display:none; margin-top: 12px;">
+                <label class="mk-card-label" style="color: #ef4444; margin-bottom: 5px; display: block;">ALASAN PENOLAKAN <span style="color:red">*</span></label>
+                <textarea id="mkReasonInput" class="md-textarea" placeholder="Contoh: Bukti tidak cukup atau deskripsi kurang jelas..." rows="3" style="border: 1.5px solid #fecaca; width: 100%; padding: 10px; border-radius: 8px; font-size: 0.85rem;"></textarea>
+            </div>
 
         </div>
 
@@ -246,6 +250,22 @@ const _KFG = {
         toastType   : 'success', toastTitle: 'Laporan Dipulihkan!', toastMsg: 'Laporan berhasil dipulihkan ke tahap sebelumnya.',
         newStatus   : 'Dipulihkan', newClass: 'verifikasi',
     },
+    // Tambahkan ini di dalam const _KFG = { ... }
+    reminder: {
+        topbarBg    : 'linear-gradient(135deg,#3b82f6,#1d4ed8)',
+        topbarIcon  : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
+        topbarSub   : 'Notifikasi Pelapor',
+        topbarTitle : 'Kirim Reminder?',
+        alertType   : 'info',
+        alertIcon   : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        alertText   : 'Sistem akan mengirimkan pengingat ke Pelapor untuk melengkapi detail laporan atau memantau progres.',
+        note        : 'Reminder ini akan tercatat di log aktivitas laporan.',
+        btnClass    : 'blue',
+        btnLabel    : 'Ya, Kirim Reminder',
+        btnIcon     : `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>`,
+        toastType   : 'success', toastTitle: 'Reminder Terkirim', toastMsg: 'Pelapor telah diingatkan.',
+        newStatus   : 'Menunggu Verifikasi', newClass: 'verifikasi',
+    },
 };
 
 let _mkActiveCfg = null;
@@ -254,6 +274,14 @@ function triggerKonfirmasi(action) {
     const cfg = _KFG[action];
     if (!cfg) return;
     _mkActiveCfg = cfg;
+
+    const reasonArea = document.getElementById('mkReasonArea');
+    if (action === 'tolak') {
+        reasonArea.style.display = 'block';
+        document.getElementById('mkReasonInput').value = ''; // Kosongkan
+    } else {
+        reasonArea.style.display = 'none';
+    }
 
     const detailOverlay = document.getElementById('modalDetail');
     if (detailOverlay) {
@@ -292,29 +320,65 @@ function triggerKonfirmasi(action) {
 }
 
 function _doConfirm(cfg) {
-    closeKonfirmasi();
+    
+    const reportId = _currentData.id;
 
-    if (_currentRow) {
-        const badge = _currentRow.querySelector('.status-badge');
-        if (badge) {
-            badge.textContent = cfg.newStatus;
-            badge.className   = 'status-badge ' + cfg.newClass;
-        }
-
-        _currentRow.querySelectorAll('.btn-aksi:not(.view)').forEach(b => {
-            b.disabled     = true;
-            b.style.opacity = '.35';
-        });
-
-        const hiColor = cfg.toastType === 'success' ? '#f0fdf4'
-                      : cfg.toastType === 'error'   ? '#fef2f2' : '#fffbeb';
-        _currentRow.style.transition  = 'background .5s';
-        _currentRow.style.background  = hiColor;
-        setTimeout(() => { if (_currentRow) _currentRow.style.background = ''; }, 1600);
+    if (!reportId) {
+        alert('ID laporan tidak ditemukan. Silakan buka ulang detail laporan.');
+        return;
     }
 
-    setTimeout(() => Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg), 200);
+    const reasonValue = document.getElementById('mkReasonInput').value;
+
+     const statusMap = {
+        'Menunggu Verifikasi' : 'menunggu',
+        'Ditolak'             : 'ditolak',
+        'Sedang Diproses'     : 'proses',
+        'Selesai'             : 'selesai',
+        'Dipulihkan'          : 'pulihkan',
+    };
+
+    const statusTarget = statusMap[cfg.newStatus] || 'menunggu';
+
+    if (statusTarget === 'ditolak' && !reasonValue.trim()) {
+        alert('Harap isi alasan penolakan!');
+        return;
+    }
+
+    if (cfg.btnLabel.includes('Reminder')) {
+        closeKonfirmasi();
+        Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg);
+        return;
+    }
+
+    (async () => {
+        try {
+            const res = await fetchAdminJson(`/api/admin/reports/${reportId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? ''
+                },
+                body: JSON.stringify({
+                    status : statusTarget,
+                    catatan: reasonValue
+                })
+            });
+
+            if (res.success) {
+                closeKonfirmasi();
+                loadRealData();
+                setTimeout(() => Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg), 200);
+            } else {
+                alert(res.message || 'Gagal memperbarui status.');
+            }
+        } catch (error) {
+            alert('Koneksi bermasalah, coba lagi.');
+        }
+    })();
 }
+
+
 
 function closeKonfirmasi() {
     document.getElementById('modalKonfirmasi').style.display = 'none';
