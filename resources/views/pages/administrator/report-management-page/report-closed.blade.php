@@ -189,5 +189,25 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => loadRealData());
+    document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open');
+        
+        if (openId) {
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            // Tunggu loadRealData selesai dulu baru buka modal
+            const waitAndOpen = setInterval(() => {
+                const rowId = 'row-' + openId;
+                if (LAPORAN_DATA[rowId]) {
+                    clearInterval(waitAndOpen);
+                    showDetail(rowId, 'laporan-selesai');// ← pakai showDetail, bukan openDetailModal
+                }
+            }, 200); // cek setiap 200ms sampai data ready
+
+            // Safety timeout 5 detik
+            setTimeout(() => clearInterval(waitAndOpen), 5000);
+        }
+    });
     </script>
 @endpush

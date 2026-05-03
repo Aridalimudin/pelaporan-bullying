@@ -411,3 +411,43 @@ html, body { height: 100%; overflow: auto; font-family: 'Plus Jakarta Sans', san
 @media (min-width: 640px) {
     .footer-compact p { font-size: 1.125rem; }
 }
+.dash-section-desc { font-size: .8rem; color: var(--text-muted); margin: -.5rem 0 .75rem; }
+.dash-stats-grid--3 { grid-template-columns: repeat(3, 1fr); }
+
+/* ── Tambahkan di bagian bawah dashboard-page.css ── */
+
+/* FIX 1: Welcome sub text tidak wrap aneh */
+.dash-welcome-sub {
+    white-space: normal;
+    max-width: 420px;
+}
+
+/* FIX 2 & 3: Warna icon untuk stat-red (belum ada di CSS lama) */
+.dash-stat-red .dash-stat-icon-wrap {
+    background: #fff1f2;
+    color: #ef4444;
+}
+
+/* FIX 4: Hapus baris "Belum Dinilai" sudah dihapus dari blade,
+   tidak ada CSS tambahan yang diperlukan */
+
+/* FIX 5: Coming soon chip — rapi dan estetik */
+.dash-jenis-coming-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--gray-500);
+}
+.dash-jenis-coming-soon svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    color: var(--gray-400);
+}

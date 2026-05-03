@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\GradeMajorController;
 
 // ═══════════════════════════════════════════
@@ -113,6 +114,10 @@ Route::middleware("auth:web")->group(function () {
     Route::match(['GET', 'POST'], "/api/admin/logout", [AuthController::class, "logout"])->name("api.admin.logout");
     Route::get("/api/admin/me",      [AuthController::class, "me"])->name("api.admin.me");
 
+    Route::get("/admin/notifications", function () {
+        return view("pages.administrator.notification-page.notifications");
+    })->name("administrator.notifications");
+
     // ── API Admin: Kelola Laporan ─────────────
     Route::prefix("api/admin")->group(function () {
 
@@ -153,11 +158,16 @@ Route::middleware("auth:web")->group(function () {
         Route::delete("/permissions/{id}", [PermissionController::class, "destroy"]);
 
     });
+    Route::prefix('api/admin/notifications')->group(function () {
+        Route::get('/count',      [NotificationController::class, 'count']);
+        Route::get('/',           [NotificationController::class, 'index']);
+        Route::post('/read-all',  [NotificationController::class, 'markAllRead']);
+        Route::post('/{id}/read', [NotificationController::class, 'markRead']);
+    });
 
     // ── Halaman Dashboard ─────────────────────
-    Route::get("/dashboard", function () {
-        return view("pages.administrator.dashboard-page.dashboard");
-    })->name("administrator.dashboard");
+    Route::get("/dashboard", [App\Http\Controllers\Admin\DashboardController::class, 'index'])
+        ->name("administrator.dashboard");
 
     // ── Report Central ────────────────────────
     Route::get("/laporan-masuk", function () {

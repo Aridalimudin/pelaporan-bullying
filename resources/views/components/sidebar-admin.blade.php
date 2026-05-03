@@ -20,7 +20,7 @@
     <nav class="sidebar-nav">
 
         <div class="nav-section-label">Dashboard</div>
-        <a href="dashboard" class="nav-item {{ ($activePage ?? '') === 'dashboard' ? 'active' : '' }}">
+        <a href="{{ route('administrator.dashboard') }}" class="nav-item {{ ($activePage ?? '') === 'dashboard' ? 'active' : '' }}">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
@@ -41,7 +41,7 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/laporan-masuk" class="nav-child {{ ($activePage ?? '') === 'laporan-masuk' ? 'active' : '' }}">
+                <a href="{{ route('administrator.incoming-report') }}" class="nav-child {{ ($activePage ?? '') === 'laporan-masuk' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                     </svg>
@@ -53,7 +53,7 @@
                         <span class="nav-badge">{{ $__badgeLM }}</span>
                     @endif
                 </a>
-                <a href="/menunggu-verifikasi" class="nav-child {{ ($activePage ?? '') === 'menunggu-verifikasi' ? 'active' : '' }}">
+                <a href="{{ route('administrator.pending-verification') }}" class="nav-child {{ ($activePage ?? '') === 'menunggu-verifikasi' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -63,7 +63,7 @@
                         <span class="nav-badge">{{ $__badgeMV }}</span>
                     @endif
                 </a>
-                <a href="/proses-laporan" class="nav-child {{ ($activePage ?? '') === 'proses-laporan' ? 'active' : '' }}">
+                <a href="{{ route('administrator.processing-report') }}" class="nav-child {{ ($activePage ?? '') === 'proses-laporan' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
@@ -73,7 +73,7 @@
                         <span class="nav-badge">{{ $__badgePL }}</span>
                     @endif
                 </a>
-                <a href="/laporan-selesai" class="nav-child {{ ($activePage ?? '') === 'laporan-selesai' ? 'active' : '' }}">
+                <a href="{{ route('administrator.report-closed') }}" class="nav-child {{ ($activePage ?? '') === 'laporan-selesai' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -83,7 +83,7 @@
                         <span class="nav-badge">{{ $__badgeLS }}</span>
                     @endif
                 </a>
-                <a href="/laporan-ditolak" class="nav-child {{ ($activePage ?? '') === 'laporan-ditolak' ? 'active' : '' }}">
+                <a href="{{ route('administrator.report-rejected') }}" class="nav-child {{ ($activePage ?? '') === 'laporan-ditolak' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
@@ -111,19 +111,19 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/SIP-Bullying/data-siswa" class="nav-child {{ ($activePage ?? '') === 'data-siswa' ? 'active' : '' }}">
+                <a href="{{ route('administrator.students') }}" class="nav-child {{ ($activePage ?? '') === 'data-siswa' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
                     <span>Data Siswa</span>
                 </a>
-                <a href="/SIP-Bullying/jenis-pelanggaran" class="nav-child {{ ($activePage ?? '') === 'jenis-pelanggaran' ? 'active' : '' }}">
+                <a href="{{ route('administrator.violation-types') }}" class="nav-child {{ ($activePage ?? '') === 'jenis-pelanggaran' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
                     <span>Jenis Pelanggaran</span>
                 </a>
-                <a href="/SIP-Bullying/tindakan-disiplin" class="nav-child {{ ($activePage ?? '') === 'tindakan-disiplin' ? 'active' : '' }}">
+                <a href="{{ route('administrator.discipline-actions') }}" class="nav-child {{ ($activePage ?? '') === 'tindakan-disiplin' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                     </svg>
@@ -145,19 +145,19 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/daftar-users" class="nav-child {{ ($activePage ?? '') === 'daftar-users' ? 'active' : '' }}">
+                <a href="{{ route('administrator.users') }}" class="nav-child {{ ($activePage ?? '') === 'daftar-users' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                     <span>User</span>
                 </a>
-                <a href="/daftar-roles" class="nav-child {{ ($activePage ?? '') === 'daftar-roles' ? 'active' : '' }}">
+                <a href="{{ route('administrator.roles') }}" class="nav-child {{ ($activePage ?? '') === 'daftar-roles' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                     </svg>
                     <span>Role</span>
                 </a>
-                <a href="/daftar-permissions" class="nav-child {{ ($activePage ?? '') === 'daftar-permissions' ? 'active' : '' }}">
+                <a href="{{ route('administrator.permissions') }}" class="nav-child {{ ($activePage ?? '') === 'daftar-permissions' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                     </svg>
@@ -180,13 +180,13 @@
                 </svg>
             </button>
             <div class="nav-group-children">
-                <a href="/rekapitulasi-PerBulan" class="nav-child {{ ($activePage ?? '') === 'rekap-bulan' ? 'active' : '' }}">
+                <a href="{{ route('administrator.monthly') }}" class="nav-child {{ ($activePage ?? '') === 'rekap-bulan' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     <span>Per Bulan</span>
                 </a>
-                <a href="/rekapitulasi-PerSemester" class="nav-child {{ ($activePage ?? '') === 'rekap-semester' ? 'active' : '' }}">
+                <a href="{{ route('administrator.semester') }}" class="nav-child {{ ($activePage ?? '') === 'rekap-semester' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>

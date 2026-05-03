@@ -82,4 +82,15 @@ class User extends Authenticatable
     {
         return $this->roles->first();
     }
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class)->latest();
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class)
+                    ->whereNull('read_at')
+                    ->latest();
+    }
 }

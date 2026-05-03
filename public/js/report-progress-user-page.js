@@ -185,30 +185,59 @@
         if (!track) return;
 
         const allSteps = [
-            { number: 1, label: 'Laporan<br>Masuk',       statuses: ['masuk', 'terkirim'] },
-            { number: 2, label: 'Menunggu<br>Verifikasi',  statuses: ['menunggu', 'verifikasi'] },
-            { number: 3, label: 'Sedang<br>Diproses',      statuses: ['diproses', 'proses'] },
-            { number: 4, label: 'Penanganan<br>Selesai',   statuses: ['selesai', 'ditolak'] },
+            { number: 1, label: 'Laporan<br>Masuk',      status: 'masuk'    },
+            { number: 2, label: 'Menunggu<br>Verifikasi', status: 'menunggu' },
+            { number: 3, label: 'Sedang<br>Diproses',     status: 'diproses' },
+            { number: 4, label: 'Penanganan<br>Selesai',  status: 'selesai'  },
         ];
 
-        const isRejected = d.status === 'ditolak';
-        const currentIdx = allSteps.findIndex(s => s.statuses.includes(d.status));
+        // Urutan status normal (index untuk perbandingan)
+        const statusOrder = ['masuk', 'menunggu', 'diproses', 'selesai'];
 
-        track.innerHTML = allSteps.map((step, i) => {
-            const isDone   = i < currentIdx;
-            const isActive = i === currentIdx;
-            const isRej    = isRejected && isActive;
-            const state    = isDone ? 'done' : isRej ? 'rejected' : isActive ? 'active' : '';
+        let steps;
 
-            let circle = `<span>${step.number}</span>`;
-            if (isDone) circle = icoCheck();
-            else if (isRej) circle = icoX();
+        if (d.status === 'ditolak') {
+            // Tentukan sampai mana laporan sudah berjalan sebelum ditolak
+            // tahapTerakhir dari API: 'laporan-masuk', 'menunggu-verifikasi', 'proses-laporan'
+            const tahapMap = {
+                'laporan-masuk'      : 0,
+                'menunggu-verifikasi': 1,
+                'proses-laporan'     : 2,
+            };
+            const rejectedAtIdx = tahapMap[d.tahap_terakhir] ?? tahapMap[d.rejected_from_stage] ?? 0;
 
-            const isLast    = i === allSteps.length - 1;
-            const connClass = isDone ? ' done' : (isRej ? ' rejected' : '');
+            // Ambil step yang sudah dilewati + step "Ditolak" di akhir
+            const passedSteps = allSteps.slice(0, rejectedAtIdx + 1);
+            steps = [
+                ...passedSteps.map((s, i) => ({
+                    ...s,
+                    state: i < rejectedAtIdx ? 'done' : 'done', // semua passed = done
+                })),
+                {
+                    number : passedSteps.length + 1,
+                    label  : 'Laporan<br>Ditolak',
+                    state  : 'rejected',
+                },
+            ];
+        } else {
+            const currentIdx = statusOrder.indexOf(d.status);
+            steps = allSteps.map((s, i) => ({
+                ...s,
+                state: i < currentIdx ? 'done' : i === currentIdx ? 'active' : '',
+            }));
+        }
+
+        track.innerHTML = steps.map((step, i) => {
+            let circle;
+            if (step.state === 'done')     circle = icoCheck();
+            else if (step.state === 'rejected') circle = icoX();
+            else                           circle = `<span>${step.number}</span>`;
+
+            const isLast    = i === steps.length - 1;
+            const connClass = (step.state === 'done' || step.state === 'rejected') ? ' done' : '';
 
             return `
-                <div class="stepper-step ${state}">
+                <div class="stepper-step ${step.state}">
                     <div class="step-circle">${circle}</div>
                     <div class="step-label">${step.label}</div>
                 </div>
@@ -766,7 +795,7 @@
                     </div>
                     <div class="rejection-reason">
                         <strong style="display:block;margin-bottom:6px;font-size:.75rem;color:#9f1239;text-transform:uppercase;letter-spacing:.06em;">Alasan Penolakan</strong>
-                        ${esc(d.catatan_admin || 'Tidak ada catatan dari admin.')}
+                        ${esc(d.rejection_reason || d.catatan_admin || 'Tidak ada catatan dari admin.')}
                     </div>
                 </div>
             </div>
@@ -941,7 +970,7 @@
 
     function buildTindakLanjut(d) {
         const tl     = d.tindak_lanjut || {};
-        const buktis = tl.bukti        || [];
+        const buktis = tl.files || tl.bukti || [];
         return `
             <div class="tindaklanjut-card">
                 <div class="tindaklanjut-header">
@@ -1012,24 +1041,81 @@
                         </div>
                     </div>
                 </div>` : ''}
-                ${buktis.length > 0 ? `
                 <div class="detail-divider" style="background:var(--green-light);"></div>
-                <div class="detail-section">
-                    <div class="detail-section-title teal">📎 Bukti Dokumentasi</div>
-                    <div class="bukti-pelaksanaan">
-                        ${buktis.map(b => `
-                            <a href="${esc(b.url)}" target="_blank" class="bukti-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                ${esc(b.nama || 'Dokumen')}
-                            </a>
-                        `).join('')}
-                    </div>
-                </div>` : ''}
+            <div class="detail-section">
+                <div class="detail-section-title teal">📎 Bukti Dokumentasi Penindak</div>
+                <div class="detail-divider" style="background:var(--green-light);"></div>
+            <div class="detail-section">
+                <div class="detail-section-title teal">📎 Bukti Dokumentasi Penindak</div>
+                ${buktis.length > 0 ? `
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                    ${buktis.map(b => {
+                        const isImage = b.mime?.startsWith('image/');
+                        const isPdf   = b.mime === 'application/pdf';
+                        const ext     = b.nama?.split('.').pop()?.toUpperCase() || 'FILE';
+                        const icon    = isPdf
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`
+                            : isImage
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
+                            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>`;
+                        const bgColor = isPdf ? '#fef2f2' : isImage ? '#eff6ff' : '#f9fafb';
+                        return `
+                            <div style="
+                                display:flex;align-items:center;justify-content:space-between;gap:12px;
+                                padding:10px 14px;background:${bgColor};
+                                border:1.5px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
+                                border-radius:10px;
+                            ">
+                                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                    <div style="
+                                        width:36px;height:36px;border-radius:8px;flex-shrink:0;
+                                        background:white;display:flex;align-items:center;justify-content:center;
+                                        border:1px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
+                                    ">
+                                        ${icon}
+                                    </div>
+                                    <div style="min-width:0;">
+                                        <div style="font-size:.82rem;font-weight:600;color:#111827;
+                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">
+                                            ${esc(b.nama || 'File')}
+                                        </div>
+                                        <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">${ext}</div>
+                                    </div>
+                                </div>
+                                <a href="${esc(b.url)}" target="_blank" style="
+                                    display:inline-flex;align-items:center;gap:6px;
+                                    padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;
+                                    background:#10b981;color:white;text-decoration:none;white-space:nowrap;
+                                    flex-shrink:0;
+                                ">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Unduh
+                                </a>
+                            </div>`;
+                    }).join('')}
+                </div>` : `
+                <div style="
+                    display:flex;flex-direction:column;align-items:center;gap:8px;
+                    padding:20px;background:#f9fafb;border:1.5px dashed #e5e7eb;
+                    border-radius:10px;text-align:center;color:#9ca3af;margin-top:8px;
+                ">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" opacity=".4">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span style="font-size:.82rem;font-weight:500;">Tidak ada berkas yang dilampirkan</span>
+                    <span style="font-size:.76rem;">Petugas tidak mengunggah dokumen pendukung tindak lanjut</span>
+                </div>`}
             </div>
         `;
     }
 
     function buildFeedbackSection(d) {
+        const isDitolak = d.status === 'ditolak';
+
         // Sudah pernah feedback → tampilkan hasil saja
         if (d.feedback) {
             const EMOJI = ['', '😡', '😞', '😐', '😊', '🌟'];
@@ -1037,7 +1123,7 @@
             const r = d.feedback.rating;
             return `
                 <div class="feedback-card" id="feedbackCard">
-                    <h3 class="feedback-title">Penilaian Anda</h3>
+                    <h3 class="feedback-title">${isDitolak ? '📝 Feedback Anda' : 'Penilaian Anda'}</h3>
                     <div style="display:flex;align-items:center;gap:14px;margin-bottom:${d.feedback.pesan ? '14px' : '0'}">
                         <span style="font-size:2.4rem;">${EMOJI[r] || ''}</span>
                         <div>
@@ -1058,11 +1144,41 @@
                 </div>`;
         }
 
-        // Belum feedback → tampilkan form
+        // Belum feedback → tampilkan form, beda style untuk ditolak
         return `
-            <div class="feedback-card" id="feedbackCard">
-                <h3 class="feedback-title">Rating Penyelesaian</h3>
-                <p class="feedback-sub">Bagaimana kepuasan Anda terhadap penanganan laporan ini? Penilaian Anda membantu kami meningkatkan layanan.</p>
+            <div class="feedback-card ${isDitolak ? 'feedback-ditolak' : ''}" id="feedbackCard"
+                style="${isDitolak ? 'border-color:#fca5a5;background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);' : ''}">
+                
+                ${isDitolak ? `
+                <div style="
+                    display:flex;align-items:flex-start;gap:10px;
+                    padding:12px 14px;background:#fee2e2;border:1.5px solid #fca5a5;
+                    border-radius:10px;margin-bottom:16px;
+                ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626"
+                        style="flex-shrink:0;margin-top:1px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>
+                        <div style="font-weight:700;color:#dc2626;font-size:.85rem;margin-bottom:3px;">
+                            Mohon Maaf, Laporan Anda Ditolak
+                        </div>
+                        <div style="font-size:.78rem;color:#991b1b;line-height:1.5;">
+                            Kami mohon maaf atas ketidaknyamanan ini. Sebagai bentuk evaluasi layanan kami, 
+                            kami sangat menghargai masukan Anda agar penanganan laporan ke depan bisa lebih baik.
+                        </div>
+                    </div>
+                </div>` : ''}
+
+                <h3 class="feedback-title" style="${isDitolak ? 'color:#dc2626;' : ''}">
+                    ${isDitolak ? '📝 Bantu Kami Evaluasi' : 'Rating Penyelesaian'}
+                </h3>
+                <p class="feedback-sub" style="${isDitolak ? 'color:#b91c1c;' : ''}">
+                    ${isDitolak 
+                        ? 'Pendapat Anda sangat berarti bagi kami untuk meningkatkan kualitas penanganan laporan di masa mendatang.'
+                        : 'Bagaimana kepuasan Anda terhadap penanganan laporan ini? Penilaian Anda membantu kami meningkatkan layanan.'}
+                </p>
                 <div id="feedbackFormSection">
                     <div class="emoji-rating-wrap">
                         ${EMOJI_OPTIONS.map(o => `
@@ -1073,8 +1189,14 @@
                         `).join('')}
                     </div>
                     <div class="rating-desc" id="ratingDesc">Pilih emoji untuk memberi penilaian</div>
-                    <textarea class="feedback-textarea" id="feedbackText" placeholder="Saran atau masukan Anda... (opsional)"></textarea>
-                    <button class="btn-submit-feedback" onclick="submitFeedback()" type="button">Kirim Penilaian</button>
+                    <textarea class="feedback-textarea" id="feedbackText" 
+                        placeholder="${isDitolak 
+                            ? 'Ceritakan kendala atau saran Anda terkait proses penanganan laporan...' 
+                            : 'Saran atau masukan Anda... (opsional)'}"></textarea>
+                    <button class="btn-submit-feedback" onclick="submitFeedback()" type="button"
+                        style="${isDitolak ? 'background:linear-gradient(135deg,#dc2626,#b91c1c);' : ''}">
+                        ${isDitolak ? '📤 Kirim Feedback' : 'Kirim Penilaian'}
+                    </button>
                 </div>
             </div>`;
     }
@@ -1544,7 +1666,8 @@
 
             if (res.ok && data.success) {
                 showUserToast('Detail berhasil disimpan! Status laporan diperbarui.', 'success', 'Berhasil');
-                setTimeout(() => loadReport(_currentCode), 1800);
+                // Delay sedikit lebih lama agar DB commit selesai sebelum fetch ulang
+                setTimeout(() => loadReport(_currentCode), 2200);
             } else {
                 showUserToast(data.message || 'Gagal menyimpan detail.', 'error', 'Gagal');
                 if (btn) { btn.disabled = false; btn.innerHTML = icoCheck() + ' Simpan &amp; Kirim Detail'; }
@@ -1627,8 +1750,7 @@
             return;
         }
 
-        if (isFinal && !sudahFeedback) {
-            // Banner baru: beri feedback
+       if (isFinal && !sudahFeedback) {
             banner.classList.remove('hidden');
             banner.onclick = () => {
                 const el = document.getElementById('feedbackFormSection');
@@ -1637,14 +1759,20 @@
             const gabTitle = banner.querySelector('.gab-title');
             const gabDesc  = banner.querySelector('.gab-desc');
             const gabIcon  = banner.querySelector('.gab-icon');
-            if (gabTitle) gabTitle.textContent = 'Berikan Penilaian Anda';
-            if (gabDesc)  gabDesc.textContent  = 'Bantu kami meningkatkan layanan dengan mengisi feedback laporan Anda';
-            if (gabIcon)  gabIcon.textContent  = '⭐';
-            banner.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+
+            if (d.status === 'ditolak') {
+                if (gabTitle) gabTitle.textContent = 'Bantu Kami Evaluasi';
+                if (gabDesc)  gabDesc.textContent  = 'Mohon maaf laporan Anda ditolak — feedback Anda sangat berarti untuk perbaikan kami';
+                if (gabIcon)  gabIcon.textContent  = '📝';
+                banner.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
+            } else {
+                if (gabTitle) gabTitle.textContent = 'Berikan Penilaian Anda';
+                if (gabDesc)  gabDesc.textContent  = 'Bantu kami meningkatkan layanan dengan mengisi feedback laporan Anda';
+                if (gabIcon)  gabIcon.textContent  = '⭐';
+                banner.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+            }
             return;
         }
-
-        banner.classList.add('hidden');
     }
 
     function openReminderModal() {

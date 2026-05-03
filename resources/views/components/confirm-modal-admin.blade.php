@@ -330,15 +330,26 @@ function _doConfirm(cfg) {
 
     const reasonValue = document.getElementById('mkReasonInput').value;
 
-     const statusMap = {
+    const statusMap = {
         'Menunggu Verifikasi' : 'menunggu',
         'Ditolak'             : 'ditolak',
-        'Sedang Diproses'     : 'proses',
+        'Sedang Diproses'     : 'diproses',
         'Selesai'             : 'selesai',
-        'Dipulihkan'          : 'pulihkan',
+        'Dipulihkan'          : null,
     };
 
-    const statusTarget = statusMap[cfg.newStatus] || 'menunggu';
+    let statusTarget = statusMap[cfg.newStatus];
+
+    if (cfg.newStatus === 'Dipulihkan') {
+        const tahapMap = {
+            'laporan-masuk'       : 'masuk',
+            'menunggu-verifikasi' : 'menunggu',
+            'proses-laporan'      : 'diproses',
+        };
+        statusTarget = tahapMap[(_currentData || {}).tahapTerakhir] || 'masuk';
+    }
+
+    if (!statusTarget) statusTarget = 'menunggu';
 
     if (statusTarget === 'ditolak' && !reasonValue.trim()) {
         alert('Harap isi alasan penolakan!');
@@ -367,8 +378,35 @@ function _doConfirm(cfg) {
 
             if (res.success) {
                 closeKonfirmasi();
-                loadRealData();
-                setTimeout(() => Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg), 200);
+
+                // Animasi hapus baris jika ini adalah restore dari halaman ditolak
+                if (_currentRow && cfg.newStatus === 'Dipulihkan') {
+                    _currentRow.style.transition = 'opacity .3s, transform .3s';
+                    _currentRow.style.opacity    = '0';
+                    _currentRow.style.transform  = 'translateX(20px)';
+                    setTimeout(() => {
+                        const rowId = _currentRow?.id;
+                        _currentRow?.remove();
+                        if (rowId && typeof LAPORAN_DATA !== 'undefined') {
+                            delete LAPORAN_DATA[rowId];
+                            if (typeof _allRows !== 'undefined')
+                                _allRows = _allRows.filter(r => r !== rowId);
+                            if (typeof _filteredRows !== 'undefined')
+                                _filteredRows = _filteredRows.filter(r => r !== rowId);
+                            if (typeof renderTable === 'function') renderTable();
+                        }
+                    }, 300);
+                } else {
+                    if (typeof loadRealData === 'function') loadRealData();
+                }
+
+                setTimeout(() => {
+                    if (typeof Toast !== 'undefined') {
+                        Toast.show(cfg.toastType, cfg.toastTitle, cfg.toastMsg);
+                    } else if (typeof showAdminToast === 'function') {
+                        showAdminToast(cfg.toastMsg, cfg.toastType);
+                    }
+                }, 200);
             } else {
                 alert(res.message || 'Gagal memperbarui status.');
             }

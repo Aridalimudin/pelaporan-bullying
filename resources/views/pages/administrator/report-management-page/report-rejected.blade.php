@@ -239,16 +239,19 @@ function showDetail(rowId) {
     openDetailModal(d, 'laporan-ditolak', _currentRow);
 }
 
-/* ══════════════════════════════════════════
-   QUICK ACTION (dari tombol di baris tabel)
-══════════════════════════════════════════ */
 function handleQuickAction(action, rowId) {
     const d = LAPORAN_DATA[rowId];
     if (!d) return;
     _currentRow  = document.getElementById(rowId);
     _currentData = d;
-    document.getElementById('modalDetail').style.display = 'none';
+
+    // Tutup modal detail jika terbuka
+    const modalDetail = document.getElementById('modalDetail');
+    if (modalDetail) modalDetail.style.display = 'none';
     document.body.style.overflow = '';
+
+    // Gunakan triggerKonfirmasi dari confirm-modal-admin
+    // (bukan yang lokal — pastikan tidak ada duplikat)
     triggerKonfirmasi(action);
 }
 
@@ -283,5 +286,25 @@ function ucfirst(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+    document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open');
+        
+        if (openId) {
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            // Tunggu loadRealData selesai dulu baru buka modal
+            const waitAndOpen = setInterval(() => {
+                const rowId = 'row-' + openId;
+                if (LAPORAN_DATA[rowId]) {
+                    clearInterval(waitAndOpen);
+                    showDetail(rowId, 'laporan-selesai');// ← pakai showDetail, bukan openDetailModal
+                }
+            }, 200); // cek setiap 200ms sampai data ready
+
+            // Safety timeout 5 detik
+            setTimeout(() => clearInterval(waitAndOpen), 5000);
+        }
+    });
     </script>
 @endpush

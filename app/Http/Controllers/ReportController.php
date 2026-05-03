@@ -33,6 +33,29 @@ class ReportController extends Controller
     private const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file (video bisa besar)
     private const MAX_IMG_SIZE  = 5  * 1024 * 1024; // 5MB untuk gambar
 
+    private function notifyAllUsers(
+        string $type,
+        string $title,
+        string $body,
+        string $icon,
+        string $color,
+        string $url
+    ): void {
+        $users = \App\Models\User::all();
+        foreach ($users as $user) {
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'type'    => $type,
+                'title'   => $title,
+                'body'    => $body,
+                'icon'    => $icon,
+                'color'   => $color,
+                'url'     => $url,
+                'read_at' => null,
+            ]);
+        }
+    }
+
     // ══════════════════════════════════════════════════════════
     // PUBLIC ENDPOINTS
     // ══════════════════════════════════════════════════════════
@@ -189,6 +212,15 @@ class ReportController extends Controller
             // Log aktivitas awal
             $report->logActivity('Laporan dikirim oleh pelapor.', null, 'masuk');
 
+            $this->notifyAllUsers(
+                'laporan_baru',
+                'Laporan Baru Masuk',
+                "Laporan baru #{$report->ticket_code} telah dikirim oleh pelapor.",
+                'file',
+                'green',
+                '/laporan-masuk?open=' . $report->id
+            );
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -266,6 +298,8 @@ class ReportController extends Controller
                 'status_color'      => $report->statusColor(),
                 'step'              => $step,
                 'catatan_admin'     => $report->catatan_admin,
+                'rejection_reason'     => $report->rejection_reason,  // ← TAMBAH
+                'tahap_terakhir'       => $report->getRejectedFromStage(),
                 'deskripsi'         => $report->deskripsi,        // ← TAMBAH INI
                 'created_at'        => $report->created_at->format('d M Y, H:i'),
                 'updated_at'        => $report->updated_at->format('d M Y, H:i'),
@@ -385,7 +419,23 @@ class ReportController extends Controller
 
         $report->logActivity('Pelapor mengirim reminder kepada petugas.');
 
-        // TODO: kirim notifikasi ke admin (email / Laravel Notification)
+        $urlMap = [
+            'masuk'    => '/laporan-masuk',
+            'menunggu' => '/menunggu-verifikasi',
+            'diproses' => '/proses-laporan',
+            'selesai'  => '/laporan-selesai',
+            'ditolak'  => '/laporan-ditolak',
+        ];
+        $url = ($urlMap[$report->status] ?? '/laporan-masuk') . '?open=' . $report->id;
+
+        $this->notifyAllUsers(
+            'reminder',
+            'Reminder Laporan',
+            "Pelapor mengirim reminder untuk laporan #{$report->ticket_code}. Mohon segera ditindaklanjuti.",
+            'bell',
+            'yellow',
+            $url
+        );
 
         return response()->json([
             'success' => true,
@@ -540,13 +590,18 @@ class ReportController extends Controller
 
         // LOGIKA PENYIMPANAN
         if ($newStatus === 'ditolak') {
-            // Ambil nilai 'catatan' dari JSON body Fetch dan simpan ke rejection_reason
-            $updates['rejection_reason'] = $request->catatan; 
-            $updates['catatan_admin']    = "Laporan ditolak oleh admin pada tahap " . $oldStatus;
+            $updates['rejection_reason']    = $request->catatan;
+            $updates['catatan_admin']       = "Laporan ditolak oleh admin pada tahap " . $oldStatus;
+            $updates['rejected_from_stage'] = $oldStatus; // simpan dari tahap mana ditolak
         } else {
-            $updates['catatan_admin']    = $request->catatan ?? "Status diperbarui menjadi " . $newStatus;
-            // Bersihkan alasan penolakan jika statusnya diubah kembali dari ditolak ke status lain
-            $updates['rejection_reason'] = null; 
+            $updates['catatan_admin']       = $request->catatan ?? "Status diperbarui menjadi " . $newStatus;
+            $updates['rejection_reason']    = null;
+            $updates['rejected_from_stage'] = null;
+
+            // Reset feedback saat laporan dipulihkan dari ditolak
+            if ($oldStatus === 'ditolak') {
+                $report->feedback()->delete();
+            }
         }
 
         if (in_array($newStatus, ['menunggu', 'diproses', 'selesai', 'ditolak'])) {
@@ -566,14 +621,62 @@ class ReportController extends Controller
             ? "Status diubah dari '{$oldLabel}' menjadi '{$newLabel}'."
             : "Laporan diperbarui (urgency/catatan).";
 
+        $logDesc = $oldStatus !== $newStatus
+        ? "Status diubah dari '{$oldLabel}' menjadi '{$newLabel}'."
+        : "Laporan diperbarui (urgency/catatan).";
+
         $report->logActivity(
             $logDesc,
             $oldStatus,
             $newStatus,
-            $request->catatan,
+            null,
             $adminId,
             'admin'
         );
+
+        // ── TAMBAHKAN INI ──────────────────────────────────────────
+        if ($oldStatus !== $newStatus) {
+            $notifMap = [
+                'menunggu' => [
+                    'type'  => 'status_menunggu',
+                    'title' => 'Laporan Menunggu Verifikasi',
+                    'body'  => "Laporan #{$report->ticket_code} sedang menunggu verifikasi oleh {$admin->nama}.",
+                    'icon'  => 'clock',
+                    'color' => 'yellow',
+                    'url'   => '/menunggu-verifikasi?open=' . $report->id,
+                ],
+                'diproses' => [
+                    'type'  => 'status_diproses',
+                    'title' => 'Laporan Sedang Diproses',
+                    'body'  => "Laporan #{$report->ticket_code} sedang diproses oleh {$admin->nama}.",
+                    'icon'  => 'clock',
+                    'color' => 'blue',
+                    'url'   => '/proses-laporan?open=' . $report->id,
+                ],
+                'selesai' => [
+                    'type'  => 'status_selesai',
+                    'title' => 'Laporan Diselesaikan',
+                    'body'  => "Laporan #{$report->ticket_code} telah diselesaikan oleh {$admin->nama}.",
+                    'icon'  => 'check',
+                    'color' => 'green',
+                    'url'   => '/laporan-selesai?open=' . $report->id,
+                ],
+                'ditolak' => [
+                    'type'  => 'status_ditolak',
+                    'title' => 'Laporan Ditolak',
+                    'body'  => "Laporan #{$report->ticket_code} ditolak oleh {$admin->nama}.",
+                    'icon'  => 'x',
+                    'color' => 'red',
+                    'url'   => '/laporan-ditolak?open=' . $report->id,
+                ],
+            ];
+
+            if (isset($notifMap[$newStatus])) {
+                $n = $notifMap[$newStatus];
+                $this->notifyAllUsers($n['type'], $n['title'], $n['body'], $n['icon'], $n['color'], $n['url']);
+            }
+        }
+// ── SAMPAI SINI ────────────────────────────────────────────
 
         return response()->json([
             'success' => true,
@@ -807,17 +910,25 @@ class ReportController extends Controller
                 }
             }
             // Log aktivitas
+            // Log aktivitas pelapor mengisi detail
             $report->logActivity(
                 'Pelapor melengkapi detail kejadian (waktu, lokasi, dan pihak terlibat).',
                 $oldStatus,
                 'menunggu',
                 null,
-                null,        // actor_id null = pelapor/sistem
-                'pelapor'    // ← tambah parameter baru
+                null,
+                'pelapor'
             );
 
-            // Log 2: sistem otomatis ubah status
-            $report->update(['status' => 'diproses']);
+            // Langsung ubah status ke diproses dalam satu update
+            $report->update([
+                'status'     => 'diproses',
+                'handled_at' => now(),
+            ]);
+
+            // Refresh model agar status terbaru terbaca
+            $report->refresh();
+
             $report->logActivity(
                 'Laporan telah diverifikasi dan akan segera ditindaklanjuti oleh petugas sekolah.',
                 'menunggu',
@@ -825,6 +936,14 @@ class ReportController extends Controller
                 null,
                 null,
                 'sistem'
+            );
+            $this->notifyAllUsers(
+                'detail_lengkap',
+                'Detail Laporan Dilengkapi',
+                "Pelapor telah melengkapi detail laporan #{$report->ticket_code}. Laporan siap diverifikasi.",
+                'check',
+                'blue',
+                '/menunggu-verifikasi?open=' . $report->id
             );
 
             DB::commit();
@@ -935,6 +1054,15 @@ class ReportController extends Controller
                 'admin'
             );
 
+            $this->notifyAllUsers(
+                'tindak_lanjut',
+                'Tindak Lanjut Disimpan',
+                "Laporan #{$report->ticket_code} telah ditindaklanjuti dengan: {$action->name} oleh {$admin->nama}.",
+                'check',
+                'green',
+                '/laporan-selesai?open=' . $report->id
+            );
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -963,8 +1091,8 @@ class ReportController extends Controller
             return response()->json(['success' => false, 'message' => 'Kode tiket tidak ditemukan.'], 404);
         }
 
-        if ($report->status !== 'selesai') {
-            return response()->json(['success' => false, 'message' => 'Feedback hanya bisa dikirim untuk laporan yang sudah selesai.'], 422);
+        if (!in_array($report->status, ['selesai', 'ditolak'])) {
+            return response()->json(['success' => false, 'message' => 'Feedback hanya bisa dikirim untuk laporan yang sudah selesai atau ditolak.'], 422);
         }
 
         try {
@@ -985,6 +1113,21 @@ class ReportController extends Controller
             'rating' => $request->rating,
             'pesan'  => $request->pesan ?? null,
         ]);
+
+        // ── TAMBAHKAN INI ──────────────────────────────────────────
+        $statusUrl = $report->status === 'selesai'
+            ? '/laporan-selesai'
+            : '/laporan-ditolak';
+
+        $this->notifyAllUsers(
+            'feedback',
+            'Feedback Diterima dari Pelapor',
+            "Pelapor memberikan penilaian {$request->rating}/5 bintang untuk laporan #{$report->ticket_code}.",
+            'chat',
+            'blue',
+            $statusUrl . '?open=' . $report->id
+        );
+        // ── SAMPAI SINI ────────────────────────────────────────────
 
         return response()->json([
             'success' => true,

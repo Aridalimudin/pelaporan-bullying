@@ -18,6 +18,7 @@ class Report extends Model
         'status',
         'catatan_admin',
         'rejection_reason',
+        'rejected_from_stage',
         'urgency',
         'incident_date',
         'incident_time',

@@ -182,7 +182,28 @@
         triggerKonfirmasi(action);
     }
 
-    // Jalankan saat halaman siap
-    document.addEventListener('DOMContentLoaded', () => loadRealData());
-    </script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // Selalu load data dulu
+        loadRealData();
+
+        // Cek apakah ada ?open=ID di URL
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get('open');
+        
+        if (openId) {
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            const waitAndOpen = setInterval(() => {
+                const rowId = 'row-' + openId;
+                if (LAPORAN_DATA[rowId]) {
+                    clearInterval(waitAndOpen);
+                    showDetail(rowId, 'laporan-masuk');
+                }
+            }, 200);
+
+            setTimeout(() => clearInterval(waitAndOpen), 5000);
+        }
+    });
+        </script>
 @endpush
