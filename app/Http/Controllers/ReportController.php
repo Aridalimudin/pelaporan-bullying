@@ -77,7 +77,7 @@ class ReportController extends Controller
         if (! $student) {
             return response()->json([
                 'success' => false,
-                'message' => 'NISN tidak ditemukan. Periksa kembali atau hubungi wali kelas.',
+                'message' => 'NIS tidak ditemukan. Periksa kembali atau hubungi wali kelas.',
             ], 404);
         }
 
@@ -1132,6 +1132,17 @@ class ReportController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Terima kasih! Penilaian Anda telah dikirim.',
+        ]);
+    }
+
+    public function reportCounts(): JsonResponse
+    {
+        return response()->json([
+            'masuk'      => Report::where('status', 'masuk')->count(),
+            'menunggu'   => Report::where('status', 'menunggu')->count(),
+            'diproses'   => Report::where('status', 'diproses')->count(),
+            'selesai'    => Report::where('status', 'selesai')->count(),
+            'ditolak'    => Report::where('status', 'ditolak')->count(),
         ]);
     }
 

@@ -42,14 +42,14 @@ class GradeMajorController extends Controller
     public function majorSave(Request $request): JsonResponse
     {
         $v = Validator::make($request->all(), [
-            'name' => 'required|string|max:100|unique:majors,name',
-            'code' => 'required|string|max:20|unique:majors,code',
+            'name' => 'required|string|max:30|unique:majors,name',
+            'code' => 'required|string|max:5|unique:majors,code',
         ], [
             'name.required' => 'Nama jurusan wajib diisi.',
             'name.unique'   => 'Nama jurusan sudah ada.',
             'code.required' => 'Kode/inisial jurusan wajib diisi.',
             'code.unique'   => 'Kode ":input" sudah digunakan.',
-            'code.max'      => 'Kode maksimal 20 karakter.',
+            'code.max'      => 'Kode maksimal 30 karakter.',
         ]);
 
         if ($v->fails()) {

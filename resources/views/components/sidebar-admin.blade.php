@@ -49,9 +49,7 @@
                     @php
                         $__badgeLM = $countLaporanMasuk ?? 12;
                     @endphp
-                    @if($__badgeLM > 0)
-                        <span class="nav-badge">{{ $__badgeLM }}</span>
-                    @endif
+                    <span class="nav-badge" id="badgeLM" style="display:none"></span>
                 </a>
                 <a href="{{ route('administrator.pending-verification') }}" class="nav-child {{ ($activePage ?? '') === 'menunggu-verifikasi' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,9 +57,7 @@
                     </svg>
                     <span>Menunggu Verifikasi</span>
                     @php $__badgeMV = $countMenungguVerifikasi ?? 0; @endphp
-                    @if($__badgeMV > 0)
-                        <span class="nav-badge">{{ $__badgeMV }}</span>
-                    @endif
+                    <span class="nav-badge" id="badgeMV" style="display:none"></span>
                 </a>
                 <a href="{{ route('administrator.processing-report') }}" class="nav-child {{ ($activePage ?? '') === 'proses-laporan' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,9 +65,7 @@
                     </svg>
                     <span>Proses Laporan</span>
                     @php $__badgePL = $countProsesLaporan ?? 0; @endphp
-                    @if($__badgePL > 0)
-                        <span class="nav-badge">{{ $__badgePL }}</span>
-                    @endif
+                    <span class="nav-badge" id="badgePL" style="display:none"></span>
                 </a>
                 <a href="{{ route('administrator.report-closed') }}" class="nav-child {{ ($activePage ?? '') === 'laporan-selesai' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,9 +73,7 @@
                     </svg>
                     <span>Laporan Selesai</span>
                     @php $__badgeLS = $countLaporanSelesai ?? 0; @endphp
-                    @if($__badgeLS > 0)
-                        <span class="nav-badge">{{ $__badgeLS }}</span>
-                    @endif
+                    <span class="nav-badge" id="badgeLS" style="display:none"></span>
                 </a>
                 <a href="{{ route('administrator.report-rejected') }}" class="nav-child {{ ($activePage ?? '') === 'laporan-ditolak' ? 'active' : '' }}">
                     <svg class="child-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,9 +81,7 @@
                     </svg>
                     <span>Laporan Ditolak</span>
                     @php $__badgeDT = $countLaporanDitolak ?? 0; @endphp
-                    @if($__badgeDT > 0)
-                        <span class="nav-badge" style="background:#ef4444">{{ $__badgeDT }}</span>
-                    @endif
+                    <span class="nav-badge" id="badgeDT" style="display:none;background:#ef4444"></span>
                 </a>
             </div>
         </div>
@@ -216,6 +206,32 @@
 </aside>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/admin/reports/counts', {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+        setBadge('badgeLM', d.masuk);
+        setBadge('badgeMV', d.menunggu);
+        setBadge('badgePL', d.diproses);
+        setBadge('badgeLS', d.selesai);
+        setBadge('badgeDT', d.ditolak);
+    })
+    .catch(function (e) { console.error('Badge fetch error:', e); });
+
+    function setBadge(id, count) {
+        var el = document.getElementById(id);
+        if (!el) { console.warn('Badge element not found:', id); return; }
+        el.textContent   = count;
+        el.style.display = count > 0 ? '' : 'none';
+    }
+});
+</script>
 
 <style>
     :root {

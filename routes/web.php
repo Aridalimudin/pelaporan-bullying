@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\GradeMajorController;
+use App\Http\Controllers\Admin\RekapController;
 
 // ═══════════════════════════════════════════
 // PUBLIC (tidak butuh login)
@@ -123,6 +124,7 @@ Route::middleware("auth:web")->group(function () {
 
         // Daftar laporan per status (untuk halaman admin)
         Route::get("/reports",              [ReportController::class, "adminIndex"]);
+        Route::get("/reports/counts",       [ReportController::class, "reportCounts"]);
         Route::get("/reports/{id}",         [ReportController::class, "adminShow"]);
         Route::put("/reports/{id}/status",  [ReportController::class, "updateStatus"]);
 
@@ -130,7 +132,7 @@ Route::middleware("auth:web")->group(function () {
         Route::post  ("/reports/{id}/persons",              [ReportController::class, "storePerson"]);
         Route::delete("/reports/{id}/persons/{personId}",   [ReportController::class, "destroyPerson"]);
 
-        Route::get("/discipline-actions", [DisciplineActionController::class, "list"]); // ✅ hapus 
+        Route::get("/discipline-actions", [DisciplineActionController::class, "list"]);
         Route::post("/reports/{id}/follow-up", [ReportController::class, "storeFollowUp"]);
         Route::put("/reports/{id}/follow-up/{followUpId}", [ReportController::class, "updateFollowUp"]);
 
@@ -265,5 +267,12 @@ Route::middleware("auth:web")->group(function () {
     Route::get("/rekapitulasi-PerSemester", function () {
         return view("pages.administrator.case-recapitulation-page.semester");
     })->name("administrator.semester");
+
+    Route::get('/api/admin/rekap/bulan',            [RekapController::class, 'bulan']);
+    Route::get('/api/admin/rekap/bulan/export',     [RekapController::class, 'exportBulan']);
+    Route::get('/api/admin/rekap/semester',         [RekapController::class, 'semester']);
+    Route::get('/api/admin/rekap/semester/export',  [RekapController::class, 'exportSemester']);
+    Route::get('/api/admin/rekap/detail-kelas',     [RekapController::class, 'detailKelas']);
+    Route::get('/api/admin/rekap/download-kelas',   [RekapController::class, 'downloadKelas']);
 
 });

@@ -290,7 +290,7 @@ var API_MAJORS_LIST          = '/api/data-siswa/majors';
 var API_MAJORS_SAVE          = '/api/data-siswa/majors/save';
 var API_MAJORS_DELETE        = '/api/data-siswa/majors/delete';
 // ── Endpoint baru (di-override via blade dengan route()) ──
-var API_GRADE_MAJORS_PAIRS   = '/api/data-siswa/grade-major-pairs';
+var API_GRADE_MAJORS_PAIRS   = '/api/data-siswa/grade-majors';
 var API_GRADES_BY_MAJOR      = '/api/data-siswa/grades-by-major';
 
 var CSRF_TOKEN = (function () {
@@ -371,6 +371,9 @@ async function loadAll() {
 
     var badgeEl = document.getElementById('tabKelasBadge');
     if (badgeEl) badgeEl.textContent = _allPairs.length;
+
+    var badgeJurusanEl = document.getElementById('tabJurusanBadge');
+    if (badgeJurusanEl) badgeJurusanEl.textContent = _allMajorsData.length;
 
     populateFilterKelas();
     populateFilterJurusan();
@@ -562,27 +565,30 @@ function openSiswaModal(id) {
     // Bersihkan semua error setiap kali modal dibuka
     smClearAllErrors();
 
-    if (id) {
+if (id) {
         var d = _allStudents.find(function (x) { return x.id == id; });
         if (d) {
             document.getElementById('smNama').value  = d.fullname;
             document.getElementById('smNis').value   = d.nis;
             populateFormKelas(d.grade);
-            populateFormJurusan(d.major);
+            filterJurusanByKelas(d.grade);
+            document.getElementById('smJurusan').value = d.major;
             document.getElementById('smJK').value    = d.gender;
             document.getElementById('smHp').value    = d.phone || '';
             document.getElementById('smEmail').value = d.email || '';
             document.getElementById('smAvatar').textContent = d.fullname.charAt(0).toUpperCase();
         }
-    } else {
-        ['smNama', 'smNis', 'smHp', 'smEmail'].forEach(function (fid) {
-            document.getElementById(fid).value = '';
-        });
-        populateFormKelas('');
-        populateFormJurusan('');
-        document.getElementById('smJK').value = 'L';
-        document.getElementById('smAvatar').textContent = '?';
-    }
+        } else {
+                ['smNama', 'smNis', 'smHp', 'smEmail'].forEach(function (fid) {
+                    document.getElementById(fid).value = '';
+                });
+                populateFormKelas('');
+                populateFormJurusan('');
+                document.getElementById('smJurusan').innerHTML = '<option value="">Pilih jurusan dulu setelah pilih kelas</option>';
+                document.getElementById('smJK').value = 'L';
+                document.getElementById('smAvatar').textContent = '?';
+            }
+            
 
     mdOpenOverlay('modalSiswa');
 }
@@ -755,6 +761,8 @@ function renderJurusanTable() {
             '</div>' +
         '</div>';
     }).join('');
+    var badgeJurusan = document.getElementById('tabJurusanBadge');
+    if (badgeJurusan) badgeJurusan.textContent = _allMajorsData.length;
 }
 
 /* Shortcut: klik "Lihat Kelas" dari tab Jurusan → pindah ke tab Kelas dan filter */
@@ -855,6 +863,11 @@ async function tambahJurusan() {
     if (!nama) { showKmgrErr('Nama jurusan wajib diisi.', 'jurusan'); return; }
     if (!kode) { showKmgrErr('Kode/inisial jurusan wajib diisi.', 'jurusan'); return; }
 
+    if (kode.length > 30) {
+        showKmgrErr('Kode maksimal 30 karakter.', 'jurusan');
+        return;
+    }
+
     if (_allMajors.indexOf(kode) !== -1) {
         showKmgrErr('Kode "' + kode + '" sudah digunakan.', 'jurusan');
         return;
@@ -896,23 +909,6 @@ async function hapusJurusan(nama) {
     if (res.status === 'success') {
         _allMajors     = _allMajors.filter(function (j) { return j !== nama; });
         _allMajorsData = _allMajorsData.filter(function (j) { return j.code !== nama; });
-        renderJurusanTable();
-        kmgrRefreshJurusanSelect();
-        kmgrRefreshFilterKelasByJurusan();
-        renderKelasTags();
-        if (typeof Toast !== 'undefined') {
-            Toast.show('success', 'Dihapus', 'Jurusan "' + nama + '" dihapus.');
-        }
-    } else {
-        alert(res.message || 'Gagal menghapus jurusan.');
-    }
-}
-
-async function hapusJurusan(nama) {
-    var res = await apiFetch(API_MAJORS_DELETE + '/' + encodeURIComponent(nama), { method: 'DELETE' });
-
-    if (res.status === 'success') {
-        _allMajors = _allMajors.filter(function (j) { return j !== nama; });
         renderJurusanTable();
         kmgrRefreshJurusanSelect();
         kmgrRefreshFilterKelasByJurusan();
@@ -991,6 +987,14 @@ async function tambahKelas() {
     }
 }
 
+function konfirmasiHapusJurusan(kode) {
+    showDeleteConfirm({
+        type      : 'jurusan',
+        nama      : kode,
+        onConfirm : function () { hapusJurusan(kode); }
+    });
+}
+
 /* ── HAPUS KELAS ── */
 function konfirmasiHapusKelas(grade) {
     showDeleteConfirm({
@@ -1004,8 +1008,12 @@ async function hapusKelas(grade) {
     var res = await apiFetch(API_GRADES_DELETE + '/' + encodeURIComponent(grade), { method: 'DELETE' });
 
     if (res.status === 'success') {
-        _allPairs  = _allPairs.filter(function (p) { return p.grade !== grade; });
-        _allGrades = _allGrades.filter(function (k) { return k !== grade; });
+        _allPairs = _allPairs.filter(function (p) { return p.grade !== grade; });
+
+        var masihAda = _allPairs.some(function (p) { return p.grade === grade; });
+        if (!masihAda) {
+            _allGrades = _allGrades.filter(function (k) { return k !== grade; });
+        }
         renderKelasTags();
         renderJurusanTable();
         document.getElementById('tabKelasBadge').textContent = _allPairs.length;
@@ -1017,9 +1025,25 @@ async function hapusKelas(grade) {
     }
 }
 
-/* ── HELPER ERROR INLINE DI MODAL KELAS-JURUSAN ── */
+function kmgrKodeCounter() {
+    var val     = (document.getElementById('inputJurusanKode').value || '');
+    var counter = document.getElementById('kodeCounter');
+    if (!counter) return;
+    counter.textContent = val.length + '/30';
+    counter.style.color = val.length > 25 ? '#ef4444' : '#9ca3af';
+}
+
+function kmgrNamaCounter() {
+    var val     = (document.getElementById('inputJurusanBaru').value || '');
+    var counter = document.getElementById('namaCounter');
+    if (!counter) return;
+    counter.textContent = val.length + '/100';
+    counter.style.color = val.length > 90 ? '#ef4444' : '#9ca3af';
+}
+
 function showKmgrErr(msg, scope) {
-    var errEl = document.getElementById('kmgrKelasErr');
+    var errId = scope === 'jurusan' ? 'kmgrJurusanErr' : 'kmgrKelasErr';
+    var errEl = document.getElementById(errId);
     if (!errEl) return;
     errEl.textContent  = msg;
     errEl.style.display = 'flex';

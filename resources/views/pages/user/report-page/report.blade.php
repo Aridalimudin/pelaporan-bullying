@@ -41,7 +41,7 @@
                         {{-- NISN + tombol cari --}}
                         <div class="form-group">
                             <label for="nisn" class="form-label">
-                                <span class="text-gray-800 font-semibold text-sm">NISN</span>
+                                <span class="text-gray-800 font-semibold text-sm">NIS</span>
                                 <span class="text-red-500 text-sm">*</span>
                             </label>
                             <div class="nisn-wrap">
@@ -153,7 +153,7 @@
 
 @include('components.modal-success')
 
-{{-- Modal: NISN tidak ditemukan --}}
+{{-- Modal: NIS tidak ditemukan --}}
 <div id="modalNisnNotFound" class="modal-overlay hidden" onclick="closeNisnModal(event)">
     <div class="modal-box-sm">
         <div class="modal-icon-wrap" style="background:#fef2f2">
@@ -161,8 +161,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
             </svg>
         </div>
-        <h3 class="modal-box-title">NISN Tidak Ditemukan</h3>
-        <p class="modal-box-desc" id="nisnNotFoundMsg">NISN tidak ditemukan dalam database. Periksa kembali atau hubungi wali kelas Anda.</p>
+        <h3 class="modal-box-title">NIS Tidak Ditemukan</h3>
+        <p class="modal-box-desc" id="nisnNotFoundMsg">NIS tidak ditemukan dalam database. Periksa kembali atau hubungi wali kelas Anda.</p>
         <button class="btn-modal-close" onclick="document.getElementById('modalNisnNotFound').classList.add('hidden')">
             Tutup
         </button>

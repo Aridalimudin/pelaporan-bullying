@@ -50,12 +50,13 @@
         </div>
 
         <div class="animate-fade-in" style="animation-delay:.05s" id="statsWrap">
-            @include('components.rekap-stats-admin', [
-                'totalLaporan'        => 42,
-                'rataRata'            => '1.4',
-                'tingkatPenyelesaian' => '76',
-                'periodeLabel'        => 'Maret 2026',
-            ])
+        @include('components.rekap-stats-admin', [
+            'idPrefix'            => 'bulan',
+            'totalLaporan'        => 0,
+            'rataRata'            => '0.0',
+            'tingkatPenyelesaian' => '0',
+            'periodeLabel'        => '—',
+        ])
         </div>
 
         <div class="rekap-chart-card animate-fade-in" style="animation-delay:.1s">
@@ -121,30 +122,142 @@
 
     </main>
     
+    @include('components.rekap-detail-drawer')
     @include('components.footer', ['type' => 'admin'])
     @include('components.toast')
 </div>
 
 <script>
-const REKAP_BULAN = [
-    { periode:'Maret 2026', kelas:'X AKL-1',   total:8,  selesai:7 },
-    { periode:'Maret 2026', kelas:'X RPL-1',   total:6,  selesai:5 },
-    { periode:'Maret 2026', kelas:'XI TKJ-1',  total:7,  selesai:6 },
-    { periode:'Maret 2026', kelas:'XI MM-2',   total:5,  selesai:4 },
-    { periode:'Maret 2026', kelas:'XII AKL-1', total:4,  selesai:3 },
-    { periode:'Maret 2026', kelas:'XII TKJ-1', total:6,  selesai:4 },
-    { periode:'Maret 2026', kelas:'X MM-1',    total:3,  selesai:3 },
-    { periode:'Maret 2026', kelas:'XI AKL-1',  total:3,  selesai:0 },
-];
+// ── State ────────────────────────────────────────────────
+let _allData  = [];
+let _filtered = [];
+let _chart    = null;
 
-let _filtered = [...REKAP_BULAN];
+// ── Ambil data dari API ──────────────────────────────────
+async function loadRekap() {
+    const bulan = document.getElementById('filterBulan').value;
+    const tahun = document.getElementById('filterTahun').value;
 
+    // Tampilkan loading di tabel
+    document.getElementById('rekapTableBody').innerHTML =
+        `<tr><td colspan="7" style="text-align:center;padding:24px;color:#9ca3af">Memuat data...</td></tr>`;
+
+    try {
+        const res  = await fetch(`/api/admin/rekap/bulan?bulan=${bulan}&tahun=${tahun}`);
+        const json = await res.json();
+        if (!json.success) throw new Error('Gagal memuat data');
+
+        const { stats, chart, tabel } = json.data;
+
+        updateStats(stats);
+        updateChart(chart);
+
+        _allData  = tabel;
+        _filtered = [...tabel];
+        renderTable();
+
+    } catch (e) {
+        document.getElementById('rekapTableBody').innerHTML =
+            `<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444">Gagal memuat data. Coba lagi.</td></tr>`;
+    }
+}
+
+// ── Update stats card ────────────────────────────────────
+function updateStats(stats) {
+    document.getElementById('bulan-totalLaporan').textContent = stats.totalLaporan;
+    document.getElementById('bulan-rataRata').textContent     = stats.rataRata;
+    document.getElementById('bulan-periode').textContent      = stats.periodeLabel;
+    document.getElementById('bulan-pct').innerHTML            = stats.tingkatPenyelesaian + '<small>%</small>';
+
+    // Badge warna
+    const badge = document.getElementById('bulan-pctBadge');
+    const bar   = document.getElementById('bulan-progressBar');
+    const pct   = stats.tingkatPenyelesaian;
+    const cls   = pct >= 75 ? 'rs-pct-good' : pct >= 50 ? 'rs-pct-mid' : 'rs-pct-low';
+    const lbl   = pct >= 75 ? 'Baik' : pct >= 50 ? 'Sedang' : 'Rendah';
+
+    badge.className = `rs-pct-badge ${cls}`;
+    badge.textContent = lbl;
+    bar.className   = `rs-progress-bar ${cls}`;
+    bar.style.width = Math.min(100, pct) + '%';
+}
+
+// ── Update chart ─────────────────────────────────────────
+function updateChart(chart) {
+    // Update teks peak
+    document.querySelector('.peak-val').textContent  = chart.peakVal + ' laporan';
+    document.querySelector('.peak-date').textContent = chart.peakHari ? 'tgl ' + chart.peakHari : '-';
+
+    const bulan = document.getElementById('filterBulan').value;
+    const tahun = document.getElementById('filterTahun').value;
+    const namaBulan = ['','Januari','Februari','Maret','April','Mei','Juni',
+        'Juli','Agustus','September','Oktober','November','Desember'];
+    const allSubs = document.querySelectorAll('.rekap-chart-sub');
+        if (allSubs[0]) allSubs[0].textContent = `Total laporan per hari — ${namaBulan[bulan]} ${tahun}`;
+        if (allSubs[1]) allSubs[1].textContent = `Per kelas — ${namaBulan[bulan]} ${tahun}`;
+
+    // Destroy & rebuild chart
+    const canvas = document.getElementById('chartBulan');
+    if (_chart) { _chart.destroy(); _chart = null; }
+
+    const ctx  = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 220);
+    grad.addColorStop(0,   'rgba(16,185,129,0.28)');
+    grad.addColorStop(0.6, 'rgba(16,185,129,0.06)');
+    grad.addColorStop(1,   'rgba(16,185,129,0)');
+
+    _chart = new Chart(ctx, {
+        
+        type: 'line',
+        data: {
+            labels: chart.labels,
+            datasets: [{
+                label: 'Laporan Masuk',
+                data: chart.data,
+                borderColor: '#10b981',
+                borderWidth: 2.5,
+                backgroundColor: grad,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#10b981',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+                tension: 0.55,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#94a3b8',
+                    padding: 12,
+                    cornerRadius: 10,
+                    displayColors: false,
+                    callbacks: { label: ctx => ' ' + ctx.parsed.y + ' laporan' }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11, weight: '600' }, color: '#9ca3af', maxRotation: 0 } },
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false, dash: [4,4] }, ticks: { font: { size: 11 }, color: '#9ca3af', stepSize: 1, padding: 6 } }
+            }
+        }
+    });
+}
+
+// ── Render tabel ─────────────────────────────────────────
 function pctColor(p) { return p >= 75 ? '#10b981' : p >= 50 ? '#f59e0b' : '#ef4444'; }
 
 function renderTable() {
     const body  = document.getElementById('rekapTableBody');
     const noRes = document.getElementById('noResultsRekap');
     const info  = document.getElementById('tableInfoRekap');
+
     if (!_filtered.length) {
         body.innerHTML = '';
         noRes.classList.remove('hidden');
@@ -153,7 +266,7 @@ function renderTable() {
     }
     noRes.classList.add('hidden');
     body.innerHTML = _filtered.map((d, i) => {
-        const pct = Math.round(d.selesai / d.total * 100);
+        const pct = d.total > 0 ? Math.round(d.selesai / d.total * 100) : 0;
         const c   = pctColor(pct);
         return `<tr class="table-row">
             <td class="col-no">${i + 1}</td>
@@ -169,27 +282,52 @@ function renderTable() {
             </td>
             <td class="col-aksi">
                 <div class="aksi-wrap">
-                    <button class="btn-aksi view" title="Lihat Detail">
+                    <button class="btn-aksi view" title="Lihat Detail" onclick="lihatDetail('${d.kelas}')">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
-                    <button class="btn-aksi done" title="Download">
+                    <button class="btn-aksi done" title="Download" onclick="downloadKelas('${d.kelas}')">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     </button>
                 </div>
             </td>
         </tr>`;
     }).join('');
-    info.textContent = `Menampilkan ${_filtered.length} dari ${REKAP_BULAN.length} kelas`;
+    info.textContent = `Menampilkan ${_filtered.length} dari ${_allData.length} kelas`;
 }
 
+function lihatDetail(kelas) {
+    const bulan = document.getElementById('filterBulan').value;
+    const tahun = document.getElementById('filterTahun').value;
+    openDrawer(kelas, { bulan, tahun });
+}
+
+function downloadKelas(kelas) {
+    const bulan = document.getElementById('filterBulan').value;
+    const tahun = document.getElementById('filterTahun').value;
+    window.open(`/api/admin/rekap/download-kelas?kelas=${encodeURIComponent(kelas)}&bulan=${bulan}&tahun=${tahun}`, '_blank');
+}
+
+// ── Export semua ─────────────────────────────────────────
+function exportRekap() {
+    const bulan = document.getElementById('filterBulan').value;
+    const tahun = document.getElementById('filterTahun').value;
+    window.open(`/api/admin/rekap/bulan/export?bulan=${bulan}&tahun=${tahun}`, '_blank');
+}
+
+// ── Search ───────────────────────────────────────────────
 document.getElementById('searchTable')?.addEventListener('input', function () {
     const q = this.value.toLowerCase();
-    _filtered = REKAP_BULAN.filter(d => d.kelas.toLowerCase().includes(q) || d.periode.toLowerCase().includes(q));
+    _filtered = _allData.filter(d =>
+        d.kelas.toLowerCase().includes(q) || d.periode.toLowerCase().includes(q)
+    );
     renderTable();
 });
 
-function exportRekap() { alert('Fitur export akan tersambung ke backend.'); }
+// ── Filter change ────────────────────────────────────────
+document.getElementById('filterBulan').addEventListener('change', loadRekap);
+document.getElementById('filterTahun').addEventListener('change', loadRekap);
 
-document.addEventListener('DOMContentLoaded', renderTable);
+// ── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadRekap);
 </script>
 @endsection

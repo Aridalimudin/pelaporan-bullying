@@ -1,4 +1,5 @@
 @php
+    $idPrefix            = $idPrefix            ?? 'stat';
     $totalLaporan        = $totalLaporan        ?? 0;
     $rataRata            = $rataRata            ?? '0';
     $tingkatPenyelesaian = $tingkatPenyelesaian ?? '0';
@@ -6,14 +7,14 @@
     $pct                 = (int) $tingkatPenyelesaian;
 
     if ($pct >= 75) {
-        $pctClass   = 'rs-pct-good';
-        $pctLabel   = 'Baik';
+        $pctClass = 'rs-pct-good';
+        $pctLabel = 'Baik';
     } elseif ($pct >= 50) {
-        $pctClass   = 'rs-pct-mid';
-        $pctLabel   = 'Sedang';
+        $pctClass = 'rs-pct-mid';
+        $pctLabel = 'Sedang';
     } else {
-        $pctClass   = 'rs-pct-low';
-        $pctLabel   = 'Rendah';
+        $pctClass = 'rs-pct-low';
+        $pctLabel = 'Rendah';
     }
 
     $pctWidth = min(100, max(0, $pct));
@@ -29,9 +30,9 @@
             </svg>
         </div>
         <div class="rs-body">
-            <span class="rs-val">{{ $totalLaporan }}</span>
+            <span class="rs-val" id="{{ $idPrefix }}-totalLaporan">{{ $totalLaporan }}</span>
             <span class="rs-lbl">Total Laporan</span>
-            <span class="rs-period">{{ $periodeLabel }}</span>
+            <span class="rs-period" id="{{ $idPrefix }}-periode">{{ $periodeLabel }}</span>
         </div>
     </div>
 
@@ -43,7 +44,7 @@
             </svg>
         </div>
         <div class="rs-body">
-            <span class="rs-val">{{ $rataRata }}</span>
+            <span class="rs-val" id="{{ $idPrefix }}-rataRata">{{ $rataRata }}</span>
             <span class="rs-lbl">Rata-rata Laporan</span>
             <span class="rs-period">per hari</span>
         </div>
@@ -58,18 +59,21 @@
         </div>
         <div class="rs-body">
             <div class="rs-pct-row">
-                <span class="rs-val">{{ $pct }}<small>%</small></span>
-                <span class="rs-pct-badge {{ $pctClass }}">{{ $pctLabel }}</span>
+                <span class="rs-val" id="{{ $idPrefix }}-pct">{{ $pct }}<small>%</small></span>
+                <span class="rs-pct-badge {{ $pctClass }}" id="{{ $idPrefix }}-pctBadge">{{ $pctLabel }}</span>
             </div>
             <span class="rs-lbl">Tingkat Penyelesaian</span>
             <div class="rs-progress-wrap">
-                <div class="rs-progress-bar {{ $pctClass }}" data-width="{{ $pctWidth }}"></div>
+                <div class="rs-progress-bar {{ $pctClass }}"
+                     id="{{ $idPrefix }}-progressBar"
+                     data-width="{{ $pctWidth }}"></div>
             </div>
         </div>
     </div>
 
 </div>
 
+{{-- Style & init progress bar (satu kali render sudah cukup) --}}
 <style>
 .rs-grid {
     display: grid;
@@ -99,14 +103,14 @@
     flex-shrink: 0;
 }
 .rs-icon-wrap svg { width: 21px; height: 21px; }
-.rs-blue .rs-icon-wrap { background: #eff6ff; color: #3b82f6; }
+.rs-blue  .rs-icon-wrap { background: #eff6ff; color: #3b82f6; }
 .rs-amber .rs-icon-wrap { background: #fffbeb; color: #d97706; }
 .rs-green .rs-icon-wrap { background: #ecfdf5; color: #10b981; }
 
 .rs-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-.rs-val { font-size: 1.7rem; font-weight: 800; color: #111827; line-height: 1; }
+.rs-val  { font-size: 1.7rem; font-weight: 800; color: #111827; line-height: 1; }
 .rs-val small { font-size: 1rem; font-weight: 700; }
-.rs-lbl { font-size: .75rem; font-weight: 600; color: #6b7280; }
+.rs-lbl  { font-size: .75rem; font-weight: 600; color: #6b7280; }
 .rs-period { font-size: .68rem; color: #9ca3af; }
 
 .rs-pct-row { display: flex; align-items: center; gap: 8px; }
@@ -121,13 +125,12 @@
 }
 .rs-progress-bar { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(.16,1,.3,1); }
 .rs-progress-bar.rs-pct-good { background: #10b981; }
-.rs-progress-bar.rs-pct-mid { background: #f59e0b; }
-.rs-progress-bar.rs-pct-low { background: #ef4444; }
+.rs-progress-bar.rs-pct-mid  { background: #f59e0b; }
+.rs-progress-bar.rs-pct-low  { background: #ef4444; }
 </style>
 
 <script>
 document.querySelectorAll('.rs-progress-bar[data-width]').forEach(bar => {
-    const width = Math.min(100, Math.max(0, parseInt(bar.dataset.width) || 0));
-    bar.style.width = width + '%';
+    bar.style.width = Math.min(100, Math.max(0, parseInt(bar.dataset.width) || 0)) + '%';
 });
 </script>

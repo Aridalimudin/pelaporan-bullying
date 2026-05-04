@@ -111,9 +111,9 @@ async function cariSiswa() {
             hint.classList.add('hidden');
 
             document.getElementById('nisnNotFoundMsg').textContent =
-                data.message || 'NISN tidak ditemukan. Periksa kembali atau hubungi wali kelas.';
+                data.message || 'NIS tidak ditemukan. Periksa kembali atau hubungi wali kelas.';
             document.getElementById('modalNisnNotFound').classList.remove('hidden');
-            FormValidator.showError('nisn', 'NISN tidak ditemukan');
+            FormValidator.showError('nisn', 'NIS tidak ditemukan');
         }
     } catch (e) {
         console.error(e);

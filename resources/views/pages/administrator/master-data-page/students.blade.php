@@ -252,9 +252,10 @@
                 <button class="kmgr-tab active" id="tabJurusan" onclick="kmgrSwitchTab('jurusan')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
                     </svg>
                     Jurusan
+                    <span class="kmgr-tab-badge" id="tabJurusanBadge">0</span>
                 </button>
                 <button class="kmgr-tab" id="tabKelas" onclick="kmgrSwitchTab('kelas')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,13 +277,19 @@
                     Tambah Jurusan Baru
                 </p>
                 <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-                    <input class="sm-input" type="text" id="inputJurusanBaru"
-                        placeholder="Nama lengkap (cth: Rekayasa Perangkat Lunak)"
-                        style="flex:2;min-width:180px"
-                        onkeydown="if(event.key==='Enter') tambahJurusan()">
+                    <div style="flex:2;min-width:180px">
+                        <input class="sm-input" type="text" id="inputJurusanBaru"
+                            placeholder="Nama lengkap (cth: Rekayasa Perangkat Lunak)"
+                            style="width:100%"
+                            maxlength="100"
+                            oninput="kmgrNamaCounter()"
+                            onkeydown="if(event.key==='Enter') tambahJurusan()">
+                        <span id="namaCounter" style="font-size:11px;color:#9ca3af">0/100</span>
+                    </div>
                     <input class="sm-input" type="text" id="inputJurusanKode"
                         placeholder="Kode (cth: RPL)"
                         style="flex:1;min-width:80px;text-transform:uppercase"
+                        maxlength="30"
                         onkeydown="if(event.key==='Enter') tambahJurusan()">
                     <button class="mgr-btn-add mgr-btn-green" onclick="tambahJurusan()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,7 +315,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Setelah menambah jurusan, buka tab <strong>Kelas</strong> untuk mendaftarkan kelas ke jurusan tersebut.
+                    Setelah menambah jurusan, buka tab Kelas untuk mendaftarkan kelas ke jurusan tersebut.
                 </div>
             </div>
 
@@ -361,6 +368,7 @@
                 </div>
 
                 {{-- Error inline --}}
+                <p class="kmgr-err" id="kmgrJurusanErr" style="display:none"></p>
                 <p class="kmgr-err" id="kmgrKelasErr" style="display:none"></p>
 
                 <hr style="border:none;border-top:1px solid #f3f4f6;margin:16px 0">
@@ -387,7 +395,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Kelas yang dihapus <strong>tidak</strong> mempengaruhi data siswa yang sudah terdaftar.
+                    Kelas yang dihapus tidak mempengaruhi data siswa yang sudah terdaftar.
                 </div>
             </div>
 
@@ -463,7 +471,7 @@ var API_GRADES_DELETE      = '{{ route("students.api.grades.delete", ":name") }}
 var API_MAJORS_LIST        = '{{ route("students.api.majors.public") }}';
 var API_MAJORS_SAVE        = '{{ route("students.api.majors.save") }}';
 var API_MAJORS_DELETE      = '{{ route("students.api.majors.delete", ":name") }}'.replace('/:name', '');
-var API_GRADE_MAJORS_PAIRS = '{{ route("api.grade.majors.pairs.public") }}';
+var API_GRADE_MAJORS_PAIRS = '{{ route("api.grade.majors.pairs") }}';
 var API_GRADES_BY_MAJOR    = '{{ route("api.grades.by.major", ":major") }}'.replace('/:major', '');
 var API_MAJORS_FULL = '{{ route("students.api.majors.full.public") }}';
 
