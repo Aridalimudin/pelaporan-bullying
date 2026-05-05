@@ -31,7 +31,7 @@
                 </div>
                 <div class="mk-card-row" id="mkCardRowExtra">
                     <div class="mk-card-field">
-                        <span class="mk-card-label">Kelas</span>
+                        <span class="mk-card-label" id="mkCardKelasLabel">Kelas</span>
                         <span class="mk-card-val" id="mkCardKelas">—</span>
                     </div>
                     <div class="mk-card-field">
@@ -302,7 +302,14 @@ function triggerKonfirmasi(action) {
     const d = _currentData || {};
     document.getElementById('mkCardKode').textContent   = d.kode  || '—';
     document.getElementById('mkCardNama').textContent   = d.nama  || '—';
-    document.getElementById('mkCardKelas').textContent  = d.kelas || '—';
+    if (d.reporter_type === 'ortu') {
+        document.getElementById('mkCardKelasLabel').textContent = 'Kelas Anak';
+        document.getElementById('mkCardKelas').textContent = d.child_grade || '—';
+    } else {
+        document.getElementById('mkCardKelasLabel').textContent = 'Kelas';
+        document.getElementById('mkCardKelas').textContent = d.kelas || '—';
+    }
+
 
     const urgensi = d.urgensi || '—';
     const urEl = document.getElementById('mkCardUrgensi');

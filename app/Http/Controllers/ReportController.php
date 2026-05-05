@@ -221,10 +221,9 @@ class ReportController extends Controller
                 'reporter_type'       => $reporterType,
                 'reporter_name'       => $reporterType === 'ortu' ? $request->reporter_name  : null,
                 'reporter_phone'      => $reporterType === 'ortu' ? $request->reporter_phone : null,
-                'catatan_admin'       => $reporterType === 'ortu'
-                    ? "Anak: {$request->child_name} | Kelas: {$request->child_grade}"
-                    : null,
-                // ── Rule-based results ──
+                'catatan_admin' => null,
+                'child_name'    => $reporterType === 'ortu' ? $request->child_name  : null,
+                'child_grade'   => $reporterType === 'ortu' ? $request->child_grade : null,
                 'urgency'             => $classified['urgency'],
                 'urgency_score'       => $classified['score'],
                 'detected_violations' => json_encode($classified['violation_ids']),
@@ -348,12 +347,8 @@ class ReportController extends Controller
                 'reporter_type'  => $report->reporter_type,
                 'reporter_name'  => $report->reporter_name,
                 'reporter_phone' => $report->reporter_phone,
-                'child_name'     => $report->reporter_type === 'ortu'
-                    ? (explode(' | ', $report->catatan_admin ?? '')[0] ?? null)
-                    : null,
-                'child_grade'    => $report->reporter_type === 'ortu'
-                    ? (explode('Kelas: ', $report->catatan_admin ?? '')[1] ?? null)
-                    : null,
+                'child_name'  => $report->child_name  ?? null,
+                'child_grade' => $report->child_grade ?? null,
 
                 // ── Data tambahan (baru) ──────────────────────────────
                 'student_grade'     => $report->student
@@ -528,12 +523,8 @@ class ReportController extends Controller
                 'reporter_type'  => $item->reporter_type,
                 'reporter_name'  => $item->reporter_name,
                 'reporter_phone' => $item->reporter_phone,
-                'child_name'     => $item->reporter_type === 'ortu'
-                    ? trim(explode(' | ', $item->catatan_admin ?? '')[0] ?? '')
-                    : null,
-                'child_grade'    => $item->reporter_type === 'ortu'
-                    ? trim(str_replace('Kelas: ', '', explode(' | ', $item->catatan_admin ?? '')[1] ?? ''))
-                    : null,
+                'child_name'  => $item->child_name  ?? null,
+                'child_grade' => $item->child_grade ?? null,
                 'tanggal' => $item->incident_date ? $item->incident_date->format('d M Y') : null,
                 'tglSelesai' => $item->handled_at?->format('d M Y') ?? '-',
                 'tglDitolak'         => $item->handled_at?->format('d M Y') ?? '-',   // ← TAMBAH alias untuk ditolak
@@ -654,10 +645,10 @@ class ReportController extends Controller
         // LOGIKA PENYIMPANAN
         if ($newStatus === 'ditolak') {
             $updates['rejection_reason']    = $request->catatan;
-            $updates['catatan_admin']       = "Laporan ditolak oleh admin pada tahap " . $oldStatus;
+            $updates['catatan_admin'] = null;
             $updates['rejected_from_stage'] = $oldStatus; // simpan dari tahap mana ditolak
         } else {
-            $updates['catatan_admin']       = $request->catatan ?? "Status diperbarui menjadi " . $newStatus;
+            $updates['catatan_admin'] = $request->catatan ?? null;
             $updates['rejection_reason']    = null;
             $updates['rejected_from_stage'] = null;
 

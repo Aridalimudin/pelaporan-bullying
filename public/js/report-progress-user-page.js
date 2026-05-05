@@ -167,9 +167,13 @@
 
     /* ─── Sidebar ─────────────────────────── */
     function renderSidebar(d) {
-        setText('sideNama',    d.student_name  || '(anonim)');
-        setText('sideNis',     d.student_nis   || '-');
-        setText('sideKelas',   d.student_grade || '-');
+        setText('sideNama', d.reporter_type === 'ortu' 
+            ? `Orang Tua (${d.reporter_name || '-'})`
+            : (d.student_name || '(anonim)'));
+        setText('sideNis',   d.reporter_type === 'ortu' ? '-' : (d.student_nis || '-'));
+        setText('sideKelas', d.reporter_type === 'ortu' 
+            ? (d.child_grade   || '-') 
+            : (d.student_grade || '-'));
         setText('sideTanggal', d.created_at);
         const urg = document.getElementById('sideUrgensi');
         if (urg) {
@@ -317,50 +321,6 @@
     TAHAP 2 – MENUNGGU VERIFIKASI
     ══════════════════════════════════════════════ */
     function renderStageVerifikasi(c, d) {
-    // Orang tua tidak perlu isi detail — admin yang isi saat ketemu langsung
-    if (d.reporter_type === 'ortu') {
-        c.innerHTML = `
-            <div style="
-                display:flex;flex-direction:column;align-items:center;gap:14px;
-                padding:32px 20px;text-align:center;
-                background:#fffbeb;border:1.5px solid #fde68a;border-radius:16px;
-            ">
-                <div style="font-size:2.4rem;">📞</div>
-                <div>
-                    <div style="font-weight:700;font-size:.95rem;color:#92400e;margin-bottom:6px;">
-                        Laporan Anda Sedang Diverifikasi
-                    </div>
-                    <div style="font-size:.82rem;color:#78716c;line-height:1.6;max-width:360px;">
-                        Pihak sekolah akan menghubungi Anda melalui nomor HP yang didaftarkan 
-                        untuk melakukan verifikasi dan mengumpulkan detail kejadian secara langsung.
-                    </div>
-                </div>
-                <div style="
-                    padding:10px 16px;background:white;border:1.5px solid #fde68a;
-                    border-radius:10px;font-size:.8rem;color:#92400e;
-                ">
-                    📱 Pastikan nomor HP Anda aktif dan bisa dihubungi
-                </div>
-            </div>
-
-            <div class="detail-panel" id="panelAwal" style="margin-top:16px;">
-                <button class="btn-toggle-detail" onclick="togglePanel('panelAwal', this)">
-                    <div class="btn-toggle-detail-left">
-                        <div class="icon-wrap">${icoDoc()}</div>
-                        <div>
-                            <div class="btn-toggle-detail-text">Lihat Laporan Awal</div>
-                            <div class="btn-toggle-detail-sub">Data yang Anda kirimkan</div>
-                        </div>
-                    </div>
-                    ${icoChevron()}
-                </button>
-                <div class="detail-panel-body" id="bodyAwal">
-                    <div class="detail-panel-inner">${buildDetailAwal(d)}</div>
-                </div>
-            </div>
-        `;
-        return;
-    }
         c.innerHTML = `
             <!-- Tombol Isi Detail -->
             <button class="btn-isi-detail" id="btnIsiDetail" onclick="toggleFormIsi()">
@@ -471,10 +431,18 @@
             </div>
         `;
 
-        addRow('pelaku');
+   addRow('pelaku');
         addRow('korban');
-    }
 
+        // Ganti label tombol jika pelapor adalah orang tua
+        if (_reportData?.reporter_type === 'ortu') {
+            document.querySelectorAll('#korbanRows .btn-add-person').forEach(btn => {
+                if (btn.textContent.includes('Saya Sendiri')) {
+                    btn.innerHTML = '👦 Anak Saya Sendiri';
+                }
+            });
+        }
+    } // ← TAM
     /* ══════════════════════════════════════════════
     TAHAP 3 – SEDANG DIPROSES
     ══════════════════════════════════════════════ */
@@ -1486,18 +1454,35 @@
     function fillSelfAsKorban(type, id) {
         if (!_reportData) return;
 
+        const isOrtu = _reportData.reporter_type === 'ortu';
+
         const namaEl = document.getElementById(`${type}_nama_${id}`);
-        if (namaEl) { namaEl.value = _reportData.student_name || ''; namaEl.disabled = true; }
+        if (namaEl) { 
+            // Ortu pakai child_name, siswa pakai student_name
+            namaEl.value = isOrtu 
+                ? (_reportData.child_name || '') 
+                : (_reportData.student_name || ''); 
+            namaEl.disabled = true; 
+        }
 
         const hiddenId = document.getElementById(`${type}_student_id_${id}`);
-        if (hiddenId) hiddenId.value = _reportData.student_id || '';
+        if (hiddenId) hiddenId.value = isOrtu ? '' : (_reportData.student_id || '');
 
-        const studentGrade = _reportData.student_grade || '';
-        const parts        = studentGrade.split(' ');
-        const grade        = parts[0] || '';
-        const majorCode    = parts.slice(1).join(' ');
-
-        lockPersonRow(type, id, grade, majorCode);
+        if (isOrtu) {
+            // Ortu: pakai child_grade langsung (misal "IX ITF")
+            const childGrade = _reportData.child_grade || '';
+            const parts      = childGrade.split(' ');
+            const grade      = parts[0] || '';
+            const majorCode  = parts.slice(1).join(' ');
+            lockPersonRow(type, id, grade, majorCode);
+        } else {
+            // Siswa: pakai student_grade
+            const studentGrade = _reportData.student_grade || '';
+            const parts        = studentGrade.split(' ');
+            const grade        = parts[0] || '';
+            const majorCode    = parts.slice(1).join(' ');
+            lockPersonRow(type, id, grade, majorCode);
+        }
     }
 
     async function fetchPairs() {

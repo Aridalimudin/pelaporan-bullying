@@ -29,7 +29,7 @@
                 <select class="filter-select" id="filterKategori">
                     <option value="">Semua Kategori</option>
                     <option value="Verbal">Bullying Verbal</option>
-                    <option value="Non-Verbal">Bullying Fisik</option>
+                    <option value="Fisik">Bullying Fisik</option>
                 </select>
                 <button class="jp-btn-tambah" onclick="openJpModal()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <span class="jp-stat-val" id="statVerbal">0</span>
-                    <span class="jp-stat-lbl">Bullying Fisik</span>
+                    <span class="jp-stat-lbl">Bullying Verbal</span>
                 </div>
             </div>
             <div class="jp-stat-card">
@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <span class="jp-stat-val" id="statNonVerbal">0</span>
-                    <span class="jp-stat-lbl">Bullying Non-Verbal</span>
+                    <span class="jp-stat-lbl">Bullying Fisik</span>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                     <select class="jp-input" id="jpKategori">
                         <option value="">Pilih Kategori...</option>
                         <option value="Verbal">Bullying Verbal</option>
-                        <option value="Non-Verbal">Bullying Non-Verbal</option>
+                        <option value="Fisik">Bullying Fisik</option>
                     </select>
                     {{-- Pesan error muncul di sini secara dinamis --}}
                 </div>

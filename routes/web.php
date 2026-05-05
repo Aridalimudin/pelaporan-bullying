@@ -58,8 +58,8 @@ Route::prefix('api')->group(function () {
     // Data Siswa — Kelas & Jurusan (untuk form publik)
     Route::prefix('data-siswa')->group(function () {
         Route::get('/grades',       [GradeMajorController::class, 'gradesList'])->name('api.students.grades.public');
-        Route::get('/majors',       [GradeMajorController::class, 'majorsList'])->name('api.students.majors.public');
-        Route::get('/majors/full',  [GradeMajorController::class, 'majorsFullList'])->name('api.students.majors.full.public');
+        Route::get('/majors',       [GradeMajorController::class, 'majorsList'])->name('students.api.majors.public');
+        Route::get('/majors/full',  [GradeMajorController::class, 'majorsFullList'])->name('students.api.majors.full.public');
         Route::get('/grade-majors', [GradeMajorController::class, 'pairsList'])->name('api.grade.majors.pairs.public');
     });
 });

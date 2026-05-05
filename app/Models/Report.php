@@ -20,8 +20,8 @@ class Report extends Model
         'rejection_reason',
         'rejected_from_stage',
         'urgency',
-        
-        // ✅ TAMBAHKAN DUA BARIS INI:
+        'child_name',    // ← TAMBAH INI
+        'child_grade',  
         'urgency_score',
         'detected_violations',
         // ==========================
