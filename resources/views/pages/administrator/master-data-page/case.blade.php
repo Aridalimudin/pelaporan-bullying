@@ -17,7 +17,7 @@
         <div class="content-heading animate-fade-in">
             <div>
                 <h2 class="content-title">Jenis Pelanggaran</h2>
-                <p class="content-sub">Kelola jenis pelanggaran bullying verbal dan non-verbal dalam sistem pelaporan.</p>
+                <p class="content-sub">Kelola jenis pelanggaran bullying verbal dan Fisik dalam sistem pelaporan.</p>
             </div>
             <div class="heading-actions">
                 <div class="search-wrap">
@@ -29,7 +29,7 @@
                 <select class="filter-select" id="filterKategori">
                     <option value="">Semua Kategori</option>
                     <option value="Verbal">Bullying Verbal</option>
-                    <option value="Non-Verbal">Bullying Non-Verbal</option>
+                    <option value="Non-Verbal">Bullying Fisik</option>
                 </select>
                 <button class="jp-btn-tambah" onclick="openJpModal()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <span class="jp-stat-val" id="statVerbal">0</span>
-                    <span class="jp-stat-lbl">Bullying Verbal</span>
+                    <span class="jp-stat-lbl">Bullying Fisik</span>
                 </div>
             </div>
             <div class="jp-stat-card">
@@ -114,6 +114,10 @@
                     </select>
                     {{-- Pesan error muncul di sini secara dinamis --}}
                 </div>
+            </div>
+            <div class="jp-field">
+                <label class="jp-label">Bobot / Poin <span class="jp-req">*</span></label>
+                <input class="jp-input" type="number" id="jpBobot" min="1" max="20" placeholder="Contoh: 5">
             </div>
             <div class="jp-field">
                 <label class="jp-label">Deskripsi <span style="font-size:10.5px;color:#9ca3af;font-weight:500">(opsional)</span></label>
@@ -240,7 +244,7 @@ var _hapusJpId = null;
 var KAT_META = {
     'Verbal':     { bg:'#fdf4ff', c:'#7c3aed', label:'Bullying Verbal',
         icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
-    'Non-Verbal': { bg:'#fef2f2', c:'#dc2626', label:'Bullying Non-Verbal',
+    'Fisik':  { bg:'#fef2f2', c:'#dc2626', label:'Bullying Fisik',
         icon:'<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' }
 };
 
@@ -276,7 +280,7 @@ function jpClearError(fieldId) {
 }
 
 function jpClearAllErrors() {
-    ['jpNama', 'jpKategori'].forEach(function(id) { jpClearError(id); });
+    ['jpNama', 'jpKategori', 'jpBobot'].forEach(function(id) { jpClearError(id); });
 }
 
 function jpValidateAll() {
@@ -298,6 +302,13 @@ function jpValidateAll() {
     // ── Kategori: wajib dipilih ──
     if (!kategori) {
         jpSetError('jpKategori', 'Kategori wajib dipilih.');
+        valid = false;
+    }
+
+    // ── Bobot: wajib, minimal 1 ──
+    var bobot = parseInt(document.getElementById('jpBobot').value);
+    if (!bobot || bobot < 1) {
+        jpSetError('jpBobot', 'Bobot wajib diisi minimal 1.');
         valid = false;
     }
 
@@ -336,7 +347,7 @@ function renderContent() {
         groups[d.category].push(d);
     });
 
-    content.innerHTML = ['Verbal', 'Non-Verbal'].filter(function(k) { return groups[k]; }).map(function(kat) {
+    content.innerHTML = ['Verbal', 'Fisik'].filter(function(k) { return groups[k]; }).map(function(kat) {
         var km           = KAT_META[kat];
         var iconColored  = km.icon.replace('stroke="currentColor"', 'stroke="' + km.c + '"');
 
@@ -380,7 +391,7 @@ function renderContent() {
 function updateStats() {
     document.getElementById('statTotal').textContent     = _jpAll.length;
     document.getElementById('statVerbal').textContent    = _jpAll.filter(function(d) { return d.category === 'Verbal'; }).length;
-    document.getElementById('statNonVerbal').textContent = _jpAll.filter(function(d) { return d.category === 'Non-Verbal'; }).length;
+    document.getElementById('statNonVerbal').textContent = _jpAll.filter(function(d) { return d.category === 'Fisik'; }).length;
 }
 
 /* ─────────────────────────────────────────
@@ -390,7 +401,7 @@ function updateModalColor() {
     var kat = document.getElementById('jpKategori').value;
     var h   = document.getElementById('jpModalHeaderBar');
     var b   = document.getElementById('jpBtnSave');
-    if (kat === 'Non-Verbal') {
+    if (kat === 'Fisik') {
         h.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)';
         b.style.background = '#dc2626';
     } else {
@@ -412,16 +423,18 @@ function openJpModal(id) {
 
     if (id) {
         var d = _jpAll.find(function(x) { return x.id == id; });
-        if (d) {
+    if (d) {
             document.getElementById('jpNama').value      = d.name;
             document.getElementById('jpKategori').value  = d.category;
+            document.getElementById('jpBobot').value     = d.weight || '';
             document.getElementById('jpDeskripsi').value = d.description || '';
         }
     } else {
-        document.getElementById('jpNama').value      = '';
-        document.getElementById('jpKategori').value  = '';
-        document.getElementById('jpDeskripsi').value = '';
-    }
+            document.getElementById('jpNama').value      = '';
+            document.getElementById('jpKategori').value  = '';
+            document.getElementById('jpBobot').value     = '';
+            document.getElementById('jpDeskripsi').value = '';
+        }
     updateModalColor();
     mdOpenOverlay('modalJp');
 }
@@ -450,6 +463,7 @@ async function saveJp() {
             id          : _editJpId || null,
             name        : document.getElementById('jpNama').value.trim(),
             category    : document.getElementById('jpKategori').value,
+            weight      : parseInt(document.getElementById('jpBobot').value) || 1,
             description : document.getElementById('jpDeskripsi').value.trim()
         }
     });
@@ -520,6 +534,9 @@ document.getElementById('modalHapusJp').addEventListener('click', function(e) { 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('jpNama').addEventListener('input', function() {
         jpClearError('jpNama');
+    });
+        document.getElementById('jpBobot').addEventListener('input', function() {
+        jpClearError('jpBobot');
     });
     document.getElementById('jpKategori').addEventListener('change', function() {
         jpClearError('jpKategori');

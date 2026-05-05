@@ -127,9 +127,28 @@
                 return `<tr class="table-row animate-fade-in" id="${rowId}">
                     <td class="col-no">${start + idx + 1}</td>
                     <td><span class="kode-badge">${d.kode}</span></td>
-                    <td><div class="pelapor-cell"><div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div><span>${d.nama}</span></div></td>
-                    <td class="text-mono">${d.nis}</td>
-                    <td><span class="kelas-tag">${d.kelas}</span></td>
+                    <td>
+                        <div class="pelapor-cell">
+                            <div class="pelapor-avatar" style="background:${av.bg};color:${av.color}">${d.nama.charAt(0)}</div>
+                            <div style="line-height:1.3">
+                                <div style="font-weight:600;font-size:.82rem">${d.nama}</div>
+                                ${d.reporter_type === 'ortu' ? `<span style="font-size:.68rem;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:99px;font-weight:600;display:inline-block;margin-top:2px;">👨‍👩‍👧 Orang Tua</span>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-mono" style="font-size:.78rem">
+                        ${d.reporter_type === 'ortu' 
+                            ? `<span style="color:#9ca3af;font-style:italic">—</span>` 
+                            : (d.nis || '—')}
+                    </td>
+                    <td>
+                        ${d.reporter_type === 'ortu' 
+                            ? `<div style="line-height:1.4">
+                                <div style="font-size:.75rem;font-weight:600;color:#374151">${d.child_name || '—'}</div>
+                                <div style="font-size:.7rem;color:#9ca3af">${d.child_grade || '—'}</div>
+                            </div>` 
+                            : `<span class="kelas-tag">${d.kelas || '—'}</span>`}
+                    </td>
                     <td><span class="urgensi-badge ${d.urgensi}">${ucfirst(d.urgensi)}</span></td>
                     <td><span class="status-badge verifikasi">Menunggu Verifikasi</span></td>
                     <td class="col-aksi">
@@ -162,7 +181,7 @@
         const u = (document.getElementById('filterUrgensi')?.value || '').toLowerCase();
         _filteredRows = _allRows.filter(id => {
             const d = LAPORAN_DATA[id];
-            return (!q || d.kode.toLowerCase().includes(q) || d.nama.toLowerCase().includes(q) || d.nis.includes(q)) && (!u || d.urgensi === u);
+            return (!q || d.kode.toLowerCase().includes(q) || d.nama.toLowerCase().includes(q) || (d.nis || '').includes(q)) && (!u || d.urgensi === u);
         });
         _currentPage = 1; renderTable();
     }

@@ -4,6 +4,11 @@
     $rataRata            = $rataRata            ?? '0';
     $tingkatPenyelesaian = $tingkatPenyelesaian ?? '0';
     $periodeLabel        = $periodeLabel        ?? '—';
+    
+    // Tambahan 2 baris variabel pelapor
+    $pelaporSiswa = $pelaporSiswa ?? 0;
+    $pelaporOrtu  = $pelaporOrtu  ?? 0;
+    
     $pct                 = (int) $tingkatPenyelesaian;
 
     if ($pct >= 75) {
@@ -73,7 +78,36 @@
 
 </div>
 
-{{-- Style & init progress bar (satu kali render sudah cukup) --}}
+{{-- Baris 2: Pelapor (Grid Baru sesuai arahan) --}}
+<div class="rs-grid" style="grid-template-columns: repeat(2,1fr); margin-top:-6px">
+    <div class="rs-card rs-purple">
+        <div class="rs-icon-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 14a4 4 0 100-8 4 4 0 000 8zm-7 6a7 7 0 0114 0"/>
+            </svg>
+        </div>
+        <div class="rs-body">
+            <span class="rs-val" id="{{ $idPrefix }}-pelaporSiswa">{{ $pelaporSiswa }}</span>
+            <span class="rs-lbl">Pelapor Siswa</span>
+            <span class="rs-period">laporan dari siswa</span>
+        </div>
+    </div>
+    <div class="rs-card rs-rose">
+        <div class="rs-icon-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8zm6 4a3 3 0 100-6 3 3 0 000 6zM3 17a3 3 0 100-6 3 3 0 000 6z"/>
+            </svg>
+        </div>
+        <div class="rs-body">
+            <span class="rs-val" id="{{ $idPrefix }}-pelaporOrtu">{{ $pelaporOrtu }}</span>
+            <span class="rs-lbl">Pelapor Orang Tua</span>
+            <span class="rs-period">laporan dari ortu</span>
+        </div>
+    </div>
+</div>
+
 <style>
 .rs-grid {
     display: grid;
@@ -81,7 +115,7 @@
     gap: 14px;
     margin-bottom: 20px;
 }
-@media (max-width: 700px) { .rs-grid { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .rs-grid { grid-template-columns: 1fr !important; } }
 
 .rs-card {
     background: white;
@@ -106,6 +140,10 @@
 .rs-blue  .rs-icon-wrap { background: #eff6ff; color: #3b82f6; }
 .rs-amber .rs-icon-wrap { background: #fffbeb; color: #d97706; }
 .rs-green .rs-icon-wrap { background: #ecfdf5; color: #10b981; }
+
+/* Tambahan 2 baris style pelapor */
+.rs-purple .rs-icon-wrap { background: #f5f3ff; color: #7c3aed; }
+.rs-rose   .rs-icon-wrap { background: #fff1f2; color: #e11d48; }
 
 .rs-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 .rs-val  { font-size: 1.7rem; font-weight: 800; color: #111827; line-height: 1; }

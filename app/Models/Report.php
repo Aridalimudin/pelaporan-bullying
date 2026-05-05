@@ -20,6 +20,12 @@ class Report extends Model
         'rejection_reason',
         'rejected_from_stage',
         'urgency',
+        
+        // ✅ TAMBAHKAN DUA BARIS INI:
+        'urgency_score',
+        'detected_violations',
+        // ==========================
+        
         'incident_date',
         'incident_time',
         'incident_location',
@@ -27,6 +33,9 @@ class Report extends Model
         'handled_at',
         'last_reminder_at',
         'reminder_count',
+        'reporter_type',
+        'reporter_name',
+        'reporter_phone',
     ];
 
     protected $casts = [
@@ -142,6 +151,21 @@ class Report extends Model
             'rendah' => 'Rendah',
             default  => '-',
         };
+    }
+    public function violationCategories(): string
+    {
+        if (empty($this->detected_violations)) return '-';
+        
+        $ids = json_decode($this->detected_violations, true);
+        if (empty($ids)) return '-';
+
+        $categories = \App\Models\ViolationType::whereIn('id', $ids)
+            ->pluck('category')
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $categories->isEmpty() ? '-' : $categories->join(' & ');
     }
 
     /**

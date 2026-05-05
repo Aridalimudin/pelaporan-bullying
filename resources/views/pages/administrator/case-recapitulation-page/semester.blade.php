@@ -46,6 +46,8 @@
             'rataRata'            => '0.0',
             'tingkatPenyelesaian' => '0',
             'periodeLabel'        => '—',
+            'pelaporSiswa'        => 0,
+            'pelaporOrtu'         => 0,
         ])
         </div>
 
@@ -53,18 +55,18 @@
             <div class="rekap-chart-header">
                 <div>
                     <h3 class="rekap-chart-title">Frekuensi Laporan Masuk</h3>
-                    <p class="rekap-chart-sub">Total laporan per bulan — Semester Genap 2025/2026</p>
+                    <p class="rekap-chart-sub" id="chartSubLabel">Total laporan per bulan — Semester Genap 2025/2026</p>
                 </div>
                 <div class="rekap-chart-peak">
                     <span class="peak-label">Puncak</span>
-                    <span class="peak-val">42 laporan</span>
-                    <span class="peak-date">Maret 2026</span>
+                    <span class="peak-val">— laporan</span>
+                    <span class="peak-date">—</span>
                 </div>
             </div>
             @include('components.rekap-chart-admin', [
                 'chartId'     => 'chartSemester',
-                'chartLabels' => ['Jan','Feb','Mar','Apr','Mei','Jun'],
-                'chartData'   => [24, 31, 42, 38, 29, 20],
+                'chartLabels' => [],
+                'chartData'   => [],
                 'chartLabel'  => 'Laporan Masuk',
                 'chartHeight' => 220,
             ])
@@ -74,7 +76,7 @@
             <div class="rekap-table-header">
                 <div>
                     <h3 class="rekap-chart-title">Rekapitulasi Detail</h3>
-                    <p class="rekap-chart-sub">Per kelas — Semester Genap 2025/2026</p>
+                    <p class="rekap-chart-sub" id="tableSubLabel">Per kelas — Semester Genap 2025/2026</p>
                 </div>
                 <div class="search-wrap">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,6 +124,15 @@ let _allData  = [];
 let _filtered = [];
 let _chart    = null;
 
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 async function loadRekap() {
     const semester    = document.getElementById('filterSemester').value;
     const tahunAjaran = document.getElementById('filterTahunAjaran').value;
@@ -152,10 +163,13 @@ async function loadRekap() {
         bar.className     = `rs-progress-bar ${cls}`;
         bar.style.width   = Math.min(100, pct) + '%';
 
+        // Tambahan 2 baris update pelapor
+        document.getElementById('semester-pelaporSiswa').textContent = stats.pelaporSiswa ?? 0;
+        document.getElementById('semester-pelaporOrtu').textContent  = stats.pelaporOrtu  ?? 0;
 
-        const allSubs = document.querySelectorAll('.rekap-chart-sub');
-        if (allSubs[0]) allSubs[0].textContent = `Total laporan per bulan — ${stats.periodeLabel}`;
-        if (allSubs[1]) allSubs[1].textContent = `Per kelas — ${stats.periodeLabel}`;
+
+        document.getElementById('chartSubLabel').textContent = `Total laporan per bulan — ${stats.periodeLabel}`;
+        document.getElementById('tableSubLabel').textContent = `Per kelas — ${stats.periodeLabel}`;
         document.querySelector('.peak-val').textContent  = chart.peakVal + ' laporan';
         document.querySelector('.peak-date').textContent = chart.peakLabel ?? '-';
 

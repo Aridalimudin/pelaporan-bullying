@@ -3,6 +3,8 @@ namespace App\Services;
 
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Str;
+
 
 class NotificationService
 {
@@ -141,6 +143,27 @@ class NotificationService
             'related_id'   => $laporan->id,
             'related_type' => 'laporan',
             'url'          => "/admin/laporan/{$laporan->id}",
+        ]);
+    }
+    public static function pesanKontak(string $nama, ?string $email, string $pesan, $recipients): void
+    {
+        $bodyEmail = $email ? " ({$email})" : '';
+
+        self::send($recipients, [
+            'type'         => 'pesan_kontak',
+            'title'        => 'Pesan baru dari halaman kontak',
+            'body'         => "{$nama}{$bodyEmail} mengirim pesan melalui halaman kontak.",
+            'icon'         => 'chat',
+            'color'        => 'blue',
+            'related_id'   => null,
+            'related_type' => 'kontak',
+            'url'          => null,
+            'meta'         => json_encode([
+                'nama'   => $nama,
+                'email'  => $email,   // null jika anonim
+                'pesan'  => $pesan,
+                'anonim' => !$email,
+            ]),
         ]);
     }
 }

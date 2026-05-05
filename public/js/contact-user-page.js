@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    document.getElementById('kontakForm').addEventListener('submit', function (e) {
+    document.getElementById('kontakForm').addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const anonim  = document.getElementById('kAnonim').checked;
@@ -112,13 +112,47 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const btn = document.getElementById('kformSubmit');
-        btn.classList.add('loading');
+        const btn     = document.getElementById('kformSubmit');
+        const spinner = btn.querySelector('.kform-spinner');
+        const btnText = btn.querySelector('.kform-btn-text');
+        const btnIcon = btn.querySelector('.kform-btn-icon');
 
-        setTimeout(function () {
-            btn.classList.remove('loading');
+        btn.disabled = true;
+        btn.classList.add('loading');
+        spinner.classList.remove('hidden');
+        btnIcon.classList.add('hidden');
+        btnText.textContent = 'Mengirim...';
+
+        try {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ nama, email, pesan, anonim }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message ?? 'Gagal mengirim pesan.');
+            }
+
             openKontakModal();
-        }, 1400);
+
+        } catch (err) {
+            document.getElementById('alertText').textContent = err.message || 'Gagal mengirim pesan. Coba lagi.';
+            alertEl.classList.remove('hidden');
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            spinner.classList.add('hidden');
+            btnIcon.classList.remove('hidden');
+            btnText.textContent = 'Kirim Pesan';
+        }
     });
 
 });

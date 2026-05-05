@@ -28,6 +28,9 @@ html, body { height: 100%; overflow: auto; }
 .jp-group-badge svg { width: 14px; height: 14px; }
 .jp-group-badge.Verbal     { background: #fdf4ff; color: #7c3aed; border: 1.5px solid #e9d5ff; }
 .jp-group-badge.Non-Verbal { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+.jp-group-badge.Fisik { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+.jp-card.Fisik        { border-top: 3px solid #dc2626; }
+.jp-card-kat.Fisik    { background: #fef2f2; color: #dc2626; }
 .jp-group-line  { flex: 1; height: 1px; background: #f3f4f6; }
 .jp-group-count { font-size: 11.5px; color: #9ca3af; font-weight: 500; white-space: nowrap; }
 

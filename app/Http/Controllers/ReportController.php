@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use App\Services\BullyingClassifier;
 
 class ReportController extends Controller
 {
@@ -134,21 +135,45 @@ class ReportController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $request->validate([
-                'nisn'        => 'required|string|max:20',
-                'email'       => 'required|email|max:255',
-                'deskripsi'   => 'required|string|min:20|max:5000',
-                'student_id'  => 'nullable|exists:students,id',
-                'bukti'       => 'nullable|array|max:5',
-                'bukti.*'     => 'file|max:51200', // 50MB, validasi MIME manual di bawah
-            ], [
-                'nisn.required'      => 'NISN wajib diisi.',
-                'email.required'     => 'Email wajib diisi.',
-                'email.email'        => 'Format email tidak valid.',
-                'deskripsi.required' => 'Deskripsi kejadian wajib diisi.',
-                'deskripsi.min'      => 'Deskripsi minimal 20 karakter.',
-                'bukti.max'          => 'Maksimal 5 file bukti.',
-            ]);
+        $reporterType = $request->input('reporter_type', 'siswa');
+
+        $baseRules = [
+            'reporter_type' => 'required|in:siswa,ortu',
+            'deskripsi'     => 'required|string|min:20|max:5000',
+            'bukti'         => 'nullable|array|max:5',
+            'bukti.*'       => 'file|max:51200',
+        ];
+
+        $siswaRules = [
+            'nisn'       => 'required|string|max:20',
+            'email'      => 'required|email|max:255',
+            'student_id' => 'nullable|exists:students,id',
+        ];
+
+        $ortuRules = [
+            'reporter_name'  => 'required|string|max:150',
+            'reporter_phone' => 'required|string|max:20',
+            'child_name'     => 'required|string|max:150',
+            'child_grade'    => 'required|string|max:50',
+            'email'          => 'nullable|email|max:255',
+        ];
+
+        $rules = array_merge($baseRules, $reporterType === 'ortu' ? $ortuRules : $siswaRules);
+
+        $messages = [
+            'nisn.required'         => 'NIS wajib diisi.',
+            'email.required'        => 'Email wajib diisi.',
+            'email.email'           => 'Format email tidak valid.',
+            'deskripsi.required'    => 'Deskripsi kejadian wajib diisi.',
+            'deskripsi.min'         => 'Deskripsi minimal 20 karakter.',
+            'bukti.max'             => 'Maksimal 5 file bukti.',
+            'reporter_name.required'  => 'Nama orang tua wajib diisi.',
+            'reporter_phone.required' => 'Nomor HP wajib diisi.',
+            'child_name.required'     => 'Nama anak wajib diisi.',
+            'child_grade.required'    => 'Kelas anak wajib diisi.',
+        ];
+
+        $request->validate($rules, $messages);
         } catch (ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
         }
@@ -179,14 +204,30 @@ class ReportController extends Controller
 
         DB::beginTransaction();
         try {
-            // Buat laporan
+            // ── Rule-based classification ──
+            $classifier = new BullyingClassifier();
+            $classified = $classifier->classify(
+                $request->deskripsi,
+                $request->input('violation_ids') // ← tambah param
+            );
+
             $report = Report::create([
-                'ticket_code' => Report::generateTicketCode(),
-                'nisn'        => $request->nisn,
-                'email'       => $request->email,
-                'student_id'  => $request->student_id ?? null,
-                'deskripsi'   => $request->deskripsi,
-                'status'      => 'masuk',
+                'ticket_code'         => Report::generateTicketCode(),
+                'nisn'                => $reporterType === 'siswa' ? $request->nisn : null,
+                'email'               => $request->email ?? null,
+                'student_id'          => $reporterType === 'siswa' ? ($request->student_id ?? null) : null,
+                'deskripsi'           => $request->deskripsi,
+                'status'              => 'masuk',
+                'reporter_type'       => $reporterType,
+                'reporter_name'       => $reporterType === 'ortu' ? $request->reporter_name  : null,
+                'reporter_phone'      => $reporterType === 'ortu' ? $request->reporter_phone : null,
+                'catatan_admin'       => $reporterType === 'ortu'
+                    ? "Anak: {$request->child_name} | Kelas: {$request->child_grade}"
+                    : null,
+                // ── Rule-based results ──
+                'urgency'             => $classified['urgency'],
+                'urgency_score'       => $classified['score'],
+                'detected_violations' => json_encode($classified['violation_ids']),
             ]);
 
             // Simpan file bukti
@@ -222,10 +263,10 @@ class ReportController extends Controller
             );
 
             DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server.'], 500);
-        }
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server.'], 500);
+            }
 
         return response()->json([
             'success'     => true,
@@ -304,6 +345,15 @@ class ReportController extends Controller
                 'created_at'        => $report->created_at->format('d M Y, H:i'),
                 'updated_at'        => $report->updated_at->format('d M Y, H:i'),
                 'student_name'      => $report->student?->fullname,
+                'reporter_type'  => $report->reporter_type,
+                'reporter_name'  => $report->reporter_name,
+                'reporter_phone' => $report->reporter_phone,
+                'child_name'     => $report->reporter_type === 'ortu'
+                    ? (explode(' | ', $report->catatan_admin ?? '')[0] ?? null)
+                    : null,
+                'child_grade'    => $report->reporter_type === 'ortu'
+                    ? (explode('Kelas: ', $report->catatan_admin ?? '')[1] ?? null)
+                    : null,
 
                 // ── Data tambahan (baru) ──────────────────────────────
                 'student_grade'     => $report->student
@@ -312,6 +362,7 @@ class ReportController extends Controller
                 'student_nis'       => $report->nisn,
                 'urgency'           => $report->urgency,
                 'urgency_label'     => $report->urgencyLabel(),
+                'violation_categories' => $this->buildViolationCategories($report),
                 'incident_date'     => $report->incident_date?->format('d M Y'),
                 'incident_time'     => $report->incident_time ?? null,
                 'incident_date_raw' => $report->incident_date?->format('Y-m-d'),
@@ -466,12 +517,23 @@ class ReportController extends Controller
             return ['row-' . $item->id => [
                 'id'        => $item->id,
                 'kode'      => $item->ticket_code,
-                'nama'      => $item->student->fullname ?? 'Pelapor Luar',
+                'nama'      => $item->reporter_type === 'ortu'
+                    ? ($item->reporter_name ?? 'Orang Tua/Wali')
+                    : ($item->student->fullname ?? 'Pelapor Tidak Dikenal'),
                 'nis'       => $item->nisn,
                 'kelas'     => $item->student ? ($item->student->grade . ' ' . $item->student->major) : '-',
                 'urgensi'   => $item->urgency ?? 'sedang',
                 'email'     => $item->email,
                 'deskripsi' => $item->deskripsi,
+                'reporter_type'  => $item->reporter_type,
+                'reporter_name'  => $item->reporter_name,
+                'reporter_phone' => $item->reporter_phone,
+                'child_name'     => $item->reporter_type === 'ortu'
+                    ? trim(explode(' | ', $item->catatan_admin ?? '')[0] ?? '')
+                    : null,
+                'child_grade'    => $item->reporter_type === 'ortu'
+                    ? trim(str_replace('Kelas: ', '', explode(' | ', $item->catatan_admin ?? '')[1] ?? ''))
+                    : null,
                 'tanggal' => $item->incident_date ? $item->incident_date->format('d M Y') : null,
                 'tglSelesai' => $item->handled_at?->format('d M Y') ?? '-',
                 'tglDitolak'         => $item->handled_at?->format('d M Y') ?? '-',   // ← TAMBAH alias untuk ditolak
@@ -513,7 +575,8 @@ class ReportController extends Controller
                     'mime' => $f->mime_type,
                 ])->toArray() ?? [],
                 // Tambah jam
-                'jam' => $item->incident_time ?? null,      
+                'jam' => $item->incident_time ?? null,
+                'violation_categories' => $this->buildViolationCategories($item),      
                 'files'     => $item->files->map(function($f) {
                     return [
                         'url'  => asset('storage/' . $f->stored_name), 
@@ -880,16 +943,17 @@ class ReportController extends Controller
                 ]);
             }
 
-            // Simpan korban
             foreach ($request->korban as $p) {
                 if (empty($p['nama'])) continue;
                 $studentId = $this->findStudentId($p);
                 ReportPerson::create([
-                    'report_id'   => $report->id,
-                    'role'        => 'korban',
-                    'student_id'  => $studentId,
-                    'name_manual' => $studentId ? null : $p['nama'],
-                    'notes'       => $p['catatan'] ?? null,
+                    'report_id'    => $report->id,
+                    'role'         => 'korban',
+                    'student_id'   => $studentId,
+                    'name_manual'  => $studentId ? null : $p['nama'],
+                    'grade_manual' => $studentId ? null : ($p['kelas']   ?? null), // ← tambah
+                    'major_manual' => $studentId ? null : ($p['jurusan'] ?? null), // ← tambah
+                    'notes'        => $p['catatan'] ?? null,
                 ]);
             }
 
@@ -1159,5 +1223,25 @@ class ReportController extends Controller
         // Coba cari by nama
         $student = Student::where('fullname', $person['nama'])->first();
         return $student?->id;
+    }
+    private function buildViolationCategories(Report $report): string
+    {
+        $ids = json_decode($report->detected_violations ?? '[]', true);
+
+        if (empty($ids) && !empty($report->deskripsi)) {
+            $classifier = new BullyingClassifier();
+            $result     = $classifier->classify($report->deskripsi);
+            $ids        = $result['violation_ids'];
+        }
+
+        if (empty($ids)) return '-';
+
+        $categories = \App\Models\ViolationType::whereIn('id', $ids)
+            ->pluck('category')  // langsung pakai nilai enum: 'Fisik' / 'Verbal'
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $categories->isEmpty() ? '-' : $categories->join(' & ');
     }
 }

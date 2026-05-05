@@ -41,6 +41,17 @@ class RekapController extends Controller
         $tingkatPenyelesaian = $totalLaporan > 0
             ? round(($totalSelesai / $totalLaporan) * 100) : 0;
 
+        // ── Pelapor ────────────────────────────────────────────
+        $pelaporSiswa = Report::whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->where('reporter_type', 'siswa')
+            ->count();
+
+        $pelaporOrtu = Report::whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->where('reporter_type', 'ortu')
+            ->count();
+
         // ── Chart per hari ─────────────────────────────────────
         $chartRaw = Report::selectRaw('DAY(created_at) as hari, COUNT(*) as total')
             ->whereMonth('created_at', $bulan)
@@ -80,7 +91,8 @@ class RekapController extends Controller
             'success' => true,
             'data'    => [
                 'stats' => compact(
-                    'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel'
+                    'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel',
+                    'pelaporSiswa','pelaporOrtu'
                 ),
                 'chart' => [
                     'labels'   => $chartLabels,
@@ -186,6 +198,17 @@ class RekapController extends Controller
         $tingkatPenyelesaian = $totalLaporan > 0
             ? round(($totalSelesai / $totalLaporan) * 100) : 0;
 
+        // ── Pelapor ────────────────────────────────────────────
+        $pelaporSiswa = Report::whereYear('created_at', $tahunFilter)
+            ->whereBetween(DB::raw('MONTH(created_at)'), [$bulanMulai, $bulanAkhir])
+            ->where('reporter_type', 'siswa')
+            ->count();
+
+        $pelaporOrtu = Report::whereYear('created_at', $tahunFilter)
+            ->whereBetween(DB::raw('MONTH(created_at)'), [$bulanMulai, $bulanAkhir])
+            ->where('reporter_type', 'ortu')
+            ->count();
+
         // ── Chart per bulan ────────────────────────────────────
         $chartRaw = Report::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
             ->whereYear('created_at', $tahunFilter)
@@ -198,8 +221,8 @@ class RekapController extends Controller
             $chartData[] = (int) ($chartRaw[$bln] ?? 0);
         }
 
-        $peakVal  = count($chartData) ? max($chartData) : 0;
-        $peakIdx  = $peakVal > 0 ? array_search($peakVal, $chartData) : null;
+        $peakVal   = count($chartData) ? max($chartData) : 0;
+        $peakIdx   = $peakVal > 0 ? array_search($peakVal, $chartData) : null;
         $peakLabel = $peakIdx !== null ? $bulanLabels[$peakIdx] . ' ' . $tahunFilter : null;
 
         // ── Tabel per kelas ────────────────────────────────────
@@ -224,7 +247,8 @@ class RekapController extends Controller
             'success' => true,
             'data'    => [
                 'stats' => compact(
-                    'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel'
+                    'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel',
+                    'pelaporSiswa','pelaporOrtu'
                 ),
                 'chart' => [
                     'labels'    => $bulanLabels,
@@ -268,7 +292,11 @@ class RekapController extends Controller
         return $pdf->download($filename);
     }
 
-        /**
+    // ══════════════════════════════════════════
+    // REKAP DETAIL PER KELAS
+    // ══════════════════════════════════════════
+
+    /**
      * GET /api/admin/rekap/detail-kelas
      * Detail laporan per kelas untuk drawer
      * ?kelas=X+AKL-1&bulan=3&tahun=2026
@@ -309,10 +337,10 @@ class RekapController extends Controller
         } elseif ($semester && $tahunAjaran) {
             [$tahunMulai, $tahunAkhir] = explode('/', $tahunAjaran);
             if ($semester === 'ganjil') {
-                $bulanMulai = 7; $bulanAkhir = 12;
+                $bulanMulai  = 7; $bulanAkhir = 12;
                 $tahunFilter = (int) $tahunMulai;
             } else {
-                $bulanMulai = 1; $bulanAkhir = 6;
+                $bulanMulai  = 1; $bulanAkhir = 6;
                 $tahunFilter = (int) $tahunAkhir;
             }
             $query->whereYear('reports.created_at', $tahunFilter)
@@ -322,41 +350,42 @@ class RekapController extends Controller
             return response()->json(['success' => false, 'message' => 'Parameter periode tidak lengkap.'], 422);
         }
 
-        $laporan = $query->select([
+        // Ambil hanya laporan berstatus selesai
+        $laporan = $query
+            ->select([
                 'reports.id',
                 'reports.ticket_code',
-                'reports.status',
                 'reports.urgency',
                 'reports.created_at',
                 'reports.handled_at',
-                'students.fullname as student_name',
             ])
+            ->where('reports.status', 'selesai')
             ->orderByDesc('reports.created_at')
             ->get();
 
-        $total   = $laporan->count();
-        // Hanya hitung status terminal
-        $selesai = $laporan->where('status', 'selesai')->count();
-        $ditolak = $laporan->where('status', 'ditolak')->count();
+        // Eager load relasi pelaku beserta data siswa
+        $laporan->load('pelaku.student');
 
-        // Urgensi — hanya dari laporan yang sudah selesai/ditolak
-        $terminal = $laporan->whereIn('status', ['selesai', 'ditolak']);
-        $urgTinggi = $terminal->where('urgency', 'tinggi')->count();
-        $urgSedang = $terminal->where('urgency', 'sedang')->count();
-        $urgRendah = $terminal->where('urgency', 'rendah')->count();
+        // Query sudah difilter hanya 'selesai', jadi tidak perlu filter lagi
+        $total     = $laporan->count();
+        $selesai   = $total;
+        $ditolak   = 0;
+        $urgTinggi = $laporan->where('urgency', 'tinggi')->count();
+        $urgSedang = $laporan->where('urgency', 'sedang')->count();
+        $urgRendah = $laporan->where('urgency', 'rendah')->count();
 
-        // Hanya tampilkan laporan terminal di tabel
-        $tabelLaporan = $laporan->whereIn('status', ['selesai', 'ditolak'])
-            ->map(fn($r) => [
-                'ticket_code'  => $r->ticket_code,
-                'student_name' => $r->student_name,
-                'status'       => $r->status,
-                'urgency'      => $r->urgency ?? 'sedang',
-                'created_at'   => Carbon::parse($r->created_at)->format('d M Y'),
-                'handled_at'   => $r->handled_at
-                    ? Carbon::parse($r->handled_at)->format('d M Y')
-                    : '-',
-            ])->values();
+        $tabelLaporan = $laporan->map(fn($r) => [
+            'ticket_code' => $r->ticket_code,
+            'pelaku'      => $r->pelaku
+                                ->map(fn($p) => $p->displayName())
+                                ->filter()
+                                ->toArray(),
+            'urgency'     => $r->urgency ?? 'sedang',
+            'created_at'  => Carbon::parse($r->created_at)->format('d M Y'),
+            'handled_at'  => $r->handled_at
+                ? Carbon::parse($r->handled_at)->format('d M Y')
+                : '-',
+        ])->values();
 
         return response()->json([
             'success' => true,
@@ -366,8 +395,8 @@ class RekapController extends Controller
                 'stats' => [
                     'total'   => $total,
                     'selesai' => $selesai,
-                    'ditolak' => $ditolak,
-                    'pct'     => $total > 0 ? round(($selesai / $total) * 100) : 0,
+                    'ditolak' => $ditolak,   // selalu 0, tetap dikirim agar drawer tidak error
+                    'pct'     => 100,        // semua data sudah selesai, pct selalu 100
                 ],
                 'urgensi' => [
                     'tinggi' => $urgTinggi,
@@ -378,6 +407,7 @@ class RekapController extends Controller
             ],
         ]);
     }
+
     /**
      * GET /api/admin/rekap/download-kelas
      * Download PDF rekap per kelas

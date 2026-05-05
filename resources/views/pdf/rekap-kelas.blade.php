@@ -267,17 +267,16 @@
 
     {{-- Tabel laporan --}}
     <div class="table-wrap" style="margin-top:18px">
-        <div class="section-title">Riwayat Laporan Selesai & Ditolak</div>
+        <div class="section-title">Riwayat Laporan Selesai — Fokus Pelaku</div>
         @if(count($laporan) > 0)
         <table>
             <thead>
                 <tr>
                     <th>No</th>
                     <th>Kode Tiket</th>
-                    <th>Pelapor</th>
+                    <th>Nama Pelaku</th>
                     <th>Urgensi</th>
-                    <th>Status</th>
-                    <th>Tgl Laporan</th>
+                    <th>Tgl Masuk</th>
                     <th>Tgl Selesai</th>
                 </tr>
             </thead>
@@ -286,15 +285,10 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td style="font-family:monospace; color:#6b7280">{{ $r['ticket_code'] }}</td>
-                    <td>{{ $r['student_name'] ?? '—' }}</td>
+                    <td>{{ is_array($r['pelaku']) ? implode(', ', $r['pelaku']) : ($r['pelaku'] ?? '—') }}</td>
                     <td>
                         <span class="badge-pill bp-{{ $r['urgency'] }}">
                             {{ $r['urgency'] === 'tinggi' ? 'Tinggi' : ($r['urgency'] === 'sedang' ? 'Sedang' : 'Rendah') }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge-pill bp-{{ $r['status'] }}">
-                            {{ $r['status'] === 'selesai' ? 'Selesai' : 'Ditolak' }}
                         </span>
                     </td>
                     <td>{{ $r['created_at'] }}</td>
@@ -334,7 +328,7 @@
     </div>
 
     {{-- Footer --}}
-    <div class="footer" style="margin-top:16px; padding-top:10px; border-top:1px solid #f3f4f6; display:flex; justify-content:space-between; font-size:9px; color:#9ca3af;">
+    <div class="footer">
         <span>SIP Bullying — SMK Muhammadiyah 3 Kadungora</span>
         <span>Dicetak otomatis oleh sistem pada {{ now()->format('d/m/Y H:i') }}</span>
     </div>
@@ -342,4 +336,3 @@
 </div>
 </body>
 </html>
-

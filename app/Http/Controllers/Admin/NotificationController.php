@@ -16,15 +16,18 @@ class NotificationController extends Controller
         $user = Auth::user();
 
         $recent = $user->notifications()->take(5)->get()
-            ->map(fn($n) => [
-                'id'               => $n->id,
-                'body'             => $n->body,
-                'icon'             => $n->icon,
-                'color'            => $n->color,
-                'url'              => $n->url,
-                'read_at'          => $n->read_at,
-                'created_at_human' => $n->created_at->diffForHumans(),
-            ]);
+        ->map(fn($n) => [
+            'id'               => $n->id,
+            'type'             => $n->type,   // ← tambah
+            'body'             => $n->body,
+            'icon'             => $n->icon,
+            'color'            => $n->color,
+            'url'              => $n->url,
+            'meta'             => $n->meta,   // ← tambah
+            'read_at'          => $n->read_at,
+            'created_at_human' => $n->created_at->diffForHumans(),
+        ]);
+
 
         return response()->json([
             'success'      => true,
@@ -47,13 +50,15 @@ class NotificationController extends Controller
         $paginated = $query->paginate(20);
 
         $items = collect($paginated->items())->map(fn($n) => [
-            'id'               => $n->id,
-            'body'             => $n->body,
-            'icon'             => $n->icon,
-            'color'            => $n->color,
-            'url'              => $n->url,
-            'read_at'          => $n->read_at,
-            'created_at_human' => $n->created_at->diffForHumans(),
+                'id'               => $n->id,
+                'type'             => $n->type,   // ← tambah
+                'body'             => $n->body,
+                'icon'             => $n->icon,
+                'color'            => $n->color,
+                'url'              => $n->url,
+                'meta'             => $n->meta,   // ← tambah
+                'read_at'          => $n->read_at,
+                'created_at_human' => $n->created_at->diffForHumans(),
         ]);
 
         return response()->json([

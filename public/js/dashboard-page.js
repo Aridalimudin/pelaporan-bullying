@@ -65,49 +65,64 @@ document.addEventListener('DOMContentLoaded', function () {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // ── Notifikasi ───────────────────────────────────────────
-    function startNotifPolling() {
-        fetchNotifCount();
-        setInterval(fetchNotifCount, 30000);
-    }
+// ── Notifikasi ───────────────────────────────────────────
+function startNotifPolling() {
+    fetchNotifCount();
+    setInterval(fetchNotifCount, 30000);
+}
 
-    async function fetchNotifCount() {
-        try {
-            const res  = await fetch('/api/admin/notifications/count');
-            const data = await res.json();
-            if (!data.success) return;
+async function fetchNotifCount() {
+    try {
+        const res  = await fetch('/api/admin/notifications/count');
+        const data = await res.json();
+        if (!data.success) return;
 
-            const badge = document.getElementById('notifBadge');
-            const text  = document.getElementById('notifCountText');
+        const badge = document.getElementById('notifBadge');
+        const text  = document.getElementById('notifCountText');
 
-            if (badge) {
-                badge.textContent   = data.unread_count > 0 ? data.unread_count : '';
-                badge.style.display = data.unread_count > 0 ? 'flex' : 'none';
-            }
-            if (text) {
-                text.textContent = data.unread_count + ' baru';
-            }
-
-            renderNotifList(data.recent);
-        } catch (e) {
-            console.error('Notif error:', e);
-        }
-    }
-
-    function renderNotifList(items) {
-        const list = document.getElementById('notifList');
-        if (!list) return;
-
-        if (!items || !items.length) {
-            list.innerHTML = '<div class="notif-empty">Tidak ada notifikasi</div>';
-            return;
+        if (badge) {
+            const count = data.unread_count ?? 0;
+            badge.textContent   = count > 0 ? (count > 99 ? '99+' : count) : '';
+            badge.style.display = count > 0 ? 'flex' : 'none';
+            // Sinkronkan juga style display dengan topbar
+            badge.style.visibility = 'visible';
         }
 
-        list.innerHTML = items.map(n => `
+        if (text) text.textContent = (data.unread_count ?? 0) + ' baru';
+
+        renderNotifList(data.recent);
+    } catch (e) {
+        console.error('Notif error:', e);
+        // Jangan hide badge kalau fetch gagal
+    }
+}
+
+function renderNotifList(items) {
+    const list = document.getElementById('notifList');
+    if (!list) return;
+
+    if (!items || !items.length) {
+        list.innerHTML = '<div class="notif-empty">Tidak ada notifikasi</div>';
+        return;
+    }
+
+    list.innerHTML = items.map(n => {
+        // Parse meta untuk pesan_kontak
+        let metaAttr = '';
+        if (n.type === 'pesan_kontak' && n.meta) {
+            try {
+                const meta = typeof n.meta === 'string' ? JSON.parse(n.meta) : n.meta;
+                meta.waktu = n.created_at_human;
+                metaAttr = `data-meta="${escapeAttr(JSON.stringify(meta))}"`;
+            } catch (e) {}
+        }
+
+        return `
             <div class="notif-item ${n.read_at ? '' : 'unread'}"
                  data-id="${n.id}"
                  data-url="${n.url || ''}"
-                 onclick="handleNotifClick(this)"
+                 data-type="${n.type || ''}"
+                 ${metaAttr}
                  style="cursor:pointer;">
                 <div class="notif-item-icon ${n.color}">
                     ${getNotifIconSvg(n.icon)}
@@ -117,39 +132,68 @@ document.addEventListener('DOMContentLoaded', function () {
                     <span class="notif-item-time">${n.created_at_human}</span>
                 </div>
             </div>
-        `).join('');
-    }
+        `;
+    }).join('');
+}
 
-    async function handleNotifClick(el) {
-        const id  = el.dataset.id;
-        const url = el.dataset.url;
+function escapeAttr(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
 
-        if (el.classList.contains('unread')) {
-            el.classList.remove('unread');
-            await fetch(`/api/admin/notifications/${id}/read`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json',
-                },
-            });
-            fetchNotifCount();
-        }
+// ── Event delegation untuk klik notif ───────
+document.addEventListener('click', async function (e) {
+    const item = e.target.closest('.notif-item');
+    if (!item) return;
 
-        if (url) window.location.href = url;
-    }
+    const id   = item.dataset.id;
+    const url  = item.dataset.url;
+    const type = item.dataset.type;
 
-    async function markAllNotifRead() {
-        await fetch('/api/admin/notifications/read-all', {
+    // Tandai dibaca
+    if (item.classList.contains('unread')) {
+        item.classList.remove('unread');
+        await fetch(`/api/admin/notifications/${id}/read`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                 'Accept': 'application/json',
             },
-        });
+        }).catch(() => {});
         fetchNotifCount();
     }
 
+    // Pesan kontak → buka modal
+    if (type === 'pesan_kontak' && item.dataset.meta) {
+        try {
+            const meta = JSON.parse(item.dataset.meta);
+            // Tutup dropdown dulu
+            document.getElementById('notifDropdown')?.classList.remove('open');
+            showPesanKontakModal(meta);
+        } catch (e) {
+            console.error('parse meta error:', e);
+        }
+        return;
+    }
+
+    // Lainnya → navigasi
+    if (url) window.location.href = url;
+});
+
+async function markAllNotifRead() {
+    await fetch('/api/admin/notifications/read-all', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+            'Accept': 'application/json',
+        },
+    });
+    fetchNotifCount();
+}
     function getNotifIconSvg(icon) {
         const map = {
             file:   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>`,
@@ -163,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return map[icon] ?? map.bell;
     }
 
-    window.handleNotifClick  = handleNotifClick;
     window.markAllNotifRead  = markAllNotifRead;
 
     startNotifPolling();

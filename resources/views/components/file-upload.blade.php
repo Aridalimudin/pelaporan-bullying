@@ -297,27 +297,28 @@ function updateFileList() {
         const item      = document.createElement('div');
         item.className  = 'file-item';
         item.style.marginBottom = '8px';
+        // Buat object URL untuk preview video langsung
+        const videoURL = URL.createObjectURL(file);
         item.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <svg class="w-8 h-8 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <p class="text-sm font-medium text-gray-900 truncate">${file.name}</p>
-                            <span class="file-type-badge video">Video</span>
-                        </div>
-                        <p class="text-xs text-gray-500">${formatFileSize(file.size)}</p>
-                    </div>
-                </div>
-                <button type="button" onclick="removeFile(${realIndex})"
-                    class="ml-3 text-red-500 hover:text-red-700 transition-colors flex-shrink-0" title="Hapus">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            <div class="preview-img-wrap" style="aspect-ratio:16/9; width:100%; max-width:320px;">
+                <video
+                    src="${videoURL}"
+                    class="preview-img"
+                    controls
+                    preload="metadata"
+                    style="object-fit:contain; background:#000; cursor:default;"
+                ></video>
+                <span class="preview-img-size">${formatFileSize(file.size)}</span>
+                <button type="button" class="preview-img-remove" style="opacity:1;"
+                    onclick="removeFile(${realIndex})" title="Hapus video">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
-            </div>`;
+            </div>
+            <p class="text-xs text-gray-500 mt-1 truncate" style="max-width:320px;">
+                <span class="file-type-badge video" style="margin-right:6px;">Video</span>${file.name}
+            </p>`;
         fileList.appendChild(item);
     });
 }

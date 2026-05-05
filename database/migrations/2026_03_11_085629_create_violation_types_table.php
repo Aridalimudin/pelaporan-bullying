@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('violation_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('category', ['Verbal', 'Non-Verbal']);
+            $table->enum('category', ['Verbal', 'Fisik']);
             $table->text('description')->nullable();
             $table->timestamps();
         });

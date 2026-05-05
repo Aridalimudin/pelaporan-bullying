@@ -126,6 +126,8 @@
         }
         </script>
 
+        <script src="{{ asset('js/topbar.js') }}"></script>
+
 <style>
     
     .notif-dropdown {

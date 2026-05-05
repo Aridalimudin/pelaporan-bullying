@@ -6,273 +6,256 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ViolationTypeController;
 use App\Http\Controllers\DisciplineActionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\GradeMajorController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\NotificationController;
-use App\Http\Controllers\GradeMajorController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RekapController;
 
-// ═══════════════════════════════════════════
-// PUBLIC (tidak butuh login)
-// ═══════════════════════════════════════════
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES — Tidak memerlukan autentikasi
+|--------------------------------------------------------------------------
+*/
 
-Route::get("/", function () {
-    return view("pages.welcome");
-})->name("home");
+Route::get('/', fn () => view('pages.welcome'))->name('home');
+Route::get('/lapor',             fn () => view('pages.user.report-page.report'))->name('lapor.index');
+Route::get('/lacak',             fn () => view('pages.user.track-page.track'))->name('lapor.lacak');
+Route::get('/progress-laporan',  fn () => view('pages.user.track-page.report-progress'))->name('lapor.progress');
+Route::get('/contact',           fn () => view('pages.user.contact-page.contact'))->name('lapor.contact');
 
-Route::get("/lapor", function () {
-    return view("pages.user.report-page.report");
-})->name("lapor.index");
+/*
+|--------------------------------------------------------------------------
+| PUBLIC API — Laporan & Siswa (digunakan oleh form publik)
+|--------------------------------------------------------------------------
+*/
 
-Route::get("/lacak", function () {
-    return view("pages.user.track-page.track");
-})->name("lapor.lacak");
+Route::prefix('api')->group(function () {
 
-Route::get("/progress-laporan", function () {
-    return view("pages.user.track-page.report-progress");
-})->name("lapor.progress");
+    // Kontak
+    Route::post('/contact', [ContactController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('api.contact.store');
 
-Route::get("/contact", function () {
-    return view("pages.user.contact-page.contact");
-})->name("lapor.contact");
+    // Laporan
+    Route::post('/reports',           [ReportController::class, 'store'])->middleware('throttle:30,1')->name('api.reports.store');
+    Route::get('/reports/track',      [ReportController::class, 'track'])->name('api.reports.track');
+    Route::post('/reports/feedback',  [ReportController::class, 'storeFeedback'])->middleware('throttle:3,1')->name('api.reports.feedback');
+    Route::post('/reports/reminder',  [ReportController::class, 'sendReminder'])->middleware('throttle:3,1')->name('api.reports.reminder');
+    Route::post('/reports/detail',    [ReportController::class, 'storeDetail'])->middleware('throttle:10,1')->name('api.reports.detail');
 
-Route::post("/api/reports/feedback", [ReportController::class, "storeFeedback"])
-    ->middleware("throttle:3,1")
-    ->name("api.reports.feedback");
+    // Siswa
+    Route::get('/students/search',       [ReportController::class, 'searchStudent'])->name('api.students.search');
+    Route::get('/students/autocomplete', [ReportController::class, 'autocompleteStudent'])->name('api.students.autocomplete');
 
-// ═══════════════════════════════════════════
-// API PUBLIC — Laporan & Siswa
-// (tidak butuh login, dipakai oleh form publik)
-// ═══════════════════════════════════════════
+    // Jenis Pelanggaran
+    Route::get('/violation-types/autocomplete', [ViolationTypeController::class, 'autocomplete'])->name('api.violation-types.autocomplete');
 
-// Cari siswa berdasarkan NISN (dipanggil dari form laporan)
-Route::get("/api/students/search", [ReportController::class, "searchStudent"])
-    ->name("api.students.search");
+    // Data Siswa — Kelas & Jurusan (untuk form publik)
+    Route::prefix('data-siswa')->group(function () {
+        Route::get('/grades',       [GradeMajorController::class, 'gradesList'])->name('api.students.grades.public');
+        Route::get('/majors',       [GradeMajorController::class, 'majorsList'])->name('api.students.majors.public');
+        Route::get('/majors/full',  [GradeMajorController::class, 'majorsFullList'])->name('api.students.majors.full.public');
+        Route::get('/grade-majors', [GradeMajorController::class, 'pairsList'])->name('api.grade.majors.pairs.public');
+    });
+});
 
-// Autocomplete nama/NIS siswa (untuk field pelaku/korban/saksi di admin)
-Route::get("/api/students/autocomplete", [ReportController::class, "autocompleteStudent"])
-    ->name("api.students.autocomplete");
+/*
+|--------------------------------------------------------------------------
+| LOGIN PAGE
+|--------------------------------------------------------------------------
+*/
 
-// Kirim laporan baru
-Route::post("/api/reports", [ReportController::class, "store"])
-    ->middleware("throttle:5,1") // maks 5 submit per menit per IP
-    ->name("api.reports.store");
-
-// Lacak laporan berdasarkan kode tiket
-Route::get("/api/reports/track", [ReportController::class, "track"])
-    ->name("api.reports.track");
-
-Route::post("/api/reports/reminder", [ReportController::class, "sendReminder"])
-    ->middleware("throttle:3,1") // maks 3 request per menit per IP
-    ->name("api.reports.reminder");
-
-Route::post("/api/reports/detail", [ReportController::class, "storeDetail"])
-    ->middleware("throttle:10,1")
-    ->name("api.reports.detail");
-
-// Rute list Kelas dan Jurusan untuk Form Public
-Route::get("/api/data-siswa/grades", [GradeMajorController::class, "gradesList"])
-     ->name("api.students.grades.public");
-
-Route::get("/api/data-siswa/majors", [GradeMajorController::class, "majorsList"])
-     ->name("students.api.majors.public");
-
-// ✅ BARU: Pasangan kelas-jurusan & jurusan lengkap — dipakai halaman /progress-laporan (publik)
-Route::get("/api/data-siswa/grade-majors", [GradeMajorController::class, "pairsList"])
-     ->name("api.grade.majors.pairs.public");
-
-Route::get("/api/data-siswa/majors/full", [GradeMajorController::class, "majorsFullList"])
-     ->name("students.api.majors.full.public");
-
-
-// ═══════════════════════════════════════════
-// HALAMAN LOGIN (tidak butuh login)
-// ═══════════════════════════════════════════
-
-Route::get("/login", function () {
+Route::get('/login', function () {
     if (Auth::check()) {
-        return redirect()->route("administrator.dashboard");
+        return redirect()->route('administrator.dashboard');
     }
-    return view("pages.administrator.login-page.login");
-})->name("administrator.login");
+    return view('pages.administrator.login-page.login');
+})->name('administrator.login');
 
-// ═══════════════════════════════════════════
-// API AUTH
-// ═══════════════════════════════════════════
+Route::post('/api/admin/login', [AuthController::class, 'login'])->name('api.admin.login');
 
-Route::post("/api/admin/login", [AuthController::class, "login"])->name("api.admin.login");
+/*
+|--------------------------------------------------------------------------
+| PROTECTED ROUTES — Memerlukan autentikasi (auth:web)
+|--------------------------------------------------------------------------
+*/
 
+Route::middleware('auth:web')->group(function () {
 
-// ═══════════════════════════════════════════
-// SEMUA ROUTE YANG BUTUH LOGIN
-// ═══════════════════════════════════════════
+    /*
+    |----------------------------------------------------------------------
+    | API Admin — Auth
+    |----------------------------------------------------------------------
+    */
 
-Route::middleware("auth:web")->group(function () {
-
-    // ── API Auth ─────────────────────────────
-    Route::match(['GET', 'POST'], "/api/admin/logout", [AuthController::class, "logout"])->name("api.admin.logout");
-    Route::get("/api/admin/me",      [AuthController::class, "me"])->name("api.admin.me");
-
-    Route::get("/admin/notifications", function () {
-        return view("pages.administrator.notification-page.notifications");
-    })->name("administrator.notifications");
-
-    // ── API Admin: Kelola Laporan ─────────────
-    Route::prefix("api/admin")->group(function () {
-
-        // Daftar laporan per status (untuk halaman admin)
-        Route::get("/reports",              [ReportController::class, "adminIndex"]);
-        Route::get("/reports/counts",       [ReportController::class, "reportCounts"]);
-        Route::get("/reports/{id}",         [ReportController::class, "adminShow"]);
-        Route::put("/reports/{id}/status",  [ReportController::class, "updateStatus"]);
-
-        // Pihak yang terlibat (pelaku/korban/saksi)
-        Route::post  ("/reports/{id}/persons",              [ReportController::class, "storePerson"]);
-        Route::delete("/reports/{id}/persons/{personId}",   [ReportController::class, "destroyPerson"]);
-
-        Route::get("/discipline-actions", [DisciplineActionController::class, "list"]);
-        Route::post("/reports/{id}/follow-up", [ReportController::class, "storeFollowUp"]);
-        Route::put("/reports/{id}/follow-up/{followUpId}", [ReportController::class, "updateFollowUp"]);
-
+    Route::prefix('api/admin')->group(function () {
+        Route::match(['GET', 'POST'], '/logout', [AuthController::class, 'logout'])->name('api.admin.logout');
+        Route::get('/me', [AuthController::class, 'me'])->name('api.admin.me');
     });
 
-    // ── API User Management ───────────────────
-    Route::prefix("api/admin")->group(function () {
+    /*
+    |----------------------------------------------------------------------
+    | API Admin — Notifikasi
+    |----------------------------------------------------------------------
+    */
 
-        // Users
-        Route::get   ("/users",      [UserController::class, "index"]);
-        Route::post  ("/users",      [UserController::class, "store"]);
-        Route::put   ("/users/{id}", [UserController::class, "update"]);
-        Route::delete("/users/{id}", [UserController::class, "destroy"]);
-
-        // Roles
-        Route::get   ("/roles",      [RoleController::class, "index"]);
-        Route::post  ("/roles",      [RoleController::class, "store"]);
-        Route::put   ("/roles/{id}", [RoleController::class, "update"]);
-        Route::delete("/roles/{id}", [RoleController::class, "destroy"]);
-
-        // Permissions
-        Route::get   ("/permissions",      [PermissionController::class, "index"]);
-        Route::post  ("/permissions",      [PermissionController::class, "store"]);
-        Route::put   ("/permissions/{id}", [PermissionController::class, "update"]);
-        Route::delete("/permissions/{id}", [PermissionController::class, "destroy"]);
-
-    });
     Route::prefix('api/admin/notifications')->group(function () {
-        Route::get('/count',      [NotificationController::class, 'count']);
         Route::get('/',           [NotificationController::class, 'index']);
+        Route::get('/count',      [NotificationController::class, 'count']);
         Route::post('/read-all',  [NotificationController::class, 'markAllRead']);
         Route::post('/{id}/read', [NotificationController::class, 'markRead']);
     });
 
-    // ── Halaman Dashboard ─────────────────────
-    Route::get("/dashboard", [App\Http\Controllers\Admin\DashboardController::class, 'index'])
-        ->name("administrator.dashboard");
+    /*
+    |----------------------------------------------------------------------
+    | API Admin — Kelola Laporan
+    |----------------------------------------------------------------------
+    */
 
-    // ── Report Central ────────────────────────
-    Route::get("/laporan-masuk", function () {
-        return view("pages.administrator.report-management-page.incoming-report");
-    })->name("administrator.incoming-report");
+    Route::prefix('api/admin')->group(function () {
+        Route::get('/reports',                              [ReportController::class, 'adminIndex']);
+        Route::get('/reports/counts',                       [ReportController::class, 'reportCounts']);
+        Route::get('/reports/{id}',                         [ReportController::class, 'adminShow']);
+        Route::put('/reports/{id}/status',                  [ReportController::class, 'updateStatus']);
+        Route::post('/reports/{id}/persons',                [ReportController::class, 'storePerson']);
+        Route::delete('/reports/{id}/persons/{personId}',   [ReportController::class, 'destroyPerson']);
+        Route::post('/reports/{id}/follow-up',              [ReportController::class, 'storeFollowUp']);
+        Route::put('/reports/{id}/follow-up/{followUpId}',  [ReportController::class, 'updateFollowUp']);
 
-    Route::get("/menunggu-verifikasi", function () {
-        return view("pages.administrator.report-management-page.pending-verification");
-    })->name("administrator.pending-verification");
-
-    Route::get("/proses-laporan", function () {
-        return view("pages.administrator.report-management-page.processing-report");
-    })->name("administrator.processing-report");
-
-    Route::get("/laporan-selesai", function () {
-        return view("pages.administrator.report-management-page.report-closed");
-    })->name("administrator.report-closed");
-
-    Route::get("/laporan-ditolak", function () {
-        return view("pages.administrator.report-management-page.report-rejected");
-    })->name("administrator.report-rejected");
-
-    // ── Master Data ───────────────────────────
-    Route::prefix("SIP-Bullying")->group(function () {
-
-        // Data Siswa
-        Route::get("/data-siswa", [StudentController::class, "index"])
-            ->name("administrator.students");
-        Route::get("/api/data-siswa/list", [StudentController::class, "getStudents"])
-            ->name("students.api.list");
-        Route::post("/api/data-siswa/save", [StudentController::class, "store"])
-            ->name("students.api.save");
-        Route::delete("/api/data-siswa/delete/{id}", [StudentController::class, "destroy"])
-            ->name("students.api.delete");
-
-        // ── Kelas & Jurusan (API GradeMajorController) ──
-        Route::post("/api/data-siswa/majors/save", [GradeMajorController::class, "majorSave"])
-            ->name("students.api.majors.save");
-        Route::delete("/api/data-siswa/majors/delete/{name}", [GradeMajorController::class, "majorDelete"])
-            ->name("students.api.majors.delete");
-
-        Route::post("/api/data-siswa/grades/save", [GradeMajorController::class, "gradeSave"])
-            ->name("students.api.grades.save");
-        Route::delete("/api/data-siswa/grades/delete/{grade}", [GradeMajorController::class, "gradeDelete"])
-            ->name("students.api.grades.delete");
-
-        // ── Pasangan Kelas-Jurusan (admin, butuh login) ──
-        Route::get("/api/data-siswa/grade-majors", [GradeMajorController::class, "pairsList"])
-            ->name("api.grade.majors.pairs");
-        Route::get("/api/data-siswa/grades-by-major/{major}", [GradeMajorController::class, "gradesByMajor"])
-            ->name("api.grades.by.major");
-        Route::get("/api/data-siswa/major-by-grade/{grade}", [GradeMajorController::class, "majorByGrade"])
-            ->name("api.major.by.grade");
-
-        // Jenis Pelanggaran
-        Route::get("/jenis-pelanggaran", [ViolationTypeController::class, "index"])
-            ->name("administrator.violation-types");
-        Route::get("/api/jenis-pelanggaran/list", [ViolationTypeController::class, "list"])
-            ->name("violation-types.api.list");
-        Route::post("/api/jenis-pelanggaran/save", [ViolationTypeController::class, "store"])
-            ->name("violation-types.api.save");
-        Route::delete("/api/jenis-pelanggaran/delete/{id}", [ViolationTypeController::class, "destroy"])
-            ->name("violation-types.api.delete");
-
-        // Tindakan Disiplin
-        Route::get("/tindakan-disiplin", [DisciplineActionController::class, "index"])
-            ->name("administrator.discipline-actions");
-        Route::get("/api/tindakan-disiplin/list", [DisciplineActionController::class, "list"])
-            ->name("discipline-actions.api.list");
-        Route::post("/api/tindakan-disiplin/save", [DisciplineActionController::class, "store"])
-            ->name("discipline-actions.api.save");
-        Route::delete("/api/tindakan-disiplin/delete/{id}", [DisciplineActionController::class, "destroy"])
-            ->name("discipline-actions.api.delete");
-
+        Route::get('/discipline-actions', [DisciplineActionController::class, 'list']);
     });
 
-    // ── User Management ───────────────────────
-    Route::get("/daftar-users", function () {
-        return view("pages.administrator.user-management-page.users");
-    })->name("administrator.users");
+    /*
+    |----------------------------------------------------------------------
+    | API Admin — User Management
+    |----------------------------------------------------------------------
+    */
 
-    Route::get("/daftar-roles", function () {
-        return view("pages.administrator.user-management-page.roles");
-    })->name("administrator.roles");
+    Route::prefix('api/admin')->group(function () {
+        Route::get('/users',        [UserController::class, 'index']);
+        Route::post('/users',       [UserController::class, 'store']);
+        Route::put('/users/{id}',   [UserController::class, 'update']);
+        Route::delete('/users/{id}',[UserController::class, 'destroy']);
 
-    Route::get("/daftar-permissions", function () {
-        return view("pages.administrator.user-management-page.permissions");
-    })->name("administrator.permissions");
+        Route::get('/roles',        [RoleController::class, 'index']);
+        Route::post('/roles',       [RoleController::class, 'store']);
+        Route::put('/roles/{id}',   [RoleController::class, 'update']);
+        Route::delete('/roles/{id}',[RoleController::class, 'destroy']);
 
-    // ── Case Recapitulation ───────────────────
-    Route::get("/rekapitulasi-PerBulan", function () {
-        return view("pages.administrator.case-recapitulation-page.monthly");
-    })->name("administrator.monthly");
+        Route::get('/permissions',          [PermissionController::class, 'index']);
+        Route::post('/permissions',         [PermissionController::class, 'store']);
+        Route::put('/permissions/{id}',     [PermissionController::class, 'update']);
+        Route::delete('/permissions/{id}',  [PermissionController::class, 'destroy']);
+    });
 
-    Route::get("/rekapitulasi-PerSemester", function () {
-        return view("pages.administrator.case-recapitulation-page.semester");
-    })->name("administrator.semester");
+    /*
+    |----------------------------------------------------------------------
+    | API Admin — Rekapitulasi
+    |----------------------------------------------------------------------
+    */
 
-    Route::get('/api/admin/rekap/bulan',            [RekapController::class, 'bulan']);
-    Route::get('/api/admin/rekap/bulan/export',     [RekapController::class, 'exportBulan']);
-    Route::get('/api/admin/rekap/semester',         [RekapController::class, 'semester']);
-    Route::get('/api/admin/rekap/semester/export',  [RekapController::class, 'exportSemester']);
-    Route::get('/api/admin/rekap/detail-kelas',     [RekapController::class, 'detailKelas']);
-    Route::get('/api/admin/rekap/download-kelas',   [RekapController::class, 'downloadKelas']);
+    Route::prefix('api/admin/rekap')->group(function () {
+        Route::get('/bulan',            [RekapController::class, 'bulan']);
+        Route::get('/bulan/export',     [RekapController::class, 'exportBulan']);
+        Route::get('/semester',         [RekapController::class, 'semester']);
+        Route::get('/semester/export',  [RekapController::class, 'exportSemester']);
+        Route::get('/detail-kelas',     [RekapController::class, 'detailKelas']);
+        Route::get('/download-kelas',   [RekapController::class, 'downloadKelas']);
+    });
 
+    /*
+    |----------------------------------------------------------------------
+    | Halaman Admin — Dashboard & Notifikasi
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('/dashboard',        [DashboardController::class, 'index'])->name('administrator.dashboard');
+    Route::get('/admin/notifications', fn () => view('pages.administrator.notification-page.notifications'))->name('administrator.notifications');
+
+    /*
+    |----------------------------------------------------------------------
+    | Halaman Admin — Manajemen Laporan
+    |----------------------------------------------------------------------
+    */
+
+    Route::prefix('')->group(function () {
+        Route::get('/laporan-masuk',        fn () => view('pages.administrator.report-management-page.incoming-report'))->name('administrator.incoming-report');
+        Route::get('/menunggu-verifikasi',  fn () => view('pages.administrator.report-management-page.pending-verification'))->name('administrator.pending-verification');
+        Route::get('/proses-laporan',       fn () => view('pages.administrator.report-management-page.processing-report'))->name('administrator.processing-report');
+        Route::get('/laporan-selesai',      fn () => view('pages.administrator.report-management-page.report-closed'))->name('administrator.report-closed');
+        Route::get('/laporan-ditolak',      fn () => view('pages.administrator.report-management-page.report-rejected'))->name('administrator.report-rejected');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Halaman & API Admin — Master Data (SIP-Bullying)
+    |----------------------------------------------------------------------
+    */
+
+    Route::prefix('SIP-Bullying')->group(function () {
+
+        // Data Siswa
+        Route::get('/data-siswa', [StudentController::class, 'index'])->name('administrator.students');
+
+        Route::prefix('api/data-siswa')->group(function () {
+            Route::get('/list',             [StudentController::class, 'getStudents'])->name('students.api.list');
+            Route::post('/save',            [StudentController::class, 'store'])->name('students.api.save');
+            Route::delete('/delete/{id}',   [StudentController::class, 'destroy'])->name('students.api.delete');
+
+            // Jurusan
+            Route::post('/majors/save',         [GradeMajorController::class, 'majorSave'])->name('students.api.majors.save');
+            Route::delete('/majors/delete/{name}', [GradeMajorController::class, 'majorDelete'])->name('students.api.majors.delete');
+
+            // Kelas
+            Route::post('/grades/save',          [GradeMajorController::class, 'gradeSave'])->name('students.api.grades.save');
+            Route::delete('/grades/delete/{grade}', [GradeMajorController::class, 'gradeDelete'])->name('students.api.grades.delete');
+
+            // Pasangan Kelas-Jurusan
+            Route::get('/grade-majors',              [GradeMajorController::class, 'pairsList'])->name('api.grade.majors.pairs');
+            Route::get('/grades-by-major/{major}',   [GradeMajorController::class, 'gradesByMajor'])->name('api.grades.by.major');
+            Route::get('/major-by-grade/{grade}',    [GradeMajorController::class, 'majorByGrade'])->name('api.major.by.grade');
+        });
+
+        // Jenis Pelanggaran
+        Route::get('/jenis-pelanggaran', [ViolationTypeController::class, 'index'])->name('administrator.violation-types');
+
+        Route::prefix('api/jenis-pelanggaran')->group(function () {
+            Route::get('/list',           [ViolationTypeController::class, 'list'])->name('violation-types.api.list');
+            Route::post('/save',          [ViolationTypeController::class, 'store'])->name('violation-types.api.save');
+            Route::delete('/delete/{id}', [ViolationTypeController::class, 'destroy'])->name('violation-types.api.delete');
+        });
+
+        // Tindakan Disiplin
+        Route::get('/tindakan-disiplin', [DisciplineActionController::class, 'index'])->name('administrator.discipline-actions');
+
+        Route::prefix('api/tindakan-disiplin')->group(function () {
+            Route::get('/list',           [DisciplineActionController::class, 'list'])->name('discipline-actions.api.list');
+            Route::post('/save',          [DisciplineActionController::class, 'store'])->name('discipline-actions.api.save');
+            Route::delete('/delete/{id}', [DisciplineActionController::class, 'destroy'])->name('discipline-actions.api.delete');
+        });
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Halaman Admin — User Management
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('/daftar-users',       fn () => view('pages.administrator.user-management-page.users'))->name('administrator.users');
+    Route::get('/daftar-roles',       fn () => view('pages.administrator.user-management-page.roles'))->name('administrator.roles');
+    Route::get('/daftar-permissions', fn () => view('pages.administrator.user-management-page.permissions'))->name('administrator.permissions');
+
+    /*
+    |----------------------------------------------------------------------
+    | Halaman Admin — Rekapitulasi Kasus
+    |----------------------------------------------------------------------
+    */
+
+    Route::get('/rekapitulasi-PerBulan',     fn () => view('pages.administrator.case-recapitulation-page.monthly'))->name('administrator.monthly');
+    Route::get('/rekapitulasi-PerSemester',  fn () => view('pages.administrator.case-recapitulation-page.semester'))->name('administrator.semester');
 });

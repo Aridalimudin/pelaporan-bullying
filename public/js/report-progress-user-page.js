@@ -221,9 +221,13 @@
             ];
         } else {
             const currentIdx = statusOrder.indexOf(d.status);
+            const isCompleted = d.status === 'selesai';
+
             steps = allSteps.map((s, i) => ({
                 ...s,
-                state: i < currentIdx ? 'done' : i === currentIdx ? 'active' : '',
+                state: (isCompleted || i < currentIdx) ? 'done' 
+                    : i === currentIdx ? 'active' 
+                    : '',
             }));
         }
 
@@ -307,11 +311,56 @@
             </div>
         `;
     }
+    
 
     /* ══════════════════════════════════════════════
     TAHAP 2 – MENUNGGU VERIFIKASI
     ══════════════════════════════════════════════ */
     function renderStageVerifikasi(c, d) {
+    // Orang tua tidak perlu isi detail — admin yang isi saat ketemu langsung
+    if (d.reporter_type === 'ortu') {
+        c.innerHTML = `
+            <div style="
+                display:flex;flex-direction:column;align-items:center;gap:14px;
+                padding:32px 20px;text-align:center;
+                background:#fffbeb;border:1.5px solid #fde68a;border-radius:16px;
+            ">
+                <div style="font-size:2.4rem;">📞</div>
+                <div>
+                    <div style="font-weight:700;font-size:.95rem;color:#92400e;margin-bottom:6px;">
+                        Laporan Anda Sedang Diverifikasi
+                    </div>
+                    <div style="font-size:.82rem;color:#78716c;line-height:1.6;max-width:360px;">
+                        Pihak sekolah akan menghubungi Anda melalui nomor HP yang didaftarkan 
+                        untuk melakukan verifikasi dan mengumpulkan detail kejadian secara langsung.
+                    </div>
+                </div>
+                <div style="
+                    padding:10px 16px;background:white;border:1.5px solid #fde68a;
+                    border-radius:10px;font-size:.8rem;color:#92400e;
+                ">
+                    📱 Pastikan nomor HP Anda aktif dan bisa dihubungi
+                </div>
+            </div>
+
+            <div class="detail-panel" id="panelAwal" style="margin-top:16px;">
+                <button class="btn-toggle-detail" onclick="togglePanel('panelAwal', this)">
+                    <div class="btn-toggle-detail-left">
+                        <div class="icon-wrap">${icoDoc()}</div>
+                        <div>
+                            <div class="btn-toggle-detail-text">Lihat Laporan Awal</div>
+                            <div class="btn-toggle-detail-sub">Data yang Anda kirimkan</div>
+                        </div>
+                    </div>
+                    ${icoChevron()}
+                </button>
+                <div class="detail-panel-body" id="bodyAwal">
+                    <div class="detail-panel-inner">${buildDetailAwal(d)}</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
         c.innerHTML = `
             <!-- Tombol Isi Detail -->
             <button class="btn-isi-detail" id="btnIsiDetail" onclick="toggleFormIsi()">
@@ -834,21 +883,39 @@
             <div class="detail-section">
                 <div class="detail-section-title">👤 Identitas Pelapor</div>
                 <div class="field-grid">
-                    <div class="field-item">
-                        <div class="field-label">Nama Pelapor</div>
-                        <div class="field-value">${esc(d.student_name || '(anonim)')}</div>
+                <div class="field-item">
+                    <div class="field-label">Nama Pelapor</div>
+                    <div class="field-value">
+                        ${esc(d.reporter_type === 'ortu' ? d.reporter_name : (d.student_name || '(anonim)'))}
+                        ${d.reporter_type === 'ortu' ? '<span style="font-size:.72rem;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:99px;margin-left:6px;">👨‍👩‍👧 Orang Tua</span>' : ''}
                     </div>
-                    <div class="field-item">
-                        <div class="field-label">NIS</div>
-                        <div class="field-value mono">${esc(d.student_nis || '-')}</div>
-                    </div>
-                    <div class="field-item">
-                        <div class="field-label">Kelas</div>
-                        <div class="field-value">${esc(d.student_grade || '-')}</div>
-                    </div>
+                </div>
+                ${d.reporter_type === 'ortu' ? `
+                <div class="field-item">
+                    <div class="field-label">No. HP</div>
+                    <div class="field-value mono">${esc(d.reporter_phone || '-')}</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-label">Nama Anak</div>
+                    <div class="field-value">${esc(d.child_name || '-')}</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-label">Kelas Anak</div>
+                    <div class="field-value">${esc(d.child_grade || '-')}</div>
+                </div>` : `
+                <div class="field-item">
+                    <div class="field-label">NIS</div>
+                    <div class="field-value mono">${esc(d.student_nis || '-')}</div>
+                </div>
+                <div class="field-item">
+                    <div class="field-label">Kelas</div>
+                    <div class="field-value">${esc(d.student_grade || '-')}</div>
+                </div>`}
                     <div class="field-item">
                         <div class="field-label">Jenis Laporan</div>
-                        <div class="field-value">-</div>
+                        <div class="field-value">
+                            ${buildViolationBadges(d.violation_categories)}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -875,9 +942,26 @@
                                     </div>`;
                             } else {
                                 return `
-                                    <a href="${esc(url)}" target="_blank" class="bukti-item">
-                                        🎬 ${esc(f.original_name)}
-                                    </a>`;
+                                    <div class="photo-item" onclick="openVideo('${esc(url)}', '${esc(f.original_name)}')"
+                                        style="position:relative;cursor:pointer;">
+                                        <video
+                                            src="${esc(url)}#t=0.1"
+                                            preload="metadata"
+                                            muted
+                                            style="width:100%;height:100%;object-fit:cover;border-radius:10px;pointer-events:none;">
+                                        </video>
+                                        <div style="
+                                            position:absolute;inset:0;display:flex;align-items:center;
+                                            justify-content:center;background:rgba(0,0,0,0.35);border-radius:10px;">
+                                            <div style="
+                                                width:38px;height:38px;background:rgba(255,255,255,0.9);
+                                                border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="#111">
+                                                    <path d="M8 5v14l11-7z"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>`;
                             }
                         }).join('')}
                     </div>
@@ -1962,6 +2046,24 @@
         document.body.appendChild(overlay);
     }
 
+    function openVideo(url, name) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;animation:fadeIn .2s ease;gap:12px;';
+        overlay.innerHTML = `
+            <video src="${esc(url)}" controls autoplay
+                style="max-width:100%;max-height:80vh;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);cursor:default;"
+                onclick="event.stopPropagation()">
+            </video>
+            <p style="color:rgba(255,255,255,.7);font-size:.82rem;max-width:400px;text-align:center;
+                overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎬 ${esc(name)}</p>
+        `;
+        overlay.onclick = () => {
+            overlay.querySelector('video').pause();
+            overlay.remove();
+        };
+        document.body.appendChild(overlay);
+    }
+
     /* ══════════════════════════════════════════════
     TOAST (pojok kanan atas)
     ══════════════════════════════════════════════ */
@@ -2059,3 +2161,22 @@
             if (current) sel.value = current;
         });
     }
+    function buildViolationBadges(categories) {
+    if (!categories || categories === '-') {
+        return '<span style="color:#9ca3af;font-style:italic;">Tidak terdeteksi</span>';
+    }
+
+    return categories.split(' & ').map(cat => {
+        const isFisik = cat === 'Fisik';
+        return `<span style="
+            display:inline-flex;align-items:center;gap:4px;
+            padding:3px 10px;border-radius:99px;font-size:.75rem;font-weight:600;
+            background:${isFisik ? '#fee2e2' : '#dbeafe'};
+            color:${isFisik ? '#991b1b' : '#1e40af'};
+            border:1px solid ${isFisik ? '#fca5a5' : '#93c5fd'};
+            margin-right:4px;
+        ">
+            ${isFisik ? '⚡' : '💬'} ${cat}
+        </span>`;
+    }).join('');
+}

@@ -120,5 +120,5 @@ if (typeof window.Toast === 'undefined') {
     warning(title, msg, duration) { this.show('warning', title, msg, duration); },
     info   (title, msg, duration) { this.show('info',    title, msg, duration); },
 };
-
+}
 </script>

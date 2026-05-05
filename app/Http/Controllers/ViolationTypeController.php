@@ -21,8 +21,10 @@ class ViolationTypeController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
-            'category'    => 'required|in:Verbal,Non-Verbal',
+            'category' => 'required|in:Verbal,Fisik',
             'description' => 'nullable|string',
+            'weight'      => 'nullable|integer|min:1|max:20',
+            'keywords'    => 'nullable|string|max:1000',
         ]);
 
         $record = ViolationType::updateOrCreate(['id' => $request->id], $data);
@@ -33,5 +35,27 @@ class ViolationTypeController extends Controller
     {
         ViolationType::destroy($id);
         return response()->json(['status' => 'success']);
+    }
+    public function autocomplete(Request $request)
+    {
+        $q = trim($request->query('q', ''));
+        $query = ViolationType::orderBy('category')->orderBy('name');
+
+        if (strlen($q) >= 1) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%")
+                    ->orWhere('keywords', 'like', "%{$q}%");
+            });
+        }
+
+        // Kalau ada query q, batasi 10. Kalau tidak ada (load semua), ambil semua
+        if (strlen($q) >= 1) {
+            $query->limit(10);
+        }
+
+        return response()->json(
+            $query->get(['id', 'name', 'category', 'weight', 'keywords'])
+        );
     }
 }

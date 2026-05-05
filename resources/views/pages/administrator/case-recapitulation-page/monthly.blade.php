@@ -56,6 +56,8 @@
             'rataRata'            => '0.0',
             'tingkatPenyelesaian' => '0',
             'periodeLabel'        => '—',
+            'pelaporSiswa'        => 0,
+            'pelaporOrtu'         => 0,
         ])
         </div>
 
@@ -63,18 +65,18 @@
             <div class="rekap-chart-header">
                 <div>
                     <h3 class="rekap-chart-title">Frekuensi Laporan Masuk</h3>
-                    <p class="rekap-chart-sub">Total laporan per hari — Maret 2026</p>
+                    <p class="rekap-chart-sub" id="chartSubLabel">Total laporan per hari — Maret 2026</p>
                 </div>
                 <div class="rekap-chart-peak">
                     <span class="peak-label">Puncak</span>
-                    <span class="peak-val">5 laporan</span>
-                    <span class="peak-date">tgl 14</span>
+                    <span class="peak-val">— laporan</span>
+                    <span class="peak-date">—</span>
                 </div>
             </div>
             @include('components.rekap-chart-admin', [
                 'chartId'     => 'chartBulan',
-                'chartLabels' => ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'],
-                'chartData'   => [1,0,2,1,3,2,0,1,2,3,1,2,3,5,4,2,1,3,2,1,0,2,3,1,2,1,0,2,1,2,1],
+                'chartLabels' => [],
+                'chartData'   => [],
                 'chartLabel'  => 'Laporan Masuk',
                 'chartHeight' => 220,
             ])
@@ -84,7 +86,7 @@
             <div class="rekap-table-header">
                 <div>
                     <h3 class="rekap-chart-title">Rekapitulasi Detail</h3>
-                    <p class="rekap-chart-sub">Per kelas — Maret 2026</p>
+                    <p class="rekap-chart-sub" id="tableSubLabel">Per kelas — Maret 2026</p>
                 </div>
                 <div class="search-wrap">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,6 +182,10 @@ function updateStats(stats) {
     badge.textContent = lbl;
     bar.className   = `rs-progress-bar ${cls}`;
     bar.style.width = Math.min(100, pct) + '%';
+
+    // Tambahan 2 baris update pelapor
+    document.getElementById('bulan-pelaporSiswa').textContent = stats.pelaporSiswa ?? 0;
+    document.getElementById('bulan-pelaporOrtu').textContent  = stats.pelaporOrtu  ?? 0;
 }
 
 // ── Update chart ─────────────────────────────────────────
@@ -192,9 +198,8 @@ function updateChart(chart) {
     const tahun = document.getElementById('filterTahun').value;
     const namaBulan = ['','Januari','Februari','Maret','April','Mei','Juni',
         'Juli','Agustus','September','Oktober','November','Desember'];
-    const allSubs = document.querySelectorAll('.rekap-chart-sub');
-        if (allSubs[0]) allSubs[0].textContent = `Total laporan per hari — ${namaBulan[bulan]} ${tahun}`;
-        if (allSubs[1]) allSubs[1].textContent = `Per kelas — ${namaBulan[bulan]} ${tahun}`;
+    document.getElementById('chartSubLabel').textContent = `Total laporan per hari — ${namaBulan[bulan]} ${tahun}`;
+    document.getElementById('tableSubLabel').textContent = `Per kelas — ${namaBulan[bulan]} ${tahun}`;
 
     // Destroy & rebuild chart
     const canvas = document.getElementById('chartBulan');
@@ -207,7 +212,6 @@ function updateChart(chart) {
     grad.addColorStop(1,   'rgba(16,185,129,0)');
 
     _chart = new Chart(ctx, {
-        
         type: 'line',
         data: {
             labels: chart.labels,
