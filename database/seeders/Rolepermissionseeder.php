@@ -14,6 +14,16 @@ class RolePermissionSeeder extends Seeder
         // 1. PERMISSIONS
         // ─────────────────────────────────────────────────────
         $permissions = [
+
+            // Grup: Master Data
+            [
+                'nama'         => 'Kelola Master Data',
+                'slug'         => 'manage-master-data',
+                'group'        => 'Master Data',
+                'aksi'         => 'manage',
+                'deskripsi'    => 'Mengelola data siswa, jurusan, kelas, jenis pelanggaran, dan tindakan disiplin.',
+                'is_protected' => false,
+            ],
             // Grup: Laporan
             [
                 'nama'         => 'Lihat Laporan',
@@ -155,6 +165,7 @@ class RolePermissionSeeder extends Seeder
                     'reject-laporan',
                     'view-rekap',
                     'export-data',
+                    'manage-master-data',
                 ],
             ],
             [

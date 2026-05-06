@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Redirect unauthenticated user ke halaman login admin
         $middleware->redirectGuestsTo(fn () => route('administrator.login'));
+        $middleware->alias([
+        'permission' => \App\Http\Middleware\CheckPermission::class,
+    ]);
+    $middleware->appendToGroup('web', \App\Http\Middleware\CheckActiveUser::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

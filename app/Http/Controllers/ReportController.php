@@ -12,6 +12,15 @@ use App\Models\FollowUpFile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Pelapor\LaporanTerkirimMail;
+use App\Mail\Pengelola\DetailLengkapMail;
+use App\Mail\Pelapor\LaporanDiterimaMail;
+use App\Mail\Pelapor\LaporanDiprosesMail;
+use App\Mail\Pelapor\LaporanDitolakMail;
+use App\Mail\Pelapor\LaporanSelesaiMail;
+use App\Mail\Pelapor\ReminderDetailMail;
+use App\Mail\Pengelola\FeedbackDiterimaMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -266,6 +275,15 @@ class ReportController extends Controller
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Terjadi kesalahan server.'], 500);
             }
+            if ($report->email) {
+            Mail::to($report->email)->send(new LaporanTerkirimMail($report));
+        }
+        $admins = \App\Models\User::all();
+        foreach ($admins as $adminUser) {
+            if ($adminUser->email) {
+                Mail::to($adminUser->email)->send(new \App\Mail\Pengelola\LaporanMasukMail($report, $adminUser));
+            }
+        }
 
         return response()->json([
             'success'     => true,
@@ -482,6 +500,16 @@ class ReportController extends Controller
             'yellow',
             $url
         );
+        $reminderCount = $report->reminder_count; // sudah di-increment sebelumnya
+        $admins = \App\Models\User::all();
+        foreach ($admins as $adminUser) {
+            if ($adminUser->email) {
+                $reminderMail = $reminderCount >= 2
+                    ? new \App\Mail\Pengelola\Reminder2Mail($report, $adminUser)
+                    : new \App\Mail\Pengelola\Reminder1Mail($report, $adminUser);
+                Mail::to($adminUser->email)->send($reminderMail);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -729,6 +757,16 @@ class ReportController extends Controller
                 $n = $notifMap[$newStatus];
                 $this->notifyAllUsers($n['type'], $n['title'], $n['body'], $n['icon'], $n['color'], $n['url']);
             }
+            if ($report->email) {
+            $mail = match($newStatus) {
+                'menunggu' => new LaporanDiterimaMail($report),
+                'diproses' => new LaporanDiprosesMail($report),
+                'ditolak'  => new LaporanDitolakMail($report),
+                'selesai'  => new LaporanSelesaiMail($report),
+                default    => null,
+            };
+            if ($mail) Mail::to($report->email)->send($mail);
+        }
         }
 // ── SAMPAI SINI ────────────────────────────────────────────
 
@@ -1002,11 +1040,18 @@ class ReportController extends Controller
             );
 
             DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('storeDetail error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Gagal menyimpan detail: ' . $e->getMessage()], 500);
-        }
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('storeDetail error: ' . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'Gagal menyimpan detail: ' . $e->getMessage()], 500);
+            }
+            $admins = \App\Models\User::all();
+            foreach ($admins as $admin) {
+                if ($admin->email) {
+                    Mail::to($admin->email)->send(new DetailLengkapMail($report, $admin));
+                }
+            }
+
 
         return response()->json([
             'success' => true,
@@ -1182,6 +1227,17 @@ class ReportController extends Controller
             'blue',
             $statusUrl . '?open=' . $report->id
         );
+        $admins = \App\Models\User::all();
+        foreach ($admins as $adminUser) {
+            if ($adminUser->email) {
+                Mail::to($adminUser->email)->send(
+                    new \App\Mail\Pengelola\FeedbackDiterimaMail(
+                        $report->load('feedback', 'followUp', 'student'),
+                        $adminUser
+                    )
+                );
+            }
+        }
         // ── SAMPAI SINI ────────────────────────────────────────────
 
         return response()->json([
@@ -1234,5 +1290,22 @@ class ReportController extends Controller
             ->values();
 
         return $categories->isEmpty() ? '-' : $categories->join(' & ');
+    }
+    public function sendReminderToReporter(Request $request, int $id): JsonResponse
+    {
+        $report = \App\Models\Report::findOrFail($id);
+
+        if (!$report->email) {
+            return response()->json(['success' => false, 'message' => 'Pelapor tidak memiliki email.'], 422);
+        }
+
+        Mail::to($report->email)->send(new ReminderDetailMail($report));
+        
+        $report->logActivity(
+            'Admin mengirim reminder ke pelapor untuk melengkapi detail.', 
+            null, null, null, auth('web')->id(), 'admin'
+        );
+
+        return response()->json(['success' => true, 'message' => 'Reminder berhasil dikirim ke pelapor.']);
     }
 }
