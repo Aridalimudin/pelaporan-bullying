@@ -41,6 +41,14 @@ class RekapController extends Controller
         $tingkatPenyelesaian = $totalLaporan > 0
             ? round(($totalSelesai / $totalLaporan) * 100) : 0;
 
+        $belumSelesai = Report::whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->whereNotIn('status', ['selesai', 'ditolak'])->count();
+
+        $sedangDitangani = Report::whereMonth('created_at', $bulan)
+            ->whereYear('created_at', $tahun)
+            ->where('status', 'diproses')->count();
+
         // ── Pelapor ────────────────────────────────────────────
         $pelaporSiswa = Report::whereMonth('created_at', $bulan)
             ->whereYear('created_at', $tahun)
@@ -92,7 +100,7 @@ class RekapController extends Controller
             'data'    => [
                 'stats' => compact(
                     'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel',
-                    'pelaporSiswa','pelaporOrtu'
+                    'pelaporSiswa','pelaporOrtu','belumSelesai','sedangDitangani'
                 ),
                 'chart' => [
                     'labels'   => $chartLabels,
@@ -198,6 +206,14 @@ class RekapController extends Controller
         $tingkatPenyelesaian = $totalLaporan > 0
             ? round(($totalSelesai / $totalLaporan) * 100) : 0;
 
+        $belumSelesai = Report::whereYear('created_at', $tahunFilter)
+            ->whereBetween(DB::raw('MONTH(created_at)'), [$bulanMulai, $bulanAkhir])
+            ->whereNotIn('status', ['selesai', 'ditolak'])->count();
+
+        $sedangDitangani = Report::whereYear('created_at', $tahunFilter)
+            ->whereBetween(DB::raw('MONTH(created_at)'), [$bulanMulai, $bulanAkhir])
+            ->where('status', 'diproses')->count();
+
         // ── Pelapor ────────────────────────────────────────────
         $pelaporSiswa = Report::whereYear('created_at', $tahunFilter)
             ->whereBetween(DB::raw('MONTH(created_at)'), [$bulanMulai, $bulanAkhir])
@@ -248,7 +264,7 @@ class RekapController extends Controller
             'data'    => [
                 'stats' => compact(
                     'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel',
-                    'pelaporSiswa','pelaporOrtu'
+                    'pelaporSiswa','pelaporOrtu','belumSelesai','sedangDitangani'
                 ),
                 'chart' => [
                     'labels'    => $bulanLabels,
@@ -293,6 +309,122 @@ class RekapController extends Controller
     }
 
     // ══════════════════════════════════════════
+    // REKAP PER TAHUN
+    // ══════════════════════════════════════════
+
+    public function tahun(Request $request): JsonResponse
+    {
+        $tahun = (int) $request->query('tahun', now()->year);
+        $periodeLabel = 'Tahun ' . $tahun;
+
+        // ── Stats ──────────────────────────────────────────────
+        $totalLaporan = Report::whereYear('created_at', $tahun)->count();
+
+        $totalSelesai = Report::whereYear('created_at', $tahun)
+            ->where('status', 'selesai')->count();
+
+        $rataRata = $totalLaporan > 0
+            ? number_format($totalLaporan / 12, 1) : '0.0';
+        $tingkatPenyelesaian = $totalLaporan > 0
+            ? round(($totalSelesai / $totalLaporan) * 100) : 0;
+
+        $belumSelesai = Report::whereYear('created_at', $tahun)
+            ->whereNotIn('status', ['selesai', 'ditolak'])->count();
+
+        $sedangDitangani = Report::whereYear('created_at', $tahun)
+            ->where('status', 'diproses')->count();
+
+        // ── Pelapor ────────────────────────────────────────────
+        $pelaporSiswa = Report::whereYear('created_at', $tahun)
+            ->where('reporter_type', 'siswa')
+            ->count();
+
+        $pelaporOrtu = Report::whereYear('created_at', $tahun)
+            ->where('reporter_type', 'ortu')
+            ->count();
+
+        // ── Chart per bulan ────────────────────────────────────
+        $chartRaw = Report::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+            ->whereYear('created_at', $tahun)
+            ->groupBy('bulan')->orderBy('bulan')
+            ->pluck('total', 'bulan');
+
+        $bulanLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+        $chartData   = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $chartData[] = (int) ($chartRaw[$m] ?? 0);
+        }
+
+        $peakVal   = count($chartData) ? max($chartData) : 0;
+        $peakIdx   = $peakVal > 0 ? array_search($peakVal, $chartData) : null;
+        $peakLabel = $peakIdx !== null ? $bulanLabels[$peakIdx] . ' ' . $tahun : null;
+
+        // ── Tabel per kelas ────────────────────────────────────
+        $tabel = Report::join('students', 'reports.student_id', '=', 'students.id')
+            ->selectRaw("
+                CONCAT(students.grade, ' ', students.major) as kelas,
+                COUNT(*) as total,
+                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai
+            ")
+            ->whereYear('reports.created_at', $tahun)
+            ->groupBy('students.grade', 'students.major')
+            ->orderByDesc('total')->get()
+            ->map(fn($r) => [
+                'periode' => $periodeLabel,
+                'kelas'   => $r->kelas,
+                'total'   => (int) $r->total,
+                'selesai' => (int) $r->selesai,
+            ])->values();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'stats' => compact(
+                    'totalLaporan','rataRata','tingkatPenyelesaian','periodeLabel',
+                    'pelaporSiswa','pelaporOrtu','belumSelesai','sedangDitangani'
+                ),
+                'chart' => [
+                    'labels'    => $bulanLabels,
+                    'data'      => $chartData,
+                    'peakVal'   => $peakVal,
+                    'peakLabel' => $peakLabel,
+                ],
+                'tabel' => $tabel,
+            ],
+        ]);
+    }
+
+    public function exportTahun(Request $request)
+    {
+        $tahun = (int) $request->query('tahun', now()->year);
+        $periodeLabel = 'Tahun ' . $tahun;
+
+        $dataResponse = $this->tahun($request);
+        $data         = json_decode($dataResponse->getContent(), true)['data'];
+
+        $tabel = collect($data['tabel'])->map(function ($row) {
+            $row['ditolak'] = $row['total'] - $row['selesai'];
+            return $row;
+        })->toArray();
+
+        $stats = array_merge($data['stats'], [
+            'selesai' => collect($tabel)->sum('selesai'),
+            'ditolak' => collect($tabel)->sum('ditolak'),
+        ]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.rekap-ringkasan', [
+            'tipe'         => 'Rekap Tahunan',
+            'periodeLabel' => $periodeLabel,
+            'stats'        => $stats,
+            'tabel'        => $tabel,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+        $filename = 'rekap-tahunan-' . $tahun . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    // ══════════════════════════════════════════
     // REKAP DETAIL PER KELAS
     // ══════════════════════════════════════════
 
@@ -301,6 +433,7 @@ class RekapController extends Controller
      * Detail laporan per kelas untuk drawer
      * ?kelas=X+AKL-1&bulan=3&tahun=2026
      * ?kelas=X+AKL-1&semester=genap&tahun_ajaran=2025/2026
+     * ?kelas=X+AKL-1&tahun=2026
      */
     public function detailKelas(Request $request): JsonResponse
     {
@@ -346,6 +479,9 @@ class RekapController extends Controller
             $query->whereYear('reports.created_at', $tahunFilter)
                 ->whereBetween(DB::raw('MONTH(reports.created_at)'), [$bulanMulai, $bulanAkhir]);
             $periodeLabel = 'Semester ' . ucfirst($semester) . ' ' . $tahunAjaran;
+        } elseif ($tahun && !$bulan) {
+            $query->whereYear('reports.created_at', (int) $tahun);
+            $periodeLabel = 'Tahun ' . $tahun;
         } else {
             return response()->json(['success' => false, 'message' => 'Parameter periode tidak lengkap.'], 422);
         }

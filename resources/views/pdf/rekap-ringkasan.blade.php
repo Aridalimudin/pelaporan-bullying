@@ -131,28 +131,56 @@
 
     {{-- Stats --}}
     <div class="stats-grid">
-        <div class="stat-cell">
+        <div class="stat-cell" style="width: 25%;">
             <div class="stat-box sb-blue">
                 <span class="stat-val">{{ $stats['totalLaporan'] }}</span>
                 <span class="stat-lbl">Total Laporan</span>
             </div>
         </div>
-        <div class="stat-cell">
+        <div class="stat-cell" style="width: 25%;">
             <div class="stat-box sb-green">
                 <span class="stat-val">{{ $stats['selesai'] }}</span>
                 <span class="stat-lbl">Diselesaikan</span>
             </div>
         </div>
-        <div class="stat-cell">
+        <div class="stat-cell" style="width: 25%;">
             <div class="stat-box sb-red">
                 <span class="stat-val">{{ $stats['ditolak'] }}</span>
                 <span class="stat-lbl">Ditolak</span>
             </div>
         </div>
-        <div class="stat-cell">
+        <div class="stat-cell" style="width: 25%;">
             <div class="stat-box sb-amber">
                 <span class="stat-val">{{ $stats['rataRata'] }}</span>
-                <span class="stat-lbl">Rata-rata/Hari</span>
+                <span class="stat-lbl">Rata-rata</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Stats Row 2 --}}
+    <div class="stats-grid" style="margin-top: 8px;">
+        <div class="stat-cell" style="width: 25%;">
+            <div class="stat-box" style="background:#fef2f2; border-color:#fecaca; color:#ef4444;">
+                <span class="stat-val">{{ $stats['belumSelesai'] ?? 0 }}</span>
+                <span class="stat-lbl">Belum Selesai</span>
+            </div>
+        </div>
+        <div class="stat-cell" style="width: 25%;">
+            <div class="stat-box" style="background:#ecfeff; border-color:#a5f3fc; color:#0891b2;">
+                <span class="stat-val">{{ $stats['sedangDitangani'] ?? 0 }}</span>
+                <span class="stat-lbl">Sedang Ditangani</span>
+            </div>
+        </div>
+        <div class="stat-cell" style="width: 25%;">
+            <div class="stat-box" style="background:#f5f3ff; border-color:#ddd6fe; color:#7c3aed;">
+                <span class="stat-val">{{ $stats['pelaporSiswa'] ?? 0 }}</span>
+                <span class="stat-lbl">Pelapor Siswa</span>
+            </div>
+        </div>
+        <div class="stat-cell" style="width: 25%;">
+            <div class="stat-box" style="background:#fff1f2; border-color:#fecdd3; color:#e11d48;">
+                <span class="stat-val">{{ $stats['pelaporOrtu'] ?? 0 }}</span>
+                <span class="stat-lbl">Pelapor Ortu</span>
             </div>
         </div>
     </div>

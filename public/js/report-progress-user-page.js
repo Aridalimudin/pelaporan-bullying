@@ -1,270 +1,270 @@
-    /**
-     * report-progress-user-page.js
-     * Sistem lengkap 5 tahap + Reminder 2x/hari + Toast pojok kanan atas
-     */
+/**
+ * report-progress-user-page.js
+ * Sistem lengkap 5 tahap + Reminder 2x/hari + Toast pojok kanan atas
+ */
 
-    /* ══════════════════════════════════════════════
-    STATE
-    ══════════════════════════════════════════════ */
-    let _reportData  = null;
-    let _currentCode = null;
-    let _searchTimeout = null;
-    let _emojiRating = 0;
-    let _gradeOptions = [];
-    let _majorOptions = [];
-    let _majorsFull = [];
-    let _allPairs = []; // Menyimpan daftar kelas dari API
+/* ══════════════════════════════════════════════
+STATE
+══════════════════════════════════════════════ */
+let _reportData = null;
+let _currentCode = null;
+let _searchTimeout = null;
+let _emojiRating = 0;
+let _gradeOptions = [];
+let _majorOptions = [];
+let _majorsFull = [];
+let _allPairs = []; // Menyimpan daftar kelas dari API
 
-    const EMOJI_OPTIONS = [
-        { emoji: '😡', label: 'Sangat Buruk', val: 1 },
-        { emoji: '😞', label: 'Buruk',        val: 2 },
-        { emoji: '😐', label: 'Cukup',        val: 3 },
-        { emoji: '😊', label: 'Baik',         val: 4 },
-        { emoji: '🌟', label: 'Luar Biasa',   val: 5 },
-    ];
+const EMOJI_OPTIONS = [
+    { emoji: '😡', label: 'Sangat Buruk', val: 1 },
+    { emoji: '😞', label: 'Buruk', val: 2 },
+    { emoji: '😐', label: 'Cukup', val: 3 },
+    { emoji: '😊', label: 'Baik', val: 4 },
+    { emoji: '🌟', label: 'Luar Biasa', val: 5 },
+];
 
-    const REMINDER_MAX = 2;           // batas per hari
-    const REMINDER_KEY = 'reminder_'; // prefix localStorage
+const REMINDER_MAX = 2;           // batas per hari
+const REMINDER_KEY = 'reminder_'; // prefix localStorage
 
-    /* ══════════════════════════════════════════════
-    INIT
-    ══════════════════════════════════════════════ */
-    document.addEventListener('DOMContentLoaded', async () => {
-        const params = new URLSearchParams(window.location.search);
-        _currentCode = params.get('code') || sessionStorage.getItem('lacak_code');
-        if (!_currentCode) { window.location.href = '/lacak'; return; }
+/* ══════════════════════════════════════════════
+INIT
+══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    _currentCode = params.get('code') || sessionStorage.getItem('lacak_code');
+    if (!_currentCode) { window.location.href = '/lacak'; return; }
 
-        // ✅ pairs & majors dulu sebelum loadReport
-        await fetchPairs();
-        await fetchMajors();
+    // ✅ pairs & majors dulu sebelum loadReport
+    await fetchPairs();
+    await fetchMajors();
 
-        await loadReport(_currentCode);
+    await loadReport(_currentCode);
 
-        document.querySelector('.back-btn')?.addEventListener('click', e => {
-            e.preventDefault();
-            window.location.href = '/lacak';
-        });
-
-        if (!document.getElementById('toastContainer')) {
-            const tc = document.createElement('div');
-            tc.id = 'toastContainer';
-            tc.className = 'toast-container';
-            document.body.appendChild(tc);
-        }
+    document.querySelector('.back-btn')?.addEventListener('click', e => {
+        e.preventDefault();
+        window.location.href = '/lacak';
     });
 
-    /* ══════════════════════════════════════════════
-    FETCH GRADES – simpan ke _gradeOptions
-    (tidak lagi menggunakan <datalist>)
-    ══════════════════════════════════════════════ */
-    async function fetchGrades() {
-        try {
-            const res  = await fetch('/api/students/grades');
-            const json = await res.json();
-            
-            console.log("Data Kelas Diterima:", json); 
+    if (!document.getElementById('toastContainer')) {
+        const tc = document.createElement('div');
+        tc.id = 'toastContainer';
+        tc.className = 'toast-container';
+        document.body.appendChild(tc);
+    }
+});
 
-            // CEK APAKAH DATANYA ARRAY (karena sudah tidak pakai json.success)
-            if (Array.isArray(json)) {
-                _gradeOptions = json; // Langsung masukkan json-nya
-                updateAllKelasSelects();
-            }
-        } catch (e) { 
-            console.error("Gagal memuat daftar kelas", e); 
+/* ══════════════════════════════════════════════
+FETCH GRADES – simpan ke _gradeOptions
+(tidak lagi menggunakan <datalist>)
+══════════════════════════════════════════════ */
+async function fetchGrades() {
+    try {
+        const res = await fetch('/api/students/grades');
+        const json = await res.json();
+
+        console.log("Data Kelas Diterima:", json);
+
+        // CEK APAKAH DATANYA ARRAY (karena sudah tidak pakai json.success)
+        if (Array.isArray(json)) {
+            _gradeOptions = json; // Langsung masukkan json-nya
+            updateAllKelasSelects();
         }
+    } catch (e) {
+        console.error("Gagal memuat daftar kelas", e);
     }
+}
 
-    /**
-     * Membangun HTML <option> dari _gradeOptions.
-     */
-    function buildKelasOptions() {
-        return _gradeOptions.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
-    }
+/**
+ * Membangun HTML <option> dari _gradeOptions.
+ */
+function buildKelasOptions() {
+    return _gradeOptions.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+}
 
-    /**
-     * Setelah fetchGrades() selesai, perbarui semua <select> kelas
-     * yang sudah ada di DOM agar opsi terisi.
-     */
-    function updateAllKelasSelects() {
-        // Mencari semua select dengan class 'kelas-select'
-        document.querySelectorAll('select.kelas-select').forEach(sel => {
-            const current = sel.value; // Simpan pilihan lama jika ada
-            
-            // Isi ulang opsinya
-            sel.innerHTML = `<option value="" disabled selected>Pilih Kelas</option>${buildKelasOptions()}`;
-            
-            // Kembalikan pilihan lama jika memang sudah dipilih
-            if (current) sel.value = current;
+/**
+ * Setelah fetchGrades() selesai, perbarui semua <select> kelas
+ * yang sudah ada di DOM agar opsi terisi.
+ */
+function updateAllKelasSelects() {
+    // Mencari semua select dengan class 'kelas-select'
+    document.querySelectorAll('select.kelas-select').forEach(sel => {
+        const current = sel.value; // Simpan pilihan lama jika ada
+
+        // Isi ulang opsinya
+        sel.innerHTML = `<option value="" disabled selected>Pilih Kelas</option>${buildKelasOptions()}`;
+
+        // Kembalikan pilihan lama jika memang sudah dipilih
+        if (current) sel.value = current;
+    });
+}
+
+/* ══════════════════════════════════════════════
+LOAD REPORT
+══════════════════════════════════════════════ */
+async function loadReport(code) {
+    showSkeleton(true);
+    try {
+        const res = await fetch(`/api/reports/track?code=${encodeURIComponent(code)}`, {
+            headers: { 'Accept': 'application/json' },
         });
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+            showError(json.message || 'Laporan tidak ditemukan.');
+            return;
+        }
+
+        _reportData = json.data;
+        renderAll(_reportData);
+        showSkeleton(false);
+    } catch (e) {
+        console.error(e);
+        showError('Koneksi bermasalah. Silakan refresh halaman.');
     }
+}
 
-    /* ══════════════════════════════════════════════
-    LOAD REPORT
-    ══════════════════════════════════════════════ */
-    async function loadReport(code) {
-        showSkeleton(true);
-        try {
-            const res  = await fetch(`/api/reports/track?code=${encodeURIComponent(code)}`, {
-                headers: { 'Accept': 'application/json' },
-            });
-            const json = await res.json();
+/* ══════════════════════════════════════════════
+RENDER ALL
+══════════════════════════════════════════════ */
+function renderAll(d) {
+    console.log('incident_time:', d.incident_time, '| incident_date:', d.incident_date);
+    renderHeader(d);
+    renderStepper(d);
+    renderSidebar(d);
+    renderActivities(d);
+    renderMainContent(d);
+    renderReminderBtn(d);
+    renderGlobalActionBanner(d);
 
-            if (!res.ok || !json.success) {
-                showError(json.message || 'Laporan tidak ditemukan.');
-                return;
+    if (['selesai', 'ditolak'].includes(d.status)) {
+        setTimeout(() => {
+            const panelId = d.status === 'selesai' ? 'panelSelesai' : 'panelDitolak';
+            const body = document.getElementById(
+                d.status === 'selesai' ? 'bodySelesai' : 'bodyDitolak'
+            );
+            const btn = document.querySelector(`#${panelId} .btn-toggle-detail`);
+            if (body && !body.classList.contains('open')) {
+                body.classList.add('open');
+                btn?.classList.add('open');
             }
-
-            _reportData = json.data;
-            renderAll(_reportData);
-            showSkeleton(false);
-        } catch (e) {
-            console.error(e);
-            showError('Koneksi bermasalah. Silakan refresh halaman.');
-        }
+        }, 300);
     }
+    document.querySelector('.demo-switcher')?.remove();
+}
 
-    /* ══════════════════════════════════════════════
-    RENDER ALL
-    ══════════════════════════════════════════════ */
-    function renderAll(d) {
-        console.log('incident_time:', d.incident_time, '| incident_date:', d.incident_date);
-        renderHeader(d);
-        renderStepper(d);
-        renderSidebar(d);
-        renderActivities(d);
-        renderMainContent(d);
-        renderReminderBtn(d);
-        renderGlobalActionBanner(d);
+/* ─── Header ─────────────────────────── */
+function renderHeader(d) {
+    setText('displayKode', d.ticket_code);
+    setText('displayTanggal', d.created_at);
+    setText('sideKode', d.ticket_code);
 
-        if (['selesai', 'ditolak'].includes(d.status)) {
-            setTimeout(() => {
-                const panelId = d.status === 'selesai' ? 'panelSelesai' : 'panelDitolak';
-                const body    = document.getElementById(
-                    d.status === 'selesai' ? 'bodySelesai' : 'bodyDitolak'
-                );
-                const btn = document.querySelector(`#${panelId} .btn-toggle-detail`);
-                if (body && !body.classList.contains('open')) {
-                    body.classList.add('open');
-                    btn?.classList.add('open');
-                }
-            }, 300);
-        }
-        document.querySelector('.demo-switcher')?.remove();
+    const pill = document.getElementById('statusPill');
+    if (pill) {
+        pill.textContent = d.status_label?.toUpperCase() ?? d.status.toUpperCase();
+        pill.className = `status-pill status-${d.status_color}`;
     }
+}
 
-    /* ─── Header ─────────────────────────── */
-    function renderHeader(d) {
-        setText('displayKode',    d.ticket_code);
-        setText('displayTanggal', d.created_at);
-        setText('sideKode',       d.ticket_code);
-
-        const pill = document.getElementById('statusPill');
-        if (pill) {
-            pill.textContent = d.status_label?.toUpperCase() ?? d.status.toUpperCase();
-            pill.className   = `status-pill status-${d.status_color}`;
-        }
+/* ─── Sidebar ─────────────────────────── */
+function renderSidebar(d) {
+    setText('sideNama', d.reporter_type === 'ortu'
+        ? `Orang Tua (${d.reporter_name || '-'})`
+        : (d.student_name || '(anonim)'));
+    setText('sideNis', d.reporter_type === 'ortu' ? '-' : (d.student_nis || '-'));
+    setText('sideKelas', d.reporter_type === 'ortu'
+        ? (d.child_grade || '-')
+        : (d.student_grade || '-'));
+    setText('sideTanggal', d.created_at);
+    const urg = document.getElementById('sideUrgensi');
+    if (urg) {
+        urg.innerHTML = d.urgency
+            ? `<span class="urg-badge ${d.urgency}">${d.urgency_label}</span>`
+            : '-';
     }
+}
 
-    /* ─── Sidebar ─────────────────────────── */
-    function renderSidebar(d) {
-        setText('sideNama', d.reporter_type === 'ortu' 
-            ? `Orang Tua (${d.reporter_name || '-'})`
-            : (d.student_name || '(anonim)'));
-        setText('sideNis',   d.reporter_type === 'ortu' ? '-' : (d.student_nis || '-'));
-        setText('sideKelas', d.reporter_type === 'ortu' 
-            ? (d.child_grade   || '-') 
-            : (d.student_grade || '-'));
-        setText('sideTanggal', d.created_at);
-        const urg = document.getElementById('sideUrgensi');
-        if (urg) {
-            urg.innerHTML = d.urgency
-                ? `<span class="urg-badge ${d.urgency}">${d.urgency_label}</span>`
-                : '-';
-        }
-    }
+/* ─── Stepper ─────────────────────────── */
+function renderStepper(d) {
+    const track = document.getElementById('stepperTrack');
+    if (!track) return;
 
-    /* ─── Stepper ─────────────────────────── */
-    function renderStepper(d) {
-        const track = document.getElementById('stepperTrack');
-        if (!track) return;
+    const allSteps = [
+        { number: 1, label: 'Laporan<br>Masuk', status: 'masuk' },
+        { number: 2, label: 'Menunggu<br>Verifikasi', status: 'menunggu' },
+        { number: 3, label: 'Sedang<br>Diproses', status: 'diproses' },
+        { number: 4, label: 'Penanganan<br>Selesai', status: 'selesai' },
+    ];
 
-        const allSteps = [
-            { number: 1, label: 'Laporan<br>Masuk',      status: 'masuk'    },
-            { number: 2, label: 'Menunggu<br>Verifikasi', status: 'menunggu' },
-            { number: 3, label: 'Sedang<br>Diproses',     status: 'diproses' },
-            { number: 4, label: 'Penanganan<br>Selesai',  status: 'selesai'  },
-        ];
+    // Urutan status normal (index untuk perbandingan)
+    const statusOrder = ['masuk', 'menunggu', 'diproses', 'selesai'];
 
-        // Urutan status normal (index untuk perbandingan)
-        const statusOrder = ['masuk', 'menunggu', 'diproses', 'selesai'];
+    let steps;
 
-        let steps;
+    if (d.status === 'ditolak') {
+        // Tentukan sampai mana laporan sudah berjalan sebelum ditolak
+        // tahapTerakhir dari API: 'laporan-masuk', 'menunggu-verifikasi', 'proses-laporan'
+        const tahapMap = {
+            'laporan-masuk': 0,
+            'menunggu-verifikasi': 1,
+            'proses-laporan': 2,
+        };
+        const rejectedAtIdx = tahapMap[d.tahap_terakhir] ?? tahapMap[d.rejected_from_stage] ?? 0;
 
-        if (d.status === 'ditolak') {
-            // Tentukan sampai mana laporan sudah berjalan sebelum ditolak
-            // tahapTerakhir dari API: 'laporan-masuk', 'menunggu-verifikasi', 'proses-laporan'
-            const tahapMap = {
-                'laporan-masuk'      : 0,
-                'menunggu-verifikasi': 1,
-                'proses-laporan'     : 2,
-            };
-            const rejectedAtIdx = tahapMap[d.tahap_terakhir] ?? tahapMap[d.rejected_from_stage] ?? 0;
-
-            // Ambil step yang sudah dilewati + step "Ditolak" di akhir
-            const passedSteps = allSteps.slice(0, rejectedAtIdx + 1);
-            steps = [
-                ...passedSteps.map((s, i) => ({
-                    ...s,
-                    state: i < rejectedAtIdx ? 'done' : 'done', // semua passed = done
-                })),
-                {
-                    number : passedSteps.length + 1,
-                    label  : 'Laporan<br>Ditolak',
-                    state  : 'rejected',
-                },
-            ];
-        } else {
-            const currentIdx = statusOrder.indexOf(d.status);
-            const isCompleted = d.status === 'selesai';
-
-            steps = allSteps.map((s, i) => ({
+        // Ambil step yang sudah dilewati + step "Ditolak" di akhir
+        const passedSteps = allSteps.slice(0, rejectedAtIdx + 1);
+        steps = [
+            ...passedSteps.map((s, i) => ({
                 ...s,
-                state: (isCompleted || i < currentIdx) ? 'done' 
-                    : i === currentIdx ? 'active' 
+                state: i < rejectedAtIdx ? 'done' : 'done', // semua passed = done
+            })),
+            {
+                number: passedSteps.length + 1,
+                label: 'Laporan<br>Ditolak',
+                state: 'rejected',
+            },
+        ];
+    } else {
+        const currentIdx = statusOrder.indexOf(d.status);
+        const isCompleted = d.status === 'selesai';
+
+        steps = allSteps.map((s, i) => ({
+            ...s,
+            state: (isCompleted || i < currentIdx) ? 'done'
+                : i === currentIdx ? 'active'
                     : '',
-            }));
-        }
+        }));
+    }
 
-        track.innerHTML = steps.map((step, i) => {
-            let circle;
-            if (step.state === 'done')     circle = icoCheck();
-            else if (step.state === 'rejected') circle = icoX();
-            else                           circle = `<span>${step.number}</span>`;
+    track.innerHTML = steps.map((step, i) => {
+        let circle;
+        if (step.state === 'done') circle = icoCheck();
+        else if (step.state === 'rejected') circle = icoX();
+        else circle = `<span>${step.number}</span>`;
 
-            const isLast    = i === steps.length - 1;
-            const connClass = (step.state === 'done' || step.state === 'rejected') ? ' done' : '';
+        const isLast = i === steps.length - 1;
+        const connClass = (step.state === 'done' || step.state === 'rejected') ? ' done' : '';
 
-            return `
+        return `
                 <div class="stepper-step ${step.state}">
                     <div class="step-circle">${circle}</div>
                     <div class="step-label">${step.label}</div>
                 </div>
                 ${!isLast ? `<div class="step-connector${connClass}"></div>` : ''}
             `;
-        }).join('');
+    }).join('');
+}
+
+/* ─── Activities ──────────────────────── */
+function renderActivities(d) {
+    const list = document.getElementById('activityList');
+    if (!list) return;
+
+    if (!d.activities || d.activities.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--gray-400);font-size:.84rem;">Belum ada aktivitas tercatat.</div>`;
+        return;
     }
 
-    /* ─── Activities ──────────────────────── */
-    function renderActivities(d) {
-        const list = document.getElementById('activityList');
-        if (!list) return;
-
-        if (!d.activities || d.activities.length === 0) {
-            list.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--gray-400);font-size:.84rem;">Belum ada aktivitas tercatat.</div>`;
-            return;
-        }
-
-        list.innerHTML = d.activities.map((a, i) => `
+    list.innerHTML = d.activities.map((a, i) => `
             <div class="activity-item" style="animation-delay:${i * .06}s">
                 <div class="act-dot-wrap">
                     <div class="act-dot ${a.dot_color || (i === 0 ? 'green' : 'gray')}"></div>
@@ -277,27 +277,27 @@
                 </div>
             </div>
         `).join('');
-    }
+}
 
-    /* ══════════════════════════════════════════════
-    RENDER MAIN CONTENT (router per status)
-    ══════════════════════════════════════════════ */
-    function renderMainContent(d) {
-        const c = document.getElementById('mainContent');
-        if (!c) return;
-        const s = d.status;
-        if (['masuk','terkirim'].includes(s))           renderStageTerkirim(c, d);
-        else if (['menunggu','verifikasi'].includes(s)) renderStageVerifikasi(c, d);
-        else if (['diproses','proses'].includes(s))     renderStageProses(c, d);
-        else if (s === 'selesai')                       renderStageSelesai(c, d);
-        else if (s === 'ditolak')                       renderStageDitolak(c, d);
-    }
+/* ══════════════════════════════════════════════
+RENDER MAIN CONTENT (router per status)
+══════════════════════════════════════════════ */
+function renderMainContent(d) {
+    const c = document.getElementById('mainContent');
+    if (!c) return;
+    const s = d.status;
+    if (['masuk', 'terkirim'].includes(s)) renderStageTerkirim(c, d);
+    else if (['menunggu', 'verifikasi'].includes(s)) renderStageVerifikasi(c, d);
+    else if (['diproses', 'proses'].includes(s)) renderStageProses(c, d);
+    else if (s === 'selesai') renderStageSelesai(c, d);
+    else if (s === 'ditolak') renderStageDitolak(c, d);
+}
 
-    /* ══════════════════════════════════════════════
-    TAHAP 1 – TERKIRIM
-    ══════════════════════════════════════════════ */
-    function renderStageTerkirim(c, d) {
-        c.innerHTML = `
+/* ══════════════════════════════════════════════
+TAHAP 1 – TERKIRIM
+══════════════════════════════════════════════ */
+function renderStageTerkirim(c, d) {
+    c.innerHTML = `
             <div class="detail-panel" id="panelTerkirim">
                 <button class="btn-toggle-detail" id="btnToggleTerkirim" onclick="togglePanel('panelTerkirim', this)">
                     <div class="btn-toggle-detail-left">
@@ -314,14 +314,14 @@
                 </div>
             </div>
         `;
-    }
-    
+}
 
-    /* ══════════════════════════════════════════════
-    TAHAP 2 – MENUNGGU VERIFIKASI
-    ══════════════════════════════════════════════ */
-    function renderStageVerifikasi(c, d) {
-        c.innerHTML = `
+
+/* ══════════════════════════════════════════════
+TAHAP 2 – MENUNGGU VERIFIKASI
+══════════════════════════════════════════════ */
+function renderStageVerifikasi(c, d) {
+    c.innerHTML = `
             <!-- Tombol Isi Detail -->
             <button class="btn-isi-detail" id="btnIsiDetail" onclick="toggleFormIsi()">
                 <div class="btn-isi-detail-left">
@@ -431,23 +431,14 @@
             </div>
         `;
 
-   addRow('pelaku');
-        addRow('korban');
-
-        // Ganti label tombol jika pelapor adalah orang tua
-        if (_reportData?.reporter_type === 'ortu') {
-            document.querySelectorAll('#korbanRows .btn-add-person').forEach(btn => {
-                if (btn.textContent.includes('Saya Sendiri')) {
-                    btn.innerHTML = '👦 Anak Saya Sendiri';
-                }
-            });
-        }
-    } // ← TAM
-    /* ══════════════════════════════════════════════
-    TAHAP 3 – SEDANG DIPROSES
-    ══════════════════════════════════════════════ */
-    function renderStageProses(c, d) {
-        c.innerHTML = `
+    addRow('pelaku');
+    addRow('korban');
+} // ← TAM
+/* ══════════════════════════════════════════════
+TAHAP 3 – SEDANG DIPROSES
+══════════════════════════════════════════════ */
+function renderStageProses(c, d) {
+    c.innerHTML = `
             <!-- Card 1: Tindak Lanjut (paling atas) -->
             ${buildTindakLanjutCard(d)}
 
@@ -493,13 +484,13 @@
                 </div>
             </div>
         `;
-    }
+}
 
-    function buildTindakLanjutCard(d) {
-        const tl = d.tindak_lanjut;
+function buildTindakLanjutCard(d) {
+    const tl = d.tindak_lanjut;
 
-        if (!tl) {
-            return `
+    if (!tl) {
+        return `
                 <div class="detail-panel" id="panelTindakLanjut">
                     <button class="btn-toggle-detail" onclick="togglePanel('panelTindakLanjut', this)">
                         <div class="btn-toggle-detail-left">
@@ -589,10 +580,10 @@
                     </div>
                 </div>
             `;
-        }
+    }
 
-        // Kalau sudah ada data tindak lanjut
-        return `
+    // Kalau sudah ada data tindak lanjut
+    return `
             <div class="detail-panel" id="panelTindakLanjut">
                 <button class="btn-toggle-detail" onclick="togglePanel('panelTindakLanjut', this)">
                     <div class="btn-toggle-detail-left">
@@ -617,7 +608,7 @@
                 </button>
                 <div class="detail-panel-body" id="bodyTindakLanjut">
                     <div class="detail-panel-inner">
-                        <div class="detail-section-title teal" style="margin-bottom:16px;">⚖️ Tindak Lanjut</div>
+                        <div class="detail-section-title teal" style="margin-bottom:16px;">⚖️ Tindak Lanjut - Pelaku</div>
                         <div class="form-grid-3" style="margin-bottom:16px;">
                             <div class="form-group" style="margin:0;">
                                 <label class="form-label">Jenis Tindakan</label>
@@ -632,17 +623,55 @@
                             <label class="form-label">Deskripsi Tindakan</label>
                             <div class="field-value text-area" style="min-height:80px;">${esc(tl.deskripsi || '-')}</div>
                         </div>
+
+                        ${(tl.jenis_tindakan_korban) ? `
+                        <div class="detail-divider"></div>
+                        <div class="detail-section-title" style="
+                            color:#15803d;margin-bottom:10px;
+                            background:#f0fdf4;padding:8px 12px;border-radius:8px;">
+                            🛡️ Tindak Lanjut untuk Korban
+                        </div>
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label class="form-label">Jenis Tindakan</label>
+                            <input type="text" class="form-input" 
+                                value="${esc(tl.jenis_tindakan_korban)}" disabled>
+                        </div>
+                        ${tl.catatan_korban ? `
+                        <div class="form-group">
+                            <label class="form-label">Catatan</label>
+                            <div class="field-value text-area">${esc(tl.catatan_korban)}</div>
+                        </div>` : ''}` : ''}
+                        
+                        ${(tl.nomor_berita_acara || tl.tanggal_berita_acara || tl.isi_berita_acara) ? `
+                        <div class="detail-divider"></div>
+                        <div class="detail-section-title teal" style="margin-bottom:12px;">📝 Berita Acara Penanganan (BA)</div>
+                        <div class="form-grid-3" style="margin-bottom:16px;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Nomor Berita Acara</label>
+                                <input type="text" class="form-input" value="${esc(tl.nomor_berita_acara || '-')}" disabled>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="form-label">Tanggal Berita Acara</label>
+                                <input type="text" class="form-input" value="${esc(tl.tanggal_berita_acara || '-')}" disabled>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Isi Berita Acara</label>
+                            <div class="field-value text-area" style="min-height:80px; white-space:pre-wrap;">${esc(tl.isi_berita_acara || '-')}</div>
+                        </div>
+                        ` : ''}
+
                         ${tl.files?.length > 0 ? `
                         <div class="detail-divider"></div>
-                        <div class="detail-section-title teal" style="margin-bottom:12px;">📎 Bukti Pelaksanaan</div>
+                        <div class="detail-section-title teal" style="margin-bottom:12px;">📎 Berkas Berita Acara &amp; Dokumentasi</div>
                         <div class="bukti-pelaksanaan">
                             ${tl.files.map(f => {
-                                const isImage = f.mime?.startsWith('image/');
-                                if (isImage) return `
+        const isImage = f.mime?.startsWith('image/');
+        if (isImage) return `
                                     <div class="photo-item" onclick="openPhoto('${esc(f.url)}')">
                                         <img src="${esc(f.url)}" alt="${esc(f.nama)}" loading="lazy">
                                     </div>`;
-                                return `
+        return `
                                     <a href="${esc(f.url)}" target="_blank" class="bukti-item">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -650,24 +679,24 @@
                                         </svg>
                                         ${esc(f.nama)}
                                     </a>`;
-                            }).join('')}
+    }).join('')}
                         </div>` : ''}
                     </div>
                 </div>
             </div>
         `;
-    }
+}
 
-    function buildFormDetailReadonly(d) {
-        const pelaku = d.pelaku || [];
-        const korban = d.korban || [];
-        const saksi  = d.saksi  || [];
+function buildFormDetailReadonly(d) {
+    const pelaku = d.pelaku || [];
+    const korban = d.korban || [];
+    const saksi = d.saksi || [];
 
-        function buildPersonRowsReadonly(list, role, icon, label) {
-            if (list.length === 0) return '';
-            const colorMap = { pelaku: 'amber', korban: 'red', saksi: 'blue' };
-            const color = colorMap[role] || 'blue';
-            return `
+    function buildPersonRowsReadonly(list, role, icon, label) {
+        if (list.length === 0) return '';
+        const colorMap = { pelaku: 'amber', korban: 'red', saksi: 'blue' };
+        const color = colorMap[role] || 'blue';
+        return `
                 <div class="detail-section-title ${color}" style="margin-top:20px;margin-bottom:10px;">
                     ${icon} ${label}
                 </div>
@@ -705,9 +734,9 @@
                     `).join('')}
                 </div>
             `;
-        }
+    }
 
-        return `
+    return `
             <!-- Waktu & Lokasi -->
             <div class="detail-section-title purple" style="margin-bottom:16px;">📍 Waktu &amp; Lokasi Kejadian</div>
             <div class="form-grid-3" style="margin-bottom:16px;">
@@ -732,7 +761,7 @@
 
             ${buildPersonRowsReadonly(pelaku, 'pelaku', '⚠️', 'Pelaku')}
             ${buildPersonRowsReadonly(korban, 'korban', '🛡️', 'Korban')}
-            ${buildPersonRowsReadonly(saksi,  'saksi',  '👁️', 'Saksi')}
+            ${buildPersonRowsReadonly(saksi, 'saksi', '👁️', 'Saksi')}
 
             <div class="detail-divider"></div>
 
@@ -753,13 +782,13 @@
                 </label>
             </div>
         `;
-    }
+}
 
-    /* ══════════════════════════════════════════════
-    TAHAP 4 – SELESAI
-    ══════════════════════════════════════════════ */
-    function renderStageSelesai(c, d) {
-        c.innerHTML = `
+/* ══════════════════════════════════════════════
+TAHAP 4 – SELESAI
+══════════════════════════════════════════════ */
+function renderStageSelesai(c, d) {
+    c.innerHTML = `
             <div class="detail-panel" id="panelSelesai">
                 <button class="btn-toggle-detail" onclick="togglePanel('panelSelesai', this)">
                     <div class="btn-toggle-detail-left">
@@ -782,16 +811,41 @@
             </div>
             ${buildFeedbackSection(d)}
         `;
-    }
+}
 
-    /* ══════════════════════════════════════════════
-    TAHAP 5 – DITOLAK
-    ══════════════════════════════════════════════ */
-    function renderStageDitolak(c, d) {
-        const rejStage = d.rejected_from_stage || 'masuk';
-        const showKej  = ['diproses','proses','selesai'].includes(rejStage);
+/* ══════════════════════════════════════════════
+TAHAP 5 – DITOLAK
+══════════════════════════════════════════════ */
 
-        c.innerHTML = `
+/**
+ * Helper: kembalikan label tahap penolakan yang terbaca,
+ * dengan fallback ke mapping manual jika rejected_from_label kosong.
+ */
+function getRejectedFromLabel(d) {
+    if (d.rejected_from_label) return d.rejected_from_label;
+
+    const map = {
+        'masuk'              : 'Laporan Masuk',
+        'terkirim'           : 'Laporan Masuk',
+        'laporan-masuk'      : 'Laporan Masuk',
+        'menunggu'           : 'Menunggu Verifikasi',
+        'verifikasi'         : 'Menunggu Verifikasi',
+        'menunggu-verifikasi': 'Menunggu Verifikasi',
+        'diproses'           : 'Sedang Diproses',
+        'proses'             : 'Sedang Diproses',
+        'proses-laporan'     : 'Sedang Diproses',
+        'selesai'            : 'Penanganan Selesai',
+    };
+
+    const key = d.rejected_from_stage || d.tahap_terakhir || '';
+    return map[key] || map[key.toLowerCase()] || 'Laporan Masuk';
+}
+
+function renderStageDitolak(c, d) {
+    const rejStage = d.rejected_from_stage || 'masuk';
+    const showKej = ['diproses', 'proses', 'selesai'].includes(rejStage);
+
+    c.innerHTML = `
             <div class="rejection-card">
                 <div class="rejection-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -803,7 +857,7 @@
                     <div class="rejection-meta">
                         <div class="rejection-meta-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Ditolak dari tahap: <strong>${esc(d.rejected_from_label || 'Tidak diketahui')}</strong>
+                            Ditolak dari tahap: <strong>${esc(getRejectedFromLabel(d))}</strong>
                         </div>
                         <div class="rejection-meta-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -813,6 +867,19 @@
                     <div class="rejection-reason">
                         <strong style="display:block;margin-bottom:6px;font-size:.75rem;color:#9f1239;text-transform:uppercase;letter-spacing:.06em;">Alasan Penolakan</strong>
                         ${esc(d.rejection_reason || d.catatan_admin || 'Tidak ada catatan dari admin.')}
+                    </div>
+                    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #fca5a5;">
+                        <button onclick="ajukanUlang()" type="button" style="
+                            display:inline-flex;align-items:center;gap:8px;
+                            padding:10px 20px;border-radius:10px;font-size:.85rem;font-weight:600;
+                            background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;
+                            border:none;cursor:pointer;
+                        ">
+                            🔄 Ajukan Ulang Laporan
+                        </button>
+                        <p style="font-size:.75rem;color:#9f1239;margin-top:8px;">
+                            Data laporan awal Anda akan dibawa otomatis, tidak perlu mengisi dari awal.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -838,16 +905,16 @@
             </div>
             ${buildFeedbackSection(d)}
         `;
-    }
+}
 
-    /* ══════════════════════════════════════════════
-    BUILDERS – BLOK KONTEN
-    ══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+BUILDERS – BLOK KONTEN
+══════════════════════════════════════════════ */
 
-    function buildDetailAwal(d) {
-        const files = d.files || [];
+function buildDetailAwal(d) {
+    const files = d.files || [];
 
-        return `
+    return `
             <div class="detail-section">
                 <div class="detail-section-title">👤 Identitas Pelapor</div>
                 <div class="field-grid">
@@ -901,15 +968,15 @@
                 ${files.length > 0 ? `
                     <div class="photo-grid">
                         ${files.map(f => {
-                            const isImage = f.mime_type?.startsWith('image/');
-                            const url = f.url || `/storage/reports/${d.ticket_code}/${f.original_name}`;
-                            if (isImage) {
-                                return `
+        const isImage = f.mime_type?.startsWith('image/');
+        const url = f.url || `/storage/reports/${d.ticket_code}/${f.original_name}`;
+        if (isImage) {
+            return `
                                     <div class="photo-item" onclick="openPhoto('${esc(url)}')">
                                         <img src="${esc(url)}" alt="${esc(f.original_name)}" loading="lazy">
                                     </div>`;
-                            } else {
-                                return `
+        } else {
+            return `
                                     <div class="photo-item" onclick="openVideo('${esc(url)}', '${esc(f.original_name)}')"
                                         style="position:relative;cursor:pointer;">
                                         <video
@@ -930,8 +997,8 @@
                                             </div>
                                         </div>
                                     </div>`;
-                            }
-                        }).join('')}
+        }
+    }).join('')}
                     </div>
                 ` : `
                     <div style="
@@ -957,10 +1024,10 @@
                 `}
             </div>
         `;
-    }
+}
 
-    function buildDetailKejadian(d) {
-        return `
+function buildDetailKejadian(d) {
+    return `
             <div class="detail-section">
                 <div class="detail-section-title purple">📍 Waktu &amp; Lokasi Kejadian</div>
                 <div class="field-grid cols-3">
@@ -979,29 +1046,29 @@
                 </div>
             </div>
         `;
-    }
+}
 
-    function buildDetailPihak(d) {
-        const pelaku = d.pelaku || [];
-        const korban = d.korban || [];
-        const saksi  = d.saksi  || [];
+function buildDetailPihak(d) {
+    const pelaku = d.pelaku || [];
+    const korban = d.korban || [];
+    const saksi = d.saksi || [];
 
-        const groups = [
-            { key: pelaku, label: 'Pelaku', role: 'pelaku', icon: '⚠️' },
-            { key: korban, label: 'Korban', role: 'korban', icon: '🛡️' },
-            { key: saksi,  label: 'Saksi',  role: 'saksi',  icon: '👁️' },
-        ];
+    const groups = [
+        { key: pelaku, label: 'Pelaku', role: 'pelaku', icon: '⚠️' },
+        { key: korban, label: 'Korban', role: 'korban', icon: '🛡️' },
+        { key: saksi, label: 'Saksi', role: 'saksi', icon: '👁️' },
+    ];
 
-        const hasAny = groups.some(g => g.key.length > 0);
-        if (!hasAny) return '';
+    const hasAny = groups.some(g => g.key.length > 0);
+    if (!hasAny) return '';
 
-        return `
+    return `
             <div class="detail-divider"></div>
             <div class="detail-section">
                 <div class="detail-section-title blue">👥 Pihak yang Terlibat</div>
                 <div class="person-cards">
                     ${groups.filter(g => g.key.length > 0).map(g =>
-                        g.key.map(x => `
+        g.key.map(x => `
                             <div class="person-card">
                                 <div class="person-avatar ${g.role}">${esc(x.display_name?.charAt(0)?.toUpperCase() || '?')}</div>
                                 <div style="min-width:0;">
@@ -1014,16 +1081,17 @@
                                 </div>
                             </div>
                         `).join('')
-                    ).join('')}
+    ).join('')}
                 </div>
             </div>
         `;
-    }
+}
 
-    function buildTindakLanjut(d) {
-        const tl     = d.tindak_lanjut || {};
-        const buktis = tl.files || tl.bukti || [];
-        return `
+function buildTindakLanjut(d) {
+    const tl = d.tindak_lanjut || {};
+    const buktis = tl.files || tl.bukti || [];
+    const hasBA = tl.nomor_berita_acara || tl.tanggal_berita_acara || tl.isi_berita_acara;
+    return `
             <div class="tindaklanjut-card">
                 <div class="tindaklanjut-header">
                     <div class="icon">
@@ -1037,10 +1105,10 @@
                     </div>
                 </div>
                 <div class="detail-section">
-                    <div class="detail-section-title teal">📋 Informasi Tindakan</div>
+                    <div class="detail-section-title teal">📋 Tindak Lanjut untuk Pelaku</div>
                     <div class="field-grid cols-3">
                         <div class="field-item">
-                            <div class="field-label">Jenis Tindakan</div>
+                            <div class="field-label">Jenis Tindakan Pelaku</div>
                             <div class="field-value">${esc(tl.jenis_tindakan || '-')}</div>
                         </div>
                         <div class="field-item">
@@ -1052,24 +1120,46 @@
                             <div class="field-value">${esc(tl.durasi || '-')}</div>
                         </div>
                         <div class="field-item full">
-                            <div class="field-label">Deskripsi Tindakan</div>
+                            <div class="field-label">Deskripsi Tindakan Pelaku</div>
                             <div class="field-value text-area">${esc(tl.deskripsi || '-')}</div>
                         </div>
                         ${tl.catatan_tambahan ? `
                         <div class="field-item full">
-                            <div class="field-label">Catatan</div>
+                            <div class="field-label">Catatan Tambahan Pelaku</div>
                             <div class="field-value" style="font-style:italic;color:#4b5563;">
                                 ${esc(tl.catatan_tambahan)}
                             </div>
                         </div>` : `
                         <div class="field-item full">
-                            <div class="field-label">Catatan</div>
+                            <div class="field-label">Catatan Tambahan Pelaku</div>
                             <div class="field-value" style="font-style:italic;color:#9ca3af;">
-                                Tidak ada catatan dari penindak
+                                Tidak ada catatan tambahan dari penindak
                             </div>
                         </div>`}
                     </div>
                 </div>
+
+                ${(tl.jenis_tindakan_korban) ? `
+                <div class="detail-divider" style="background:var(--green-light);"></div>
+                <div class="detail-section">
+                    <div class="detail-section-title" style="
+                        color:#15803d;margin-bottom:10px;
+                        background:#f0fdf4;padding:8px 12px;border-radius:8px;">
+                        🛡️ Tindak Lanjut untuk Korban
+                    </div>
+                    <div class="field-grid">
+                        <div class="field-item full">
+                            <div class="field-label">Jenis Tindakan Korban</div>
+                            <div class="field-value">${esc(tl.jenis_tindakan_korban)}</div>
+                        </div>
+                        ${tl.catatan_korban ? `
+                        <div class="field-item full">
+                            <div class="field-label">Catatan Tindakan Korban</div>
+                            <div class="field-value text-area">${esc(tl.catatan_korban)}</div>
+                        </div>` : ''}
+                    </div>
+                </div>` : ''}
+
                 ${(tl.pelaksana || tl.keterlibatan_ortu !== undefined) ? `
                 <div class="detail-divider" style="background:var(--green-light);"></div>
                 <div class="detail-section">
@@ -1086,94 +1176,113 @@
                             <div class="field-value" style="background:transparent;border:none;padding:8px 0;">
                                 <span class="ortu-badge ${(tl.keterlibatan_ortu === true || tl.keterlibatan_ortu === 1 || tl.keterlibatan_ortu === 'ya') ? 'ya' : 'tidak'}">
                                     ${(tl.keterlibatan_ortu === true || tl.keterlibatan_ortu === 1 || tl.keterlibatan_ortu === 'ya')
-                                        ? '✅ Ya, terlibat'
-                                        : '❌ Tidak terlibat'}
+                ? '✅ Ya, terlibat'
+                : '❌ Tidak terlibat'}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>` : ''}
+                
+                ${hasBA ? `
                 <div class="detail-divider" style="background:var(--green-light);"></div>
-            <div class="detail-section">
-                <div class="detail-section-title teal">📎 Bukti Dokumentasi Penindak</div>
+                <div class="detail-section">
+                    <div class="detail-section-title teal">📝 Berita Acara Penanganan (BA)</div>
+                    <div class="field-grid">
+                        <div class="field-item">
+                            <div class="field-label">Nomor Berita Acara</div>
+                            <div class="field-value">${esc(tl.nomor_berita_acara || '-')}</div>
+                        </div>
+                        <div class="field-item">
+                            <div class="field-label">Tanggal Berita Acara</div>
+                            <div class="field-value">${esc(tl.tanggal_berita_acara || '-')}</div>
+                        </div>
+                        <div class="field-item full">
+                            <div class="field-label">Isi Berita Acara</div>
+                            <div class="field-value text-area" style="white-space:pre-wrap;">${esc(tl.isi_berita_acara || '-')}</div>
+                        </div>
+                    </div>
+                </div>` : ''}
+
                 <div class="detail-divider" style="background:var(--green-light);"></div>
-            <div class="detail-section">
-                <div class="detail-section-title teal">📎 Bukti Dokumentasi Penindak</div>
-                ${buktis.length > 0 ? `
-                <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-                    ${buktis.map(b => {
+                <div class="detail-section">
+                    <div class="detail-section-title teal">📎 Berkas Berita Acara &amp; Dokumentasi</div>
+                    ${buktis.length > 0 ? `
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                        ${buktis.map(b => {
                         const isImage = b.mime?.startsWith('image/');
-                        const isPdf   = b.mime === 'application/pdf';
-                        const ext     = b.nama?.split('.').pop()?.toUpperCase() || 'FILE';
-                        const icon    = isPdf
+                        const isPdf = b.mime === 'application/pdf';
+                        const ext = b.nama?.split('.').pop()?.toUpperCase() || 'FILE';
+                        const icon = isPdf
                             ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>`
                             : isImage
-                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
-                            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>`;
+                                ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`
+                                : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>`;
                         const bgColor = isPdf ? '#fef2f2' : isImage ? '#eff6ff' : '#f9fafb';
                         return `
-                            <div style="
-                                display:flex;align-items:center;justify-content:space-between;gap:12px;
-                                padding:10px 14px;background:${bgColor};
-                                border:1.5px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
-                                border-radius:10px;
-                            ">
-                                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                                    <div style="
-                                        width:36px;height:36px;border-radius:8px;flex-shrink:0;
-                                        background:white;display:flex;align-items:center;justify-content:center;
-                                        border:1px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
-                                    ">
-                                        ${icon}
-                                    </div>
-                                    <div style="min-width:0;">
-                                        <div style="font-size:.82rem;font-weight:600;color:#111827;
-                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">
-                                            ${esc(b.nama || 'File')}
-                                        </div>
-                                        <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">${ext}</div>
-                                    </div>
-                                </div>
-                                <a href="${esc(b.url)}" target="_blank" style="
-                                    display:inline-flex;align-items:center;gap:6px;
-                                    padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;
-                                    background:#10b981;color:white;text-decoration:none;white-space:nowrap;
-                                    flex-shrink:0;
+                                <div style="
+                                    display:flex;align-items:center;justify-content:space-between;gap:12px;
+                                    padding:10px 14px;background:${bgColor};
+                                    border:1.5px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
+                                    border-radius:10px;
                                 ">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                    </svg>
-                                    Unduh
-                                </a>
-                            </div>`;
+                                    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                        <div style="
+                                            width:36px;height:36px;border-radius:8px;flex-shrink:0;
+                                            background:white;display:flex;align-items:center;justify-content:center;
+                                            border:1px solid ${isPdf ? '#fca5a5' : isImage ? '#bfdbfe' : '#e5e7eb'};
+                                        ">
+                                            ${icon}
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div style="font-size:.82rem;font-weight:600;color:#111827;
+                                                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">
+                                                ${esc(b.nama || 'File')}
+                                            </div>
+                                            <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">${ext}</div>
+                                        </div>
+                                    </div>
+                                    <a href="${esc(b.url)}" target="_blank" style="
+                                        display:inline-flex;align-items:center;gap:6px;
+                                        padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:600;
+                                        background:#10b981;color:white;text-decoration:none;white-space:nowrap;
+                                        flex-shrink:0;
+                                    ">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                        </svg>
+                                        Unduh
+                                    </a>
+                                </div>`;
                     }).join('')}
-                </div>` : `
-                <div style="
-                    display:flex;flex-direction:column;align-items:center;gap:8px;
-                    padding:20px;background:#f9fafb;border:1.5px dashed #e5e7eb;
-                    border-radius:10px;text-align:center;color:#9ca3af;margin-top:8px;
-                ">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" opacity=".4">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    <span style="font-size:.82rem;font-weight:500;">Tidak ada berkas yang dilampirkan</span>
-                    <span style="font-size:.76rem;">Petugas tidak mengunggah dokumen pendukung tindak lanjut</span>
-                </div>`}
+                    </div>` : `
+                    <div style="
+                        display:flex;flex-direction:column;align-items:center;gap:8px;
+                        padding:20px;background:#f9fafb;border:1.5px dashed #e5e7eb;
+                        border-radius:10px;text-align:center;color:#9ca3af;margin-top:8px;
+                    ">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" opacity=".4">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span style="font-size:.82rem;font-weight:500;">Tidak ada berkas yang dilampirkan</span>
+                        <span style="font-size:.76rem;">Petugas tidak mengunggah dokumen pendukung berita acara</span>
+                    </div>`}
+                </div>
             </div>
         `;
-    }
+}
 
-    function buildFeedbackSection(d) {
-        const isDitolak = d.status === 'ditolak';
+function buildFeedbackSection(d) {
+    const isDitolak = d.status === 'ditolak';
 
-        // Sudah pernah feedback → tampilkan hasil saja
-        if (d.feedback) {
-            const EMOJI = ['', '😡', '😞', '😐', '😊', '🌟'];
-            const LABEL = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Luar Biasa'];
-            const r = d.feedback.rating;
-            return `
+    // Sudah pernah feedback → tampilkan hasil saja
+    if (d.feedback) {
+        const EMOJI = ['', '😡', '😞', '😐', '😊', '🌟'];
+        const LABEL = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Luar Biasa'];
+        const r = d.feedback.rating;
+        return `
                 <div class="feedback-card" id="feedbackCard">
                     <h3 class="feedback-title">${isDitolak ? '📝 Feedback Anda' : 'Penilaian Anda'}</h3>
                     <div style="display:flex;align-items:center;gap:14px;margin-bottom:${d.feedback.pesan ? '14px' : '0'}">
@@ -1194,10 +1303,10 @@
                         "${esc(d.feedback.pesan)}"
                     </div>` : ''}
                 </div>`;
-        }
+    }
 
-        // Belum feedback → tampilkan form, beda style untuk ditolak
-        return `
+    // Belum feedback → tampilkan form, beda style untuk ditolak
+    return `
             <div class="feedback-card ${isDitolak ? 'feedback-ditolak' : ''}" id="feedbackCard"
                 style="${isDitolak ? 'border-color:#fca5a5;background:linear-gradient(135deg,#fff5f5 0%,#fff 100%);' : ''}">
                 
@@ -1227,9 +1336,9 @@
                     ${isDitolak ? '📝 Bantu Kami Evaluasi' : 'Rating Penyelesaian'}
                 </h3>
                 <p class="feedback-sub" style="${isDitolak ? 'color:#b91c1c;' : ''}">
-                    ${isDitolak 
-                        ? 'Pendapat Anda sangat berarti bagi kami untuk meningkatkan kualitas penanganan laporan di masa mendatang.'
-                        : 'Bagaimana kepuasan Anda terhadap penanganan laporan ini? Penilaian Anda membantu kami meningkatkan layanan.'}
+                    ${isDitolak
+            ? 'Pendapat Anda sangat berarti bagi kami untuk meningkatkan kualitas penanganan laporan di masa mendatang.'
+            : 'Bagaimana kepuasan Anda terhadap penanganan laporan ini? Penilaian Anda membantu kami meningkatkan layanan.'}
                 </p>
                 <div id="feedbackFormSection">
                     <div class="emoji-rating-wrap">
@@ -1241,94 +1350,114 @@
                         `).join('')}
                     </div>
                     <div class="rating-desc" id="ratingDesc">Pilih emoji untuk memberi penilaian</div>
-                    <textarea class="feedback-textarea" id="feedbackText" 
-                        placeholder="${isDitolak 
-                            ? 'Ceritakan kendala atau saran Anda terkait proses penanganan laporan...' 
-                            : 'Saran atau masukan Anda... (opsional)'}"></textarea>
+                    <textarea class="feedback-textarea" id="feedbackText"
+                        oninput="updateWordCount(this)"
+                        placeholder="${isDitolak
+            ? 'Wajib diisi \u2013 ceritakan kendala atau saran Anda (min. 10 kata)'
+            : 'Wajib diisi \u2013 tuliskan saran atau masukan Anda (min. 10 kata)'}"></textarea>
+                    <div id="wordCountInfo" style="font-size:.75rem;color:#9ca3af;margin-top:4px;text-align:right;">0 / 10 kata minimum</div>
                     <button class="btn-submit-feedback" onclick="submitFeedback()" type="button"
                         style="${isDitolak ? 'background:linear-gradient(135deg,#dc2626,#b91c1c);' : ''}">
                         ${isDitolak ? '📤 Kirim Feedback' : 'Kirim Penilaian'}
                     </button>
+                    ${isDitolak ? `
+                    <div style="margin-top:16px;text-align:center;padding-top:14px;border-top:1px solid #fca5a5;">
+                        <p style="font-size:.8rem;color:#9f1239;margin-bottom:8px;">
+                            Ingin mencoba melaporkan kembali?
+                        </p>
+                        <button onclick="ajukanUlang()" type="button" style="
+                            background:none;border:none;cursor:pointer;
+                            font-size:.85rem;font-weight:600;color:#dc2626;
+                            text-decoration:underline;text-underline-offset:3px;
+                            display:inline-flex;align-items:center;gap:6px;
+                        ">
+                            🔄 Ajukan Ulang Laporan
+                        </button>
+                        <p style="font-size:.72rem;color:#b91c1c;margin-top:6px;">
+                            Data laporan Anda akan dibawa otomatis ke form baru
+                        </p>
+                    </div>` : ''}
                 </div>
             </div>`;
+}
+
+
+/* ══════════════════════════════════════════════
+TOGGLE PANEL (accordion detail)
+══════════════════════════════════════════════ */
+function togglePanel(panelId, btn) {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+
+    const body = btn.nextElementSibling;
+    const isOpen = body.classList.contains('open');
+
+    body.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+
+    if (!isOpen) {
+        setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     }
+}
 
+/* ══════════════════════════════════════════════
+TOGGLE FORM ISI DETAIL
+══════════════════════════════════════════════ */
+function toggleFormIsi() {
+    const form = document.getElementById('formIsiDetail');
+    const btn = document.getElementById('btnIsiDetail');
+    if (!form) return;
+    const willOpen = !form.classList.contains('open');
+    form.classList.toggle('open', willOpen);
+    btn?.classList.toggle('open', willOpen);
+    if (willOpen) setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
 
-    /* ══════════════════════════════════════════════
-    TOGGLE PANEL (accordion detail)
-    ══════════════════════════════════════════════ */
-    function togglePanel(panelId, btn) {
-        const panel = document.getElementById(panelId);
-        if (!panel) return;
-
-        const body   = btn.nextElementSibling;
-        const isOpen = body.classList.contains('open');
-
-        body.classList.toggle('open', !isOpen);
-        btn.classList.toggle('open', !isOpen);
-
-        if (!isOpen) {
-            setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
-        }
+function bannerScrollToForm() {
+    // Buka form jika belum terbuka
+    const form = document.getElementById('formIsiDetail');
+    const btn = document.getElementById('btnIsiDetail');
+    if (form && !form.classList.contains('open')) {
+        form.classList.add('open');
+        btn?.classList.add('open');
     }
+    // Scroll ke form
+    setTimeout(() => {
+        form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+}
 
-    /* ══════════════════════════════════════════════
-    TOGGLE FORM ISI DETAIL
-    ══════════════════════════════════════════════ */
-    function toggleFormIsi() {
-        const form = document.getElementById('formIsiDetail');
-        const btn  = document.getElementById('btnIsiDetail');
-        if (!form) return;
-        const willOpen = !form.classList.contains('open');
-        form.classList.toggle('open', willOpen);
-        btn?.classList.toggle('open', willOpen);
-        if (willOpen) setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-    }
+/* ══════════════════════════════════════════════
+PERSON ROWS – SELECT KELAS
+Kolom Kelas menggunakan <select> dengan opsi
+dari API /api/students/grades (_gradeOptions).
+Berlaku untuk: pelaku, korban, saksi.
+══════════════════════════════════════════════ */
+const _counters = { pelaku: 0, korban: 0, saksi: 0 };
 
-    function bannerScrollToForm() {
-        // Buka form jika belum terbuka
-        const form = document.getElementById('formIsiDetail');
-        const btn  = document.getElementById('btnIsiDetail');
-        if (form && !form.classList.contains('open')) {
-            form.classList.add('open');
-            btn?.classList.add('open');
-        }
-        // Scroll ke form
-        setTimeout(() => {
-            form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 80);
-    }
+function addRow(type) {
+    const container = document.getElementById(`${type}Rows`);
+    if (!container) return;
+    const id = ++_counters[type];
+    const div = document.createElement('div');
+    div.className = 'person-row';
+    div.id = `${type}Row${id}`;
 
-    /* ══════════════════════════════════════════════
-    PERSON ROWS – SELECT KELAS
-    Kolom Kelas menggunakan <select> dengan opsi
-    dari API /api/students/grades (_gradeOptions).
-    Berlaku untuk: pelaku, korban, saksi.
-    ══════════════════════════════════════════════ */
-    const _counters = { pelaku: 0, korban: 0, saksi: 0 };
+    const uniqueGrades = [...new Set(_allPairs.map(p => p.grade))].sort();
+    const kelasOptions = uniqueGrades
+        .map(g => `<option value="${esc(g)}">${esc(g)}</option>`)
+        .join('');
 
-    function addRow(type) {
-        const container = document.getElementById(`${type}Rows`);
-        if (!container) return;
-        const id  = ++_counters[type];
-        const div = document.createElement('div');
-        div.className = 'person-row';
-        div.id = `${type}Row${id}`;
-
-        const uniqueGrades = [...new Set(_allPairs.map(p => p.grade))].sort();
-        const kelasOptions = uniqueGrades
-            .map(g => `<option value="${esc(g)}">${esc(g)}</option>`)
-            .join('');
-
-        // Tombol "Saya Sendiri" hanya untuk korban
-        const saSendiriBtn = type === 'korban' ? `
+    // Tombol "Saya Sendiri" hanya untuk korban, dan hanya jika pelapor bukan orang tua
+    const isOrtu = _reportData?.reporter_type === 'ortu';
+    const saSendiriBtn = (type === 'korban' && !isOrtu) ? `
             <button class="btn-add-person" type="button"
                     onclick="fillSelfAsKorban('${type}', ${id})"
                     style="margin-bottom:10px;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;">
                 👤 Saya Sendiri
             </button>` : '';
 
-        div.innerHTML = `
+    div.innerHTML = `
             ${saSendiriBtn}
             <div class="person-row-top" style="display:flex;gap:10px;align-items:flex-end;">
                 <div class="form-group" style="margin:0;position:relative;flex:2;">
@@ -1346,7 +1475,7 @@
                             onchange="onKelasChange('${type}', ${id})">
                         <option value="" disabled selected>Pilih</option>
                         ${[...new Set(_allPairs.map(p => p.grade))].sort()
-                            .map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('')}
+            .map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('')}
                     </select>
                 </div>
 
@@ -1370,631 +1499,660 @@
                     placeholder="Keterangan tambahan...">
             </div>
         `;
-        container.appendChild(div);
+    container.appendChild(div);
+}
+
+/**
+ * Dipanggil saat user memilih kelas secara manual.
+ * Filter jurusan berdasarkan kelas yang dipilih dari _allPairs.
+ */
+function onKelasChange(type, id) {
+    const grade = document.getElementById(`${type}_kelas_${id}`)?.value;
+    const juruSel = document.getElementById(`${type}_jurusan_${id}`);
+    if (!juruSel) return;
+
+    if (!grade) {
+        juruSel.innerHTML = `<option value="" disabled selected>Pilih kelas dulu</option>`;
+        juruSel.disabled = true;
+        return;
     }
 
-    /**
-     * Dipanggil saat user memilih kelas secara manual.
-     * Filter jurusan berdasarkan kelas yang dipilih dari _allPairs.
-     */
-    function onKelasChange(type, id) {
-        const grade   = document.getElementById(`${type}_kelas_${id}`)?.value;
-        const juruSel = document.getElementById(`${type}_jurusan_${id}`);
-        if (!juruSel) return;
+    const matchedCodes = _allPairs
+        .filter(p => p.grade === grade)
+        .map(p => p.major);
 
-        if (!grade) {
-            juruSel.innerHTML = `<option value="" disabled selected>Pilih kelas dulu</option>`;
-            juruSel.disabled  = true;
-            return;
+    juruSel.innerHTML = `<option value="" disabled selected>Pilih Jurusan</option>` +
+        matchedCodes.map(code => {
+            const name = getMajorName(code);
+            return `<option value="${esc(code)}">${esc(name)}</option>`;
+        }).join('');
+    juruSel.disabled = false;
+
+    if (matchedCodes.length === 1) juruSel.value = matchedCodes[0];
+}
+/**
+ * Kunci field kelas & jurusan (setelah autocomplete dipilih).
+ */
+function lockPersonRow(type, id, grade, majorCode) {
+    const kelasSel = document.getElementById(`${type}_kelas_${id}`);
+    const juruSel = document.getElementById(`${type}_jurusan_${id}`);
+
+    if (kelasSel) {
+        // Tambah opsi kalau belum ada
+        if (!Array.from(kelasSel.options).find(o => o.value === grade)) {
+            kelasSel.add(new Option(grade, grade));
         }
-
-        const matchedCodes = _allPairs
-            .filter(p => p.grade === grade)
-            .map(p => p.major);
-
-        juruSel.innerHTML = `<option value="" disabled selected>Pilih Jurusan</option>` +
-            matchedCodes.map(code => {
-                const name = getMajorName(code);
-                return `<option value="${esc(code)}">${esc(name)}</option>`;
-            }).join('');
-        juruSel.disabled = false;
-
-        if (matchedCodes.length === 1) juruSel.value = matchedCodes[0];
-    }
-    /**
-     * Kunci field kelas & jurusan (setelah autocomplete dipilih).
-     */
-    function lockPersonRow(type, id, grade, majorCode) {
-        const kelasSel = document.getElementById(`${type}_kelas_${id}`);
-        const juruSel  = document.getElementById(`${type}_jurusan_${id}`);
-
-        if (kelasSel) {
-            // Tambah opsi kalau belum ada
-            if (!Array.from(kelasSel.options).find(o => o.value === grade)) {
-                kelasSel.add(new Option(grade, grade));
-            }
-            kelasSel.value    = grade;
-            kelasSel.disabled = true;
-        }
-
-        if (juruSel) {
-            const majorName = getMajorName(majorCode) || majorCode;
-            juruSel.innerHTML = `<option value="${esc(majorCode)}" selected>${esc(majorName)}</option>`;
-            juruSel.value     = majorCode;
-            juruSel.disabled  = true;
-        }
+        kelasSel.value = grade;
+        kelasSel.disabled = true;
     }
 
-    function unlockPersonRow(type, id) {
-        const kelasSel = document.getElementById(`${type}_kelas_${id}`);
-        const juruSel  = document.getElementById(`${type}_jurusan_${id}`);
+    if (juruSel) {
+        const majorName = getMajorName(majorCode) || majorCode;
+        juruSel.innerHTML = `<option value="${esc(majorCode)}" selected>${esc(majorName)}</option>`;
+        juruSel.value = majorCode;
+        juruSel.disabled = true;
+    }
+}
 
-        if (kelasSel) {
-            const uniqueGrades = [...new Set(_allPairs.map(p => p.grade))].sort();
-            kelasSel.innerHTML = `<option value="" disabled selected>Pilih</option>` +
-                uniqueGrades.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
-            kelasSel.disabled = false;
-            kelasSel.value    = '';
-        }
+function unlockPersonRow(type, id) {
+    const kelasSel = document.getElementById(`${type}_kelas_${id}`);
+    const juruSel = document.getElementById(`${type}_jurusan_${id}`);
 
-        if (juruSel) {
-            juruSel.innerHTML = `<option value="" disabled selected>Pilih kelas dulu</option>`;
-            juruSel.disabled  = true;
-        }
-
-        const hiddenId = document.getElementById(`${type}_student_id_${id}`);
-        if (hiddenId) hiddenId.value = '';
+    if (kelasSel) {
+        const uniqueGrades = [...new Set(_allPairs.map(p => p.grade))].sort();
+        kelasSel.innerHTML = `<option value="" disabled selected>Pilih</option>` +
+            uniqueGrades.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+        kelasSel.disabled = false;
+        kelasSel.value = '';
     }
 
-
-
-    /**
-     * Khusus korban: isi dengan data pelapor sendiri, semua field disabled.
-     */
-    function fillSelfAsKorban(type, id) {
-        if (!_reportData) return;
-
-        const isOrtu = _reportData.reporter_type === 'ortu';
-
-        const namaEl = document.getElementById(`${type}_nama_${id}`);
-        if (namaEl) { 
-            // Ortu pakai child_name, siswa pakai student_name
-            namaEl.value = isOrtu 
-                ? (_reportData.child_name || '') 
-                : (_reportData.student_name || ''); 
-            namaEl.disabled = true; 
-        }
-
-        const hiddenId = document.getElementById(`${type}_student_id_${id}`);
-        if (hiddenId) hiddenId.value = isOrtu ? '' : (_reportData.student_id || '');
-
-        if (isOrtu) {
-            // Ortu: pakai child_grade langsung (misal "IX ITF")
-            const childGrade = _reportData.child_grade || '';
-            const parts      = childGrade.split(' ');
-            const grade      = parts[0] || '';
-            const majorCode  = parts.slice(1).join(' ');
-            lockPersonRow(type, id, grade, majorCode);
-        } else {
-            // Siswa: pakai student_grade
-            const studentGrade = _reportData.student_grade || '';
-            const parts        = studentGrade.split(' ');
-            const grade        = parts[0] || '';
-            const majorCode    = parts.slice(1).join(' ');
-            lockPersonRow(type, id, grade, majorCode);
-        }
+    if (juruSel) {
+        juruSel.innerHTML = `<option value="" disabled selected>Pilih kelas dulu</option>`;
+        juruSel.disabled = true;
     }
 
-    async function fetchPairs() {
+    const hiddenId = document.getElementById(`${type}_student_id_${id}`);
+    if (hiddenId) hiddenId.value = '';
+}
+
+
+
+/**
+ * Khusus korban: isi dengan data pelapor sendiri, semua field disabled.
+ */
+function fillSelfAsKorban(type, id) {
+    if (!_reportData) return;
+
+    const isOrtu = _reportData.reporter_type === 'ortu';
+
+    const namaEl = document.getElementById(`${type}_nama_${id}`);
+    if (namaEl) {
+        // Ortu pakai child_name, siswa pakai student_name
+        namaEl.value = isOrtu
+            ? (_reportData.child_name || '')
+            : (_reportData.student_name || '');
+        namaEl.disabled = true;
+    }
+
+    const hiddenId = document.getElementById(`${type}_student_id_${id}`);
+    if (hiddenId) hiddenId.value = isOrtu ? '' : (_reportData.student_id || '');
+
+    if (isOrtu) {
+        // Ortu: pakai child_grade langsung (misal "IX ITF")
+        const childGrade = _reportData.child_grade || '';
+        const parts = childGrade.split(' ');
+        const grade = parts[0] || '';
+        const majorCode = parts.slice(1).join(' ');
+        lockPersonRow(type, id, grade, majorCode);
+    } else {
+        // Siswa: pakai student_grade
+        const studentGrade = _reportData.student_grade || '';
+        const parts = studentGrade.split(' ');
+        const grade = parts[0] || '';
+        const majorCode = parts.slice(1).join(' ');
+        lockPersonRow(type, id, grade, majorCode);
+    }
+}
+
+async function fetchPairs() {
+    try {
+        const res = await fetch('/api/data-siswa/grade-majors');
+        const json = await res.json();
+        if (Array.isArray(json)) {
+            _allPairs = json;
+            console.log('_allPairs loaded:', _allPairs);
+        }
+    } catch (e) {
+        console.error('Gagal memuat grade-major pairs', e);
+    }
+}
+
+async function fetchMajors() {
+    try {
+        const res = await fetch('/api/data-siswa/majors/full');
+        const json = await res.json();
+        if (Array.isArray(json)) {
+            _majorsFull = json;
+            _majorOptions = json.map(m => m.code);
+        }
+    } catch (e) {
+        console.error("Gagal memuat jurusan", e);
+    }
+}
+
+function getMajorName(code) {
+    const found = _majorsFull.find(m => m.code === code);
+    return found ? found.name : code;
+}
+
+function getMajorCode(name) {
+    const found = _majorsFull.find(m => m.name === name);
+    return found ? found.code : name;
+}
+
+/* ══════════════════════════════════════════════
+AUTOCOMPLETE SISWA
+══════════════════════════════════════════════ */
+async function handleSearchStudent(input, type, id) {
+    clearTimeout(_searchTimeout);
+    const q = input.value.trim();
+    const resultBox = document.getElementById(`results_${type}_${id}`);
+
+    if (q.length === 0) {
+        unlockPersonRow(type, id);
+    }
+
+    if (q.length < 2) {
+        resultBox.classList.add('hidden');
+        return;
+    }
+
+    _searchTimeout = setTimeout(async () => {
         try {
-            const res  = await fetch('/api/data-siswa/grade-majors');
+            const res = await fetch(`/api/students/autocomplete?q=${encodeURIComponent(q)}`);
             const json = await res.json();
-            if (Array.isArray(json)) {
-                _allPairs = json;
-                console.log('_allPairs loaded:', _allPairs);
-            }
-        } catch (e) {
-            console.error('Gagal memuat grade-major pairs', e);
-        }
-    }
 
-    async function fetchMajors() {
-        try {
-            const res  = await fetch('/api/data-siswa/majors/full');
-            const json = await res.json();
-            if (Array.isArray(json)) {
-                _majorsFull   = json;
-                _majorOptions = json.map(m => m.code);
-            }
-        } catch (e) {
-            console.error("Gagal memuat jurusan", e);
-        }
-    }
-
-    function getMajorName(code) {
-        const found = _majorsFull.find(m => m.code === code);
-        return found ? found.name : code;
-    }
-
-    function getMajorCode(name) {
-        const found = _majorsFull.find(m => m.name === name);
-        return found ? found.code : name;
-    }
-
-    /* ══════════════════════════════════════════════
-    AUTOCOMPLETE SISWA
-    ══════════════════════════════════════════════ */
-    async function handleSearchStudent(input, type, id) {
-        clearTimeout(_searchTimeout);
-        const q = input.value.trim();
-        const resultBox = document.getElementById(`results_${type}_${id}`);
-        
-        if (q.length === 0) {
-            unlockPersonRow(type, id);
-        }
-
-        if (q.length < 2) {
-            resultBox.classList.add('hidden');
-            return;
-        }
-
-        _searchTimeout = setTimeout(async () => {
-            try {
-                const res  = await fetch(`/api/students/autocomplete?q=${encodeURIComponent(q)}`);
-                const json = await res.json();
-
-                if (json.success && json.data.length > 0) {
-                    resultBox.innerHTML = json.data.map(s => {
-                        // Simpan data dalam string aman untuk attribute
-                        const dataStr = JSON.stringify(s).replace(/'/g, "&apos;");
-                        return `
+            if (json.success && json.data.length > 0) {
+                resultBox.innerHTML = json.data.map(s => {
+                    // Simpan data dalam string aman untuk attribute
+                    const dataStr = JSON.stringify(s).replace(/'/g, "&apos;");
+                    return `
                             <div class="result-item" onclick='selectStudent("${type}", ${id}, ${dataStr})'>
                                 <strong>${esc(s.fullname)}</strong><br>
                                 <small>${esc(s.nis)} - ${esc(s.grade)} ${esc(s.major || '')}</small>
                             </div>
                         `;
-                    }).join('');
-                    resultBox.classList.remove('hidden');
-                } else {
-                    resultBox.classList.add('hidden');
-                }
-            } catch (e) { console.error(e); }
-        }, 400); // Tunggu 400ms setelah berhenti mengetik
+                }).join('');
+                resultBox.classList.remove('hidden');
+            } else {
+                resultBox.classList.add('hidden');
+            }
+        } catch (e) { console.error(e); }
+    }, 400); // Tunggu 400ms setelah berhenti mengetik
+}
+
+function selectStudent(type, rowId, data) {
+    const namaEl = document.getElementById(`${type}_nama_${rowId}`);
+    if (namaEl) { namaEl.value = data.fullname; namaEl.disabled = true; }
+
+    const hiddenId = document.getElementById(`${type}_student_id_${rowId}`);
+    if (hiddenId) hiddenId.value = data.id;
+
+    lockPersonRow(type, rowId, data.grade, data.major);
+
+    document.getElementById(`results_${type}_${rowId}`)?.classList.add('hidden');
+}
+
+// Tutup dropdown autocomplete jika klik di luar
+document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('form-input')) {
+        document.querySelectorAll('.autocomplete-results').forEach(el => el.classList.add('hidden'));
     }
+});
 
-    function selectStudent(type, rowId, data) {
-        const namaEl = document.getElementById(`${type}_nama_${rowId}`);
-        if (namaEl) { namaEl.value = data.fullname; namaEl.disabled = true; }
+function removeRow(rowId) {
+    document.getElementById(rowId)?.remove();
+}
 
-        const hiddenId = document.getElementById(`${type}_student_id_${rowId}`);
-        if (hiddenId) hiddenId.value = data.id;
+function collectRows(type) {
+    const rows = document.querySelectorAll(`#${type}Rows .person-row`);
+    const res = [];
+    rows.forEach(row => {
+        const id = row.id.replace(`${type}Row`, '');
+        const nama = document.getElementById(`${type}_nama_${id}`)?.value?.trim();
+        const studentId = document.getElementById(`${type}_student_id_${id}`)?.value || null;
+        const kelas = document.getElementById(`${type}_kelas_${id}`)?.value?.trim();
+        const jurusan = document.getElementById(`${type}_jurusan_${id}`)?.value?.trim();
+        const catatan = document.getElementById(`${type}_catatan_${id}`)?.value?.trim();
 
-        lockPersonRow(type, rowId, data.grade, data.major);
-
-        document.getElementById(`results_${type}_${rowId}`)?.classList.add('hidden');
-    }
-
-    // Tutup dropdown autocomplete jika klik di luar
-    document.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('form-input')) {
-            document.querySelectorAll('.autocomplete-results').forEach(el => el.classList.add('hidden'));
+        if (nama) {
+            res.push({
+                nama,
+                student_id: studentId ? parseInt(studentId) : null,
+                kelas: kelas || null,
+                jurusan: jurusan || null,
+                catatan: catatan || null,
+            });
         }
     });
+    return res;
+}
 
-    function removeRow(rowId) {
-        document.getElementById(rowId)?.remove();
-    }
+/* ══════════════════════════════════════════════
+CHECKLIST
+══════════════════════════════════════════════ */
+function toggleCheck(el) {
+    const cb = el.querySelector('input[type="checkbox"]');
+    if (cb) { cb.checked = !cb.checked; el.classList.toggle('checked', cb.checked); }
+}
 
-    function collectRows(type) {
-        const rows = document.querySelectorAll(`#${type}Rows .person-row`);
-        const res  = [];
-        rows.forEach(row => {
-            const id        = row.id.replace(`${type}Row`, '');
-            const nama      = document.getElementById(`${type}_nama_${id}`)?.value?.trim();
-            const studentId = document.getElementById(`${type}_student_id_${id}`)?.value || null;
-            const kelas     = document.getElementById(`${type}_kelas_${id}`)?.value?.trim();
-            const jurusan   = document.getElementById(`${type}_jurusan_${id}`)?.value?.trim();
-            const catatan   = document.getElementById(`${type}_catatan_${id}`)?.value?.trim();
-
-            if (nama) {
-                res.push({
-                    nama,
-                    student_id : studentId ? parseInt(studentId) : null,
-                    kelas      : kelas    || null,
-                    jurusan    : jurusan  || null,
-                    catatan    : catatan  || null,
-                });
-            }
-        });
-        return res;
-    }
-
-    /* ══════════════════════════════════════════════
-    CHECKLIST
-    ══════════════════════════════════════════════ */
-    function toggleCheck(el) {
-        const cb = el.querySelector('input[type="checkbox"]');
-        if (cb) { cb.checked = !cb.checked; el.classList.toggle('checked', cb.checked); }
-    }
-
-    function validateNoDuplicates(pelaku, korban, saksi) {
-        const checkGroup = (arr, label) => {
-            const names = arr.map(p => p.nama.toLowerCase().trim());
-            const dupe  = names.find((n, i) => names.indexOf(n) !== i);
-            if (dupe) return `Nama "${dupe}" muncul lebih dari sekali di daftar ${label}.`;
-            return null;
-        };
-
-        let err = checkGroup(pelaku, 'Pelaku');
-        if (err) return err;
-        err = checkGroup(korban, 'Korban');
-        if (err) return err;
-        err = checkGroup(saksi, 'Saksi');
-        if (err) return err;
-
-        const all  = [
-            ...pelaku.map(p => ({ nama: p.nama.toLowerCase().trim(), role: 'Pelaku' })),
-            ...korban.map(p => ({ nama: p.nama.toLowerCase().trim(), role: 'Korban' })),
-            ...saksi.map(p  => ({ nama: p.nama.toLowerCase().trim(), role: 'Saksi'  })),
-        ];
-        const seen = {};
-        for (const entry of all) {
-            if (seen[entry.nama]) {
-                return `"${entry.nama}" tidak boleh ada di ${seen[entry.nama]} sekaligus ${entry.role}.`;
-            }
-            seen[entry.nama] = entry.role;
-        }
+function validateNoDuplicates(pelaku, korban, saksi) {
+    const checkGroup = (arr, label) => {
+        const names = arr.map(p => p.nama.toLowerCase().trim());
+        const dupe = names.find((n, i) => names.indexOf(n) !== i);
+        if (dupe) return `Nama "${dupe}" muncul lebih dari sekali di daftar ${label}.`;
         return null;
-    }
+    };
 
-    /* ══════════════════════════════════════════════
-    SIMPAN DETAIL (Tahap Verifikasi)
-    ══════════════════════════════════════════════ */
-    async function simpanDetail() {
-        const tgl    = document.getElementById('inp_tgl')?.value;
-        const jam    = document.getElementById('inp_jam')?.value;
-        const lokasi = document.getElementById('inp_lokasi')?.value?.trim();
+    let err = checkGroup(pelaku, 'Pelaku');
+    if (err) return err;
+    err = checkGroup(korban, 'Korban');
+    if (err) return err;
+    err = checkGroup(saksi, 'Saksi');
+    if (err) return err;
 
-        // ── Validasi Waktu & Lokasi ──
-        if (!tgl)    { showUserToast('Tanggal kejadian wajib diisi.', 'error', 'Validasi'); return; }
-        if (!lokasi) { showUserToast('Tempat kejadian wajib diisi.', 'error', 'Validasi'); return; }
-
-        const pelaku = collectRows('pelaku');
-        const korban = collectRows('korban');
-        const saksi  = collectRows('saksi');
-
-        // ── Validasi Minimal 1 Pelaku & Korban ──
-        if (pelaku.length === 0) { showUserToast('Minimal 1 pelaku harus diisi.', 'error', 'Validasi'); return; }
-        if (korban.length === 0) { showUserToast('Minimal 1 korban harus diisi.', 'error', 'Validasi'); return; }
-
-        // ── Validasi Kelas & Jurusan per Row ──
-        const validatePersonFields = (list, label) => {
-            for (let i = 0; i < list.length; i++) {
-                const p   = list[i];
-                const num = i + 1;
-
-                // Kalau sudah autocomplete (student_id ada), skip validasi kelas/jurusan
-                if (p.student_id) continue;
-
-                if (!p.kelas || p.kelas.trim() === '') {
-                    showUserToast(`${label} ke-${num}: Kelas wajib diisi.`, 'error', 'Validasi');
-                    return false;
-                }
-                if (!p.jurusan || p.jurusan.trim() === '') {
-                    showUserToast(`${label} ke-${num}: Jurusan wajib diisi.`, 'error', 'Validasi');
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        if (!validatePersonFields(pelaku, 'Pelaku')) return;
-        if (!validatePersonFields(korban, 'Korban')) return;
-        if (!validatePersonFields(saksi,  'Saksi'))  return;
-
-        // ── Validasi Duplikat ──
-        const dupErr = validateNoDuplicates(pelaku, korban, saksi);
-        if (dupErr) { showUserToast(dupErr, 'error', 'Data Duplikat'); return; }
-
-        // ── Validasi Checklist ──
-        const chk1 = document.getElementById('chk1')?.checked;
-        const chk2 = document.getElementById('chk2')?.checked;
-        const chk3 = document.getElementById('chk3')?.checked;
-        if (!chk1) { showUserToast('Harap centang konfirmasi kebenaran data.', 'warning', 'Konfirmasi'); return; }
-        if (!chk2) { showUserToast('Harap centang kesediaan dipanggil untuk keterangan.', 'warning', 'Konfirmasi'); return; }
-        if (!chk3) { showUserToast('Harap centang pernyataan kerahasiaan laporan.', 'warning', 'Konfirmasi'); return; }
-
-        // ── Kirim ke API ──
-        const btn = document.getElementById('btnSimpan');
-        if (btn) { 
-            btn.disabled = true; 
-            btn.innerHTML = '<div class="loading-spinner" style="width:18px;height:18px;border-width:3px;"></div> Menyimpan...'; 
+    const all = [
+        ...pelaku.map(p => ({ nama: p.nama.toLowerCase().trim(), role: 'Pelaku' })),
+        ...korban.map(p => ({ nama: p.nama.toLowerCase().trim(), role: 'Korban' })),
+        ...saksi.map(p => ({ nama: p.nama.toLowerCase().trim(), role: 'Saksi' })),
+    ];
+    const seen = {};
+    for (const entry of all) {
+        if (seen[entry.nama]) {
+            return `"${entry.nama}" tidak boleh ada di ${seen[entry.nama]} sekaligus ${entry.role}.`;
         }
-        showLoadingOverlay(true);
+        seen[entry.nama] = entry.role;
+    }
+    return null;
+}
 
-        try {
-            const res  = await fetch('/api/reports/detail', {
-                method:  'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Accept': 'application/json', 
-                    'X-CSRF-TOKEN': csrfToken() 
-                },
-                body: JSON.stringify({ 
-                    code: _currentCode, 
-                    tanggal: tgl, 
-                    jam, 
-                    lokasi, 
-                    pelaku, 
-                    korban, 
-                    saksi 
-                }),
-            });
-            const data = await res.json();
-            showLoadingOverlay(false);
+/* ══════════════════════════════════════════════
+SIMPAN DETAIL (Tahap Verifikasi)
+══════════════════════════════════════════════ */
+async function simpanDetail() {
+    const tgl = document.getElementById('inp_tgl')?.value;
+    const jam = document.getElementById('inp_jam')?.value;
+    const lokasi = document.getElementById('inp_lokasi')?.value?.trim();
 
-            if (res.ok && data.success) {
-                showUserToast('Detail berhasil disimpan! Status laporan diperbarui.', 'success', 'Berhasil');
-                // Delay sedikit lebih lama agar DB commit selesai sebelum fetch ulang
-                setTimeout(() => loadReport(_currentCode), 2200);
-            } else {
-                showUserToast(data.message || 'Gagal menyimpan detail.', 'error', 'Gagal');
-                if (btn) { btn.disabled = false; btn.innerHTML = icoCheck() + ' Simpan &amp; Kirim Detail'; }
+    // ── Validasi Waktu & Lokasi ──
+    if (!tgl) { showUserToast('Tanggal kejadian wajib diisi.', 'error', 'Validasi'); return; }
+    if (!lokasi) { showUserToast('Tempat kejadian wajib diisi.', 'error', 'Validasi'); return; }
+
+    const pelaku = collectRows('pelaku');
+    const korban = collectRows('korban');
+    const saksi = collectRows('saksi');
+
+    // ── Validasi Minimal 1 Pelaku & Korban ──
+    if (pelaku.length === 0) { showUserToast('Minimal 1 pelaku harus diisi.', 'error', 'Validasi'); return; }
+    if (korban.length === 0) { showUserToast('Minimal 1 korban harus diisi.', 'error', 'Validasi'); return; }
+
+    // ── Validasi Kelas & Jurusan per Row ──
+    const validatePersonFields = (list, label) => {
+        for (let i = 0; i < list.length; i++) {
+            const p = list[i];
+            const num = i + 1;
+
+            // Kalau sudah autocomplete (student_id ada), skip validasi kelas/jurusan
+            if (p.student_id) continue;
+
+            if (!p.kelas || p.kelas.trim() === '') {
+                showUserToast(`${label} ke-${num}: Kelas wajib diisi.`, 'error', 'Validasi');
+                return false;
             }
-        } catch (e) {
-            console.error(e);
-            showLoadingOverlay(false);
-            showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error');
+            if (!p.jurusan || p.jurusan.trim() === '') {
+                showUserToast(`${label} ke-${num}: Jurusan wajib diisi.`, 'error', 'Validasi');
+                return false;
+            }
+        }
+        return true;
+    };
+
+    if (!validatePersonFields(pelaku, 'Pelaku')) return;
+    if (!validatePersonFields(korban, 'Korban')) return;
+    if (!validatePersonFields(saksi, 'Saksi')) return;
+
+    // ── Validasi Duplikat ──
+    const dupErr = validateNoDuplicates(pelaku, korban, saksi);
+    if (dupErr) { showUserToast(dupErr, 'error', 'Data Duplikat'); return; }
+
+    // ── Validasi Checklist ──
+    const chk1 = document.getElementById('chk1')?.checked;
+    const chk2 = document.getElementById('chk2')?.checked;
+    const chk3 = document.getElementById('chk3')?.checked;
+    if (!chk1) { showUserToast('Harap centang konfirmasi kebenaran data.', 'warning', 'Konfirmasi'); return; }
+    if (!chk2) { showUserToast('Harap centang kesediaan dipanggil untuk keterangan.', 'warning', 'Konfirmasi'); return; }
+    if (!chk3) { showUserToast('Harap centang pernyataan kerahasiaan laporan.', 'warning', 'Konfirmasi'); return; }
+
+    // ── Kirim ke API ──
+    const btn = document.getElementById('btnSimpan');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loading-spinner" style="width:18px;height:18px;border-width:3px;"></div> Menyimpan...';
+    }
+    showLoadingOverlay(true);
+
+    try {
+        const res = await fetch('/api/reports/detail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken()
+            },
+            body: JSON.stringify({
+                code: _currentCode,
+                tanggal: tgl,
+                jam,
+                lokasi,
+                pelaku,
+                korban,
+                saksi
+            }),
+        });
+        const data = await res.json();
+        showLoadingOverlay(false);
+
+        if (res.ok && data.success) {
+            showUserToast('Detail berhasil disimpan! Status laporan diperbarui.', 'success', 'Berhasil');
+            // Delay sedikit lebih lama agar DB commit selesai sebelum fetch ulang
+            setTimeout(() => loadReport(_currentCode), 2200);
+        } else {
+            showUserToast(data.message || 'Gagal menyimpan detail.', 'error', 'Gagal');
             if (btn) { btn.disabled = false; btn.innerHTML = icoCheck() + ' Simpan &amp; Kirim Detail'; }
         }
+    } catch (e) {
+        console.error(e);
+        showLoadingOverlay(false);
+        showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error');
+        if (btn) { btn.disabled = false; btn.innerHTML = icoCheck() + ' Simpan &amp; Kirim Detail'; }
+    }
+}
+
+/* ══════════════════════════════════════════════
+REMINDER — BATAS 2x PER HARI
+══════════════════════════════════════════════ */
+
+function getReminderUsed() {
+    const key = REMINDER_KEY + _currentCode;
+    const today = new Date().toDateString();
+    try {
+        const raw = localStorage.getItem(key);
+        const data = raw ? JSON.parse(raw) : null;
+        if (data && data.date === today) return data.count;
+    } catch { }
+    return 0;
+}
+
+function setReminderUsed(count) {
+    const key = REMINDER_KEY + _currentCode;
+    const today = new Date().toDateString();
+    try { localStorage.setItem(key, JSON.stringify({ date: today, count })); } catch { }
+}
+
+function renderReminderBtn(d) {
+    const wrap = document.getElementById('reminderBtnWrap');
+    const btn = document.getElementById('btnReminder');
+    const badge = document.getElementById('reminderCounter');
+    if (!btn) return;
+
+    const isTerminal = ['selesai', 'ditolak'].includes(d.status);
+    if (isTerminal) { wrap?.classList.add('hidden'); return; }
+    wrap?.classList.remove('hidden');
+
+    const used = getReminderUsed();
+    const sisa = REMINDER_MAX - used;
+
+    if (badge) {
+        badge.textContent = sisa;
+        badge.className = 'reminder-counter ' + (sisa >= 2 ? 'ok' : sisa === 1 ? 'warn' : 'out');
     }
 
-    /* ══════════════════════════════════════════════
-    REMINDER — BATAS 2x PER HARI
-    ══════════════════════════════════════════════ */
+    if (sisa <= 0) {
+        btn.disabled = true;
+        btn.title = 'Batas pengiriman reminder (2x) telah tercapai hari ini.';
+    } else {
+        btn.disabled = false;
+        btn.title = `Kirim reminder (sisa ${sisa}x hari ini)`;
+    }
+}
 
-    function getReminderUsed() {
-        const key   = REMINDER_KEY + _currentCode;
-        const today = new Date().toDateString();
-        try {
-            const raw  = localStorage.getItem(key);
-            const data = raw ? JSON.parse(raw) : null;
-            if (data && data.date === today) return data.count;
-        } catch {}
-        return 0;
+function renderGlobalActionBanner(d) {
+    const banner = document.getElementById('globalActionBanner');
+    if (!banner) return;
+
+    const isVerifikasi = ['menunggu', 'verifikasi'].includes(d.status);
+    const isFinal = ['selesai', 'ditolak'].includes(d.status);
+    const sudahFeedback = !!d.feedback;
+
+    if (isVerifikasi) {
+        // Banner lama: isi detail laporan
+        banner.classList.remove('hidden');
+        banner.onclick = bannerScrollToForm;
+        const gabTitle = banner.querySelector('.gab-title');
+        const gabDesc = banner.querySelector('.gab-desc');
+        const gabIcon = banner.querySelector('.gab-icon');
+        if (gabTitle) gabTitle.textContent = 'Tindakan Diperlukan';
+        if (gabDesc) gabDesc.textContent = 'Lengkapi detail kejadian agar laporan segera ditindaklanjuti';
+        if (gabIcon) gabIcon.textContent = '📋';
+        banner.style.background = '';
+        return;
     }
 
-    function setReminderUsed(count) {
-        const key   = REMINDER_KEY + _currentCode;
-        const today = new Date().toDateString();
-        try { localStorage.setItem(key, JSON.stringify({ date: today, count })); } catch {}
-    }
+    if (isFinal && !sudahFeedback) {
+        banner.classList.remove('hidden');
+        banner.onclick = () => {
+            const el = document.getElementById('feedbackFormSection');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        const gabTitle = banner.querySelector('.gab-title');
+        const gabDesc = banner.querySelector('.gab-desc');
+        const gabIcon = banner.querySelector('.gab-icon');
 
-    function renderReminderBtn(d) {
-        const wrap  = document.getElementById('reminderBtnWrap');
-        const btn   = document.getElementById('btnReminder');
-        const badge = document.getElementById('reminderCounter');
-        if (!btn) return;
-
-        const isTerminal = ['selesai','ditolak'].includes(d.status);
-        if (isTerminal) { wrap?.classList.add('hidden'); return; }
-        wrap?.classList.remove('hidden');
-
-        const used = getReminderUsed();
-        const sisa = REMINDER_MAX - used;
-
-        if (badge) {
-            badge.textContent = sisa;
-            badge.className   = 'reminder-counter ' + (sisa >= 2 ? 'ok' : sisa === 1 ? 'warn' : 'out');
-        }
-
-        if (sisa <= 0) {
-            btn.disabled = true;
-            btn.title    = 'Batas pengiriman reminder (2x) telah tercapai hari ini.';
+        if (d.status === 'ditolak') {
+            if (gabTitle) gabTitle.textContent = 'Bantu Kami Evaluasi';
+            if (gabDesc) gabDesc.textContent = 'Mohon maaf laporan Anda ditolak — feedback Anda sangat berarti untuk perbaikan kami';
+            if (gabIcon) gabIcon.textContent = '📝';
+            banner.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
         } else {
-            btn.disabled = false;
-            btn.title    = `Kirim reminder (sisa ${sisa}x hari ini)`;
+            if (gabTitle) gabTitle.textContent = 'Berikan Penilaian Anda';
+            if (gabDesc) gabDesc.textContent = 'Bantu kami meningkatkan layanan dengan mengisi feedback laporan Anda';
+            if (gabIcon) gabIcon.textContent = '⭐';
+            banner.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
         }
+        return;
     }
+}
 
-    function renderGlobalActionBanner(d) {
-        const banner = document.getElementById('globalActionBanner');
-        if (!banner) return;
+function openReminderModal() {
+    const used = getReminderUsed();
+    const sisa = REMINDER_MAX - used;
 
-        const isVerifikasi = ['menunggu', 'verifikasi'].includes(d.status);
-        const isFinal      = ['selesai', 'ditolak'].includes(d.status);
-        const sudahFeedback = !!d.feedback;
-
-        if (isVerifikasi) {
-            // Banner lama: isi detail laporan
-            banner.classList.remove('hidden');
-            banner.onclick = bannerScrollToForm;
-            const gabTitle = banner.querySelector('.gab-title');
-            const gabDesc  = banner.querySelector('.gab-desc');
-            const gabIcon  = banner.querySelector('.gab-icon');
-            if (gabTitle) gabTitle.textContent = 'Tindakan Diperlukan';
-            if (gabDesc)  gabDesc.textContent  = 'Lengkapi detail kejadian agar laporan segera ditindaklanjuti';
-            if (gabIcon)  gabIcon.textContent  = '📋';
-            banner.style.background = '';
-            return;
-        }
-
-       if (isFinal && !sudahFeedback) {
-            banner.classList.remove('hidden');
-            banner.onclick = () => {
-                const el = document.getElementById('feedbackFormSection');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            };
-            const gabTitle = banner.querySelector('.gab-title');
-            const gabDesc  = banner.querySelector('.gab-desc');
-            const gabIcon  = banner.querySelector('.gab-icon');
-
-            if (d.status === 'ditolak') {
-                if (gabTitle) gabTitle.textContent = 'Bantu Kami Evaluasi';
-                if (gabDesc)  gabDesc.textContent  = 'Mohon maaf laporan Anda ditolak — feedback Anda sangat berarti untuk perbaikan kami';
-                if (gabIcon)  gabIcon.textContent  = '📝';
-                banner.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
-            } else {
-                if (gabTitle) gabTitle.textContent = 'Berikan Penilaian Anda';
-                if (gabDesc)  gabDesc.textContent  = 'Bantu kami meningkatkan layanan dengan mengisi feedback laporan Anda';
-                if (gabIcon)  gabIcon.textContent  = '⭐';
-                banner.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
-            }
-            return;
-        }
-    }
-
-    function openReminderModal() {
-        const used = getReminderUsed();
-        const sisa = REMINDER_MAX - used;
-
-        if (sisa <= 0) {
-            showModal({
-                iconClass: 'red',
-                iconSvg:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
-                title:     'Batas Tercapai',
-                desc:      'Anda telah mengirim reminder sebanyak 2 kali hari ini. Silakan coba kembali besok.',
-                btnLabel:  'Mengerti',
-                onConfirm: closeModal,
-            });
-            return;
-        }
-
+    if (sisa <= 0) {
         showModal({
-            iconClass: 'amber',
-            iconSvg:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
-            title:     'Kirim Reminder?',
-            desc:      `Notifikasi akan dikirim ke petugas. Anda masih punya <strong>${sisa}</strong> kali pengiriman reminder hari ini (maks. 2x/hari).`,
-            btnLabel:  'Ya, Kirim Sekarang',
-            onConfirm: doSendReminder,
+            iconClass: 'red',
+            iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`,
+            title: 'Batas Tercapai',
+            desc: 'Anda telah mengirim reminder sebanyak 2 kali hari ini. Silakan coba kembali besok.',
+            btnLabel: 'Mengerti',
+            onConfirm: closeModal,
         });
+        return;
     }
 
-    async function doSendReminder() {
-        const used = getReminderUsed();
-        if (used >= REMINDER_MAX) {
-            closeModal();
-            showUserToast('Batas pengiriman reminder adalah 2 kali dalam sehari.', 'error', 'Batas Tercapai');
-            return;
+    showModal({
+        iconClass: 'amber',
+        iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
+        title: 'Kirim Reminder?',
+        desc: `Notifikasi akan dikirim ke petugas. Anda masih punya <strong>${sisa}</strong> kali pengiriman reminder hari ini (maks. 2x/hari).`,
+        btnLabel: 'Ya, Kirim Sekarang',
+        onConfirm: doSendReminder,
+    });
+}
+
+async function doSendReminder() {
+    const used = getReminderUsed();
+    if (used >= REMINDER_MAX) {
+        closeModal();
+        showUserToast('Batas pengiriman reminder adalah 2 kali dalam sehari.', 'error', 'Batas Tercapai');
+        return;
+    }
+
+    const btn = document.getElementById('modalConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+
+    try {
+        const res = await fetch('/api/reports/reminder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+            body: JSON.stringify({ code: _currentCode }),
+        });
+        const data = await res.json();
+        closeModal();
+
+        if (res.ok && data.success) {
+            const newUsed = used + 1;
+            setReminderUsed(newUsed);
+            const sisa = REMINDER_MAX - newUsed;
+
+            showUserToast(
+                sisa > 0
+                    ? `Reminder berhasil dikirim ke petugas. Sisa ${sisa}x pengiriman hari ini.`
+                    : `Reminder berhasil dikirim. Anda telah mencapai batas pengiriman hari ini.`,
+                'success',
+                'Reminder Terkirim'
+            );
+            renderReminderBtn(_reportData);
+        } else {
+            showUserToast(data.message || 'Gagal mengirim reminder.', 'error', 'Gagal');
         }
+    } catch (e) {
+        console.error(e);
+        closeModal();
+        showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error Koneksi');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Ya, Kirim Sekarang'; }
+    }
+}
 
-        const btn = document.getElementById('modalConfirmBtn');
-        if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+/* ══════════════════════════════════════════════
+MODAL HELPER (fleksibel)
+══════════════════════════════════════════════ */
+let _modalConfirm = null;
 
-        try {
-            const res  = await fetch('/api/reports/reminder', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
-                body:    JSON.stringify({ code: _currentCode }),
-            });
-            const data = await res.json();
-            closeModal();
+function showModal({ iconClass, iconSvg, title, desc, btnLabel, onConfirm }) {
+    _modalConfirm = onConfirm;
+    const box = document.getElementById('modalBox');
+    if (!box) return;
+    box.querySelector('.modal-icon').className = `modal-icon ${iconClass}`;
+    box.querySelector('.modal-icon').innerHTML = iconSvg;
+    box.querySelector('.modal-title').textContent = title;
+    box.querySelector('.modal-desc').innerHTML = desc;
+    const confirmBtn = box.querySelector('#modalConfirmBtn');
+    confirmBtn.textContent = btnLabel;
+    document.getElementById('reminderModal')?.classList.remove('hidden');
+}
 
-            if (res.ok && data.success) {
-                const newUsed = used + 1;
-                setReminderUsed(newUsed);
-                const sisa = REMINDER_MAX - newUsed;
+function confirmModal() { _modalConfirm?.(); }
 
-                showUserToast(
-                    sisa > 0
-                        ? `Reminder berhasil dikirim ke petugas. Sisa ${sisa}x pengiriman hari ini.`
-                        : `Reminder berhasil dikirim. Anda telah mencapai batas pengiriman hari ini.`,
-                    'success',
-                    'Reminder Terkirim'
-                );
-                renderReminderBtn(_reportData);
-            } else {
-                showUserToast(data.message || 'Gagal mengirim reminder.', 'error', 'Gagal');
+function closeModal(e) {
+    if (!e || e.target === e.currentTarget) {
+        document.getElementById('reminderModal')?.classList.add('hidden');
+    }
+}
+
+/* ══════════════════════════════════════════════
+WORD COUNT LIVE COUNTER
+══════════════════════════════════════════════ */
+function updateWordCount(textarea) {
+    const val = textarea.value.trim();
+    const count = val ? val.split(/\s+/).filter(w => w.length > 0).length : 0;
+    const el = document.getElementById('wordCountInfo');
+    if (!el) return;
+    el.textContent = `${count} / 10 kata minimum`;
+    el.style.color = count >= 10 ? '#16a34a' : '#9ca3af';
+}
+
+/* ══════════════════════════════════════════════
+FEEDBACK EMOJI
+══════════════════════════════════════════════ */
+function setEmojiRating(val) {
+    _emojiRating = val;
+    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('active', +b.dataset.val === val));
+    const found = EMOJI_OPTIONS.find(o => o.val === val);
+    setText('ratingDesc', found ? `${found.emoji} ${found.label}` : '');
+}
+
+async function submitFeedback() {
+    // 1. Cek rating
+    if (_emojiRating === 0) {
+        showUserToast('Pilih emoji penilaian terlebih dahulu.', 'warning', 'Penilaian');
+        return;
+    }
+
+    // 2. Ambil & trim nilai pesan
+    const pesan = document.getElementById('feedbackText')?.value?.trim();
+
+    // 3. Validasi kosong
+    if (!pesan) {
+        showUserToast('Kolom saran wajib diisi.', 'warning', 'Validasi');
+        return;
+    }
+
+    // 4–5. Hitung kata & validasi minimum
+    const jumlahKata = pesan.split(/\s+/).filter(w => w.length > 0).length;
+    if (jumlahKata < 10) {
+        showUserToast(`Saran minimal 10 kata. Saat ini baru ${jumlahKata} kata.`, 'warning', 'Validasi');
+        return;
+    }
+
+    // 6. Semua validasi lolos → baru disable tombol
+    const btn = document.querySelector('.btn-submit-feedback');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+
+    try {
+        const res = await fetch('/api/reports/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken()
+            },
+            body: JSON.stringify({
+                code: _currentCode,
+                rating: _emojiRating,
+                pesan: pesan || null
+            }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            showUserToast('Terima kasih! Penilaian Anda telah dikirim.', 'success', 'Berhasil');
+
+            // Simpan feedback ke _reportData supaya tidak bisa submit lagi
+            if (_reportData) {
+                _reportData.feedback = { rating: _emojiRating, pesan: pesan || null };
             }
-        } catch (e) {
-            console.error(e);
-            closeModal();
-            showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error Koneksi');
-        } finally {
-            if (btn) { btn.disabled = false; btn.textContent = 'Ya, Kirim Sekarang'; }
-        }
-    }
 
-    /* ══════════════════════════════════════════════
-    MODAL HELPER (fleksibel)
-    ══════════════════════════════════════════════ */
-    let _modalConfirm = null;
+            // Sembunyikan banner feedback
+            const banner = document.getElementById('globalActionBanner');
+            if (banner) banner.classList.add('hidden');
 
-    function showModal({ iconClass, iconSvg, title, desc, btnLabel, onConfirm }) {
-        _modalConfirm = onConfirm;
-        const box = document.getElementById('modalBox');
-        if (!box) return;
-        box.querySelector('.modal-icon').className    = `modal-icon ${iconClass}`;
-        box.querySelector('.modal-icon').innerHTML    = iconSvg;
-        box.querySelector('.modal-title').textContent = title;
-        box.querySelector('.modal-desc').innerHTML    = desc;
-        const confirmBtn = box.querySelector('#modalConfirmBtn');
-        confirmBtn.textContent = btnLabel;
-        document.getElementById('reminderModal')?.classList.remove('hidden');
-    }
-
-    function confirmModal() { _modalConfirm?.(); }
-
-    function closeModal(e) {
-        if (!e || e.target === e.currentTarget) {
-            document.getElementById('reminderModal')?.classList.add('hidden');
-        }
-    }
-
-    /* ══════════════════════════════════════════════
-    FEEDBACK EMOJI
-    ══════════════════════════════════════════════ */
-    function setEmojiRating(val) {
-        _emojiRating = val;
-        document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('active', +b.dataset.val === val));
-        const found = EMOJI_OPTIONS.find(o => o.val === val);
-        setText('ratingDesc', found ? `${found.emoji} ${found.label}` : '');
-    }
-
-    async function submitFeedback() {
-        if (_emojiRating === 0) { 
-            showUserToast('Pilih emoji penilaian terlebih dahulu.', 'warning', 'Penilaian'); 
-            return; 
-        }
-
-        const pesan = document.getElementById('feedbackText')?.value?.trim();
-        const btn   = document.querySelector('.btn-submit-feedback');
-        if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
-
-        try {
-            const res  = await fetch('/api/reports/feedback', {
-                method:  'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'Accept': 'application/json', 
-                    'X-CSRF-TOKEN': csrfToken() 
-                },
-                body: JSON.stringify({ 
-                    code:   _currentCode, 
-                    rating: _emojiRating, 
-                    pesan:  pesan || null 
-                }),
-            });
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                showUserToast('Terima kasih! Penilaian Anda telah dikirim.', 'success', 'Berhasil');
-
-                // Simpan feedback ke _reportData supaya tidak bisa submit lagi
-                if (_reportData) {
-                    _reportData.feedback = { rating: _emojiRating, pesan: pesan || null };
-                }
-
-                // Sembunyikan banner feedback
-                const banner = document.getElementById('globalActionBanner');
-                if (banner) banner.classList.add('hidden');
-
-                // Ganti form dengan tampilan hasil (tanpa reload halaman)
-                const card = document.getElementById('feedbackCard');
-                if (card) {
-                    const EMOJI = ['', '😡', '😞', '😐', '😊', '🌟'];
-                    const LABEL = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Luar Biasa'];
-                    card.innerHTML = `
+            // Ganti form dengan tampilan hasil (tanpa reload halaman)
+            const card = document.getElementById('feedbackCard');
+            if (card) {
+                const EMOJI = ['', '😡', '😞', '😐', '😊', '🌟'];
+                const LABEL = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Luar Biasa'];
+                card.innerHTML = `
                         <h3 class="feedback-title">Penilaian Anda</h3>
                         <div style="display:flex;align-items:center;gap:14px;margin-bottom:${pesan ? '14px' : '0'}">
                             <span style="font-size:2.4rem;">${EMOJI[_emojiRating]}</span>
@@ -2008,33 +2166,33 @@
                             font-size:.85rem;font-style:italic;color:#4b5563;line-height:1.6;">
                             "${esc(pesan)}"</div>` : ''}
                     `;
-                }
-            } else {
-                showUserToast(data.message || 'Gagal mengirim penilaian.', 'error', 'Gagal');
-                if (btn) { btn.disabled = false; btn.textContent = 'Kirim Penilaian'; }
             }
-        } catch (e) {
-            console.error(e);
-            showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error');
+        } else {
+            showUserToast(data.message || 'Gagal mengirim penilaian.', 'error', 'Gagal');
             if (btn) { btn.disabled = false; btn.textContent = 'Kirim Penilaian'; }
         }
+    } catch (e) {
+        console.error(e);
+        showUserToast('Koneksi bermasalah. Coba lagi.', 'error', 'Error');
+        if (btn) { btn.disabled = false; btn.textContent = 'Kirim Penilaian'; }
     }
+}
 
-    /* ══════════════════════════════════════════════
-    PHOTO VIEWER
-    ══════════════════════════════════════════════ */
-    function openPhoto(url) {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;animation:fadeIn .2s ease;';
-        overlay.innerHTML = `<img src="${esc(url)}" style="max-width:100%;max-height:90vh;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);">`;
-        overlay.onclick = () => overlay.remove();
-        document.body.appendChild(overlay);
-    }
+/* ══════════════════════════════════════════════
+PHOTO VIEWER
+══════════════════════════════════════════════ */
+function openPhoto(url) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;animation:fadeIn .2s ease;';
+    overlay.innerHTML = `<img src="${esc(url)}" style="max-width:100%;max-height:90vh;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);">`;
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+}
 
-    function openVideo(url, name) {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;animation:fadeIn .2s ease;gap:12px;';
-        overlay.innerHTML = `
+function openVideo(url, name) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;animation:fadeIn .2s ease;gap:12px;';
+    overlay.innerHTML = `
             <video src="${esc(url)}" controls autoplay
                 style="max-width:100%;max-height:80vh;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);cursor:default;"
                 onclick="event.stopPropagation()">
@@ -2042,111 +2200,111 @@
             <p style="color:rgba(255,255,255,.7);font-size:.82rem;max-width:400px;text-align:center;
                 overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🎬 ${esc(name)}</p>
         `;
-        overlay.onclick = () => {
-            overlay.querySelector('video').pause();
-            overlay.remove();
-        };
-        document.body.appendChild(overlay);
-    }
+    overlay.onclick = () => {
+        overlay.querySelector('video').pause();
+        overlay.remove();
+    };
+    document.body.appendChild(overlay);
+}
 
-    /* ══════════════════════════════════════════════
-    TOAST (pojok kanan atas)
-    ══════════════════════════════════════════════ */
-    function showUserToast(msg, type = 'success', title = null) {
-        const tc = document.getElementById('toastContainer');
-        if (!tc) return;
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
+/* ══════════════════════════════════════════════
+TOAST (pojok kanan atas)
+══════════════════════════════════════════════ */
+function showUserToast(msg, type = 'success', title = null) {
+    const tc = document.getElementById('toastContainer');
+    if (!tc) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
             <div class="toast-body">
                 <div class="toast-title">${title || 'Notifikasi'}</div>
                 <div class="toast-msg">${esc(msg)}</div>
             </div>
             <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
         `;
-        tc.appendChild(toast);
-        setTimeout(() => {
-            toast.classList.add('leaving');
-            setTimeout(() => toast.remove(), 400);
-        }, 4000);
-    }
+    tc.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('leaving');
+        setTimeout(() => toast.remove(), 400);
+    }, 4000);
+}
 
-    /* ══════════════════════════════════════════════
-    LOADING OVERLAY
-    ══════════════════════════════════════════════ */
-    function showLoadingOverlay(on) {
-        let el = document.getElementById('loadingOverlay');
-        if (on) {
-            if (!el) {
-                el = document.createElement('div');
-                el.id = 'loadingOverlay';
-                el.className = 'loading-overlay';
-                el.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">Menyimpan data...</div>';
-                document.body.appendChild(el);
-            }
-        } else {
-            el?.remove();
+/* ══════════════════════════════════════════════
+LOADING OVERLAY
+══════════════════════════════════════════════ */
+function showLoadingOverlay(on) {
+    let el = document.getElementById('loadingOverlay');
+    if (on) {
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'loadingOverlay';
+            el.className = 'loading-overlay';
+            el.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">Menyimpan data...</div>';
+            document.body.appendChild(el);
         }
+    } else {
+        el?.remove();
     }
+}
 
-    /* ══════════════════════════════════════════════
-    SKELETON / ERROR
-    ══════════════════════════════════════════════ */
-    function showSkeleton(on) {
-        document.getElementById('skeletonWrap')?.classList.toggle('hidden', !on);
-        document.getElementById('contentWrap')?.classList.toggle('hidden',  on);
-    }
+/* ══════════════════════════════════════════════
+SKELETON / ERROR
+══════════════════════════════════════════════ */
+function showSkeleton(on) {
+    document.getElementById('skeletonWrap')?.classList.toggle('hidden', !on);
+    document.getElementById('contentWrap')?.classList.toggle('hidden', on);
+}
 
-    function showError(msg) {
-        showSkeleton(false);
-        const wrap = document.getElementById('contentWrap');
-        if (wrap) {
-            wrap.classList.remove('hidden');
-            wrap.innerHTML = `
+function showError(msg) {
+    showSkeleton(false);
+    const wrap = document.getElementById('contentWrap');
+    if (wrap) {
+        wrap.classList.remove('hidden');
+        wrap.innerHTML = `
                 <div class="error-wrap">
                     <div class="error-icon">⚠️</div>
                     <h2 class="error-title">Laporan Tidak Ditemukan</h2>
                     <p class="error-desc">${esc(msg)}</p>
                     <a href="/lacak" class="btn-back-lacak">← Kembali ke Halaman Lacak</a>
                 </div>`;
-        }
     }
+}
 
-    /* ══════════════════════════════════════════════
-    MINI SVG ICONS
-    ══════════════════════════════════════════════ */
-    function icoCheck()  { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`; }
-    function icoX()      { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>`; }
-    function icoDoc()    { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`; }
-    function icoEdit()   { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`; }
-    function icoChevron(){ return `<svg class="btn-toggle-detail-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`; }
+/* ══════════════════════════════════════════════
+MINI SVG ICONS
+══════════════════════════════════════════════ */
+function icoCheck() { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>`; }
+function icoX() { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>`; }
+function icoDoc() { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`; }
+function icoEdit() { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`; }
+function icoChevron() { return `<svg class="btn-toggle-detail-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>`; }
 
-    /* ══════════════════════════════════════════════
-    HELPERS
-    ══════════════════════════════════════════════ */
-    function setText(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val ?? '-';
-    }
+/* ══════════════════════════════════════════════
+HELPERS
+══════════════════════════════════════════════ */
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val ?? '-';
+}
 
-    function esc(str) {
-        if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-    function csrfToken() {
-        return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    }
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
 
-    function updateAllJurusanSelects() {
-        document.querySelectorAll('select.jurusan-select').forEach(sel => {
-            const current = sel.value;
-            const options = _majorOptions.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-            sel.innerHTML = `<option value="" disabled selected>Pilih Jurusan</option>${options}`;
-            if (current) sel.value = current;
-        });
-    }
-    function buildViolationBadges(categories) {
+function updateAllJurusanSelects() {
+    document.querySelectorAll('select.jurusan-select').forEach(sel => {
+        const current = sel.value;
+        const options = _majorOptions.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+        sel.innerHTML = `<option value="" disabled selected>Pilih Jurusan</option>${options}`;
+        if (current) sel.value = current;
+    });
+}
+function buildViolationBadges(categories) {
     if (!categories || categories === '-') {
         return '<span style="color:#9ca3af;font-style:italic;">Tidak terdeteksi</span>';
     }
@@ -2164,4 +2322,45 @@
             ${isFisik ? '⚡' : '💬'} ${cat}
         </span>`;
     }).join('');
+}
+
+/* ══════════════════════════════════════════════
+AJUKAN ULANG LAPORAN
+══════════════════════════════════════════════ */
+function ajukanUlang() {
+    if (!_reportData) return;
+
+    sessionStorage.setItem('resubmit_data', JSON.stringify({
+        is_resubmit          : true,
+        original_code        : _reportData.ticket_code,
+
+        // Tipe pelapor (untuk dikunci di halaman /lapor)
+        reporter_type        : _reportData.reporter_type,
+
+        // Data siswa
+        student_id           : _reportData.student_id,
+        student_nis          : _reportData.student_nis,
+        student_name         : _reportData.student_name,
+        student_grade        : _reportData.student_grade,
+        student_email        : _reportData.student_email,
+
+        // Data ortu
+        reporter_name        : _reportData.reporter_name,
+        reporter_phone       : _reportData.reporter_phone,
+        child_name           : _reportData.child_name,
+        child_grade          : _reportData.child_grade,
+
+        // Konten laporan
+        deskripsi            : _reportData.deskripsi,
+        violation_categories : _reportData.violation_categories,
+
+        // File lama sebagai referensi (tidak bisa di-upload otomatis)
+        existing_files       : (_reportData.files || []).map(f => ({
+            url           : f.url,
+            original_name : f.original_name,
+            mime_type     : f.mime_type,
+        })),
+    }));
+
+    window.location.href = '/lapor?resubmit=1';
 }

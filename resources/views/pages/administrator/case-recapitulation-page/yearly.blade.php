@@ -5,40 +5,31 @@
 <link rel="stylesheet" href="{{ asset('css/recapitulation-admin-page.css') }}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-@include('components.sidebar-admin', ['activePage' => 'rekap-bulan'])
+@include('components.sidebar-admin', ['activePage' => 'rekap-tahun'])
 
 <div class="admin-wrapper" id="adminWrapper">
     @include('components.topbar-admin', [
-        'pageTitle'   => 'Rekapitulasi Per Bulan',
-        'breadcrumbs' => [['label' => 'Analitik'], ['label' => 'Rekapitulasi Per Bulan']],
+        'pageTitle'   => 'Rekapitulasi Per Tahun',
+        'breadcrumbs' => [['label' => 'Analitik'], ['label' => 'Rekapitulasi Per Tahun']],
     ])
 
     <main class="admin-main">
 
         <div class="content-heading animate-fade-in">
             <div>
-                <h2 class="content-title">Rekapitulasi Per Bulan</h2>
-                <p class="content-sub">Ringkasan laporan bullying berdasarkan bulan yang dipilih.</p>
+                <h2 class="content-title">Rekapitulasi Per Tahun</h2>
+                <p class="content-sub">Ringkasan laporan bullying berdasarkan tahun yang dipilih.</p>
             </div>
             <div class="heading-actions">
-                <select class="filter-select" id="filterBulan">
-                    <option value="1">Januari</option>
-                    <option value="2">Februari</option>
-                    <option value="3" selected>Maret</option>
-                    <option value="4">April</option>
-                    <option value="5">Mei</option>
-                    <option value="6">Juni</option>
-                    <option value="7">Juli</option>
-                    <option value="8">Agustus</option>
-                    <option value="9">September</option>
-                    <option value="10">Oktober</option>
-                    <option value="11">November</option>
-                    <option value="12">Desember</option>
-                </select>
                 <select class="filter-select" id="filterTahun">
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
-                    <option value="2026" selected>2026</option>
+                    @php
+                        $currentYear = now()->year;
+                        $startYear = 2024;
+                        $endYear = $currentYear + 1;
+                    @endphp
+                    @for ($y = $startYear; $y <= $endYear; $y++)
+                        <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
+                    @endfor
                 </select>
                 <button class="btn-export" onclick="exportRekap()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +42,7 @@
 
         <div class="animate-fade-in" style="animation-delay:.05s" id="statsWrap">
         @include('components.rekap-stats-admin', [
-            'idPrefix'            => 'bulan',
+            'idPrefix'            => 'tahun',
             'totalLaporan'        => 0,
             'rataRata'            => '0.0',
             'tingkatPenyelesaian' => '0',
@@ -65,7 +56,7 @@
             <div class="rekap-chart-header">
                 <div>
                     <h3 class="rekap-chart-title">Frekuensi Laporan Masuk</h3>
-                    <p class="rekap-chart-sub" id="chartSubLabel">Total laporan per hari — Maret 2026</p>
+                    <p class="rekap-chart-sub" id="chartSubLabel">Total laporan per bulan — Tahun {{ now()->year }}</p>
                 </div>
                 <div class="rekap-chart-peak">
                     <span class="peak-label">Puncak</span>
@@ -74,7 +65,7 @@
                 </div>
             </div>
             @include('components.rekap-chart-admin', [
-                'chartId'     => 'chartBulan',
+                'chartId'     => 'chartTahun',
                 'chartLabels' => [],
                 'chartData'   => [],
                 'chartLabel'  => 'Laporan Masuk',
@@ -86,7 +77,7 @@
             <div class="rekap-table-header">
                 <div>
                     <h3 class="rekap-chart-title">Rekapitulasi Detail</h3>
-                    <p class="rekap-chart-sub" id="tableSubLabel">Per kelas — Maret 2026</p>
+                    <p class="rekap-chart-sub" id="tableSubLabel">Per kelas — Tahun {{ now()->year }}</p>
                 </div>
                 <div class="search-wrap">
                     <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +91,7 @@
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
-                            <th>Bulan / Tahun</th>
+                            <th>Periode</th>
                             <th>Kelas</th>
                             <th>Total Laporan</th>
                             <th>Diselesaikan</th>
@@ -137,7 +128,6 @@ let _chart    = null;
 
 // ── Ambil data dari API ──────────────────────────────────
 async function loadRekap() {
-    const bulan = document.getElementById('filterBulan').value;
     const tahun = document.getElementById('filterTahun').value;
 
     // Tampilkan loading di tabel
@@ -145,7 +135,7 @@ async function loadRekap() {
         `<tr><td colspan="7" style="text-align:center;padding:24px;color:#9ca3af">Memuat data...</td></tr>`;
 
     try {
-        const res  = await fetch(`/api/admin/rekap/bulan?bulan=${bulan}&tahun=${tahun}`);
+        const res  = await fetch(`/api/admin/rekap/tahun?tahun=${tahun}`);
         const json = await res.json();
         if (!json.success) throw new Error('Gagal memuat data');
 
@@ -166,14 +156,20 @@ async function loadRekap() {
 
 // ── Update stats card ────────────────────────────────────
 function updateStats(stats) {
-    document.getElementById('bulan-totalLaporan').textContent = stats.totalLaporan;
-    document.getElementById('bulan-rataRata').textContent     = stats.rataRata;
-    document.getElementById('bulan-periode').textContent      = stats.periodeLabel;
-    document.getElementById('bulan-pct').innerHTML            = stats.tingkatPenyelesaian + '<small>%</small>';
+    document.getElementById('tahun-totalLaporan').textContent = stats.totalLaporan;
+    document.getElementById('tahun-rataRata').textContent     = stats.rataRata;
+    document.getElementById('tahun-periode').textContent      = stats.periodeLabel;
+    document.getElementById('tahun-pct').innerHTML            = stats.tingkatPenyelesaian + '<small>%</small>';
+
+    // Set label rata-rata menjadi "per bulan" karena tahunan
+    const periodEl = document.querySelector('#tahun-rataRata').parentElement.querySelector('.rs-period');
+    if (periodEl) {
+        periodEl.textContent = 'per bulan';
+    }
 
     // Badge warna
-    const badge = document.getElementById('bulan-pctBadge');
-    const bar   = document.getElementById('bulan-progressBar');
+    const badge = document.getElementById('tahun-pctBadge');
+    const bar   = document.getElementById('tahun-progressBar');
     const pct   = stats.tingkatPenyelesaian;
     const cls   = pct >= 75 ? 'rs-pct-good' : pct >= 50 ? 'rs-pct-mid' : 'rs-pct-low';
     const lbl   = pct >= 75 ? 'Baik' : pct >= 50 ? 'Sedang' : 'Rendah';
@@ -184,29 +180,26 @@ function updateStats(stats) {
     bar.style.width = Math.min(100, pct) + '%';
 
     // Tambahan 2 baris update pelapor
-    document.getElementById('bulan-pelaporSiswa').textContent = stats.pelaporSiswa ?? 0;
-    document.getElementById('bulan-pelaporOrtu').textContent  = stats.pelaporOrtu  ?? 0;
+    document.getElementById('tahun-pelaporSiswa').textContent = stats.pelaporSiswa ?? 0;
+    document.getElementById('tahun-pelaporOrtu').textContent  = stats.pelaporOrtu  ?? 0;
 
     // Tambahan 2 baris update status penanganan
-    document.getElementById('bulan-belumSelesai').textContent     = stats.belumSelesai ?? 0;
-    document.getElementById('bulan-sedangDitangani').textContent = stats.sedangDitangani ?? 0;
+    document.getElementById('tahun-belumSelesai').textContent     = stats.belumSelesai ?? 0;
+    document.getElementById('tahun-sedangDitangani').textContent = stats.sedangDitangani ?? 0;
 }
 
 // ── Update chart ─────────────────────────────────────────
 function updateChart(chart) {
     // Update teks peak
-    document.querySelector('.peak-val').textContent  = chart.peakVal + ' laporan';
-    document.querySelector('.peak-date').textContent = chart.peakHari ? 'tgl ' + chart.peakHari : '-';
+    document.querySelector('.peak-val').textContent  = chart.peakVal + ' Laporan';
+    document.querySelector('.peak-date').textContent = chart.peakLabel ? chart.peakLabel : '-';
 
-    const bulan = document.getElementById('filterBulan').value;
     const tahun = document.getElementById('filterTahun').value;
-    const namaBulan = ['','Januari','Februari','Maret','April','Mei','Juni',
-        'Juli','Agustus','September','Oktober','November','Desember'];
-    document.getElementById('chartSubLabel').textContent = `Total laporan per hari — ${namaBulan[bulan]} ${tahun}`;
-    document.getElementById('tableSubLabel').textContent = `Per kelas — ${namaBulan[bulan]} ${tahun}`;
+    document.getElementById('chartSubLabel').textContent = `Total laporan per bulan — Tahun ${tahun}`;
+    document.getElementById('tableSubLabel').textContent = `Per kelas — Tahun ${tahun}`;
 
     // Destroy & rebuild chart
-    const canvas = document.getElementById('chartBulan');
+    const canvas = document.getElementById('chartTahun');
     if (_chart) { _chart.destroy(); _chart = null; }
 
     const ctx  = canvas.getContext('2d');
@@ -252,7 +245,7 @@ function updateChart(chart) {
             },
             scales: {
                 x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11, weight: '600' }, color: '#9ca3af', maxRotation: 0 } },
-                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false, dash: [4,4] }, ticks: { font: { size: 11 }, color: '#9ca3af', stepSize: 1, padding: 6 } }
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, border: { display: false, dash: [4,4] }, ticks: { font: { size: 11 }, color: '#9ca3af', stepSize: 5, padding: 6 } }
             }
         }
     });
@@ -304,22 +297,19 @@ function renderTable() {
 }
 
 function lihatDetail(kelas) {
-    const bulan = document.getElementById('filterBulan').value;
     const tahun = document.getElementById('filterTahun').value;
-    openDrawer(kelas, { bulan, tahun });
+    openDrawer(kelas, { tahun });
 }
 
 function downloadKelas(kelas) {
-    const bulan = document.getElementById('filterBulan').value;
     const tahun = document.getElementById('filterTahun').value;
-    window.open(`/api/admin/rekap/download-kelas?kelas=${encodeURIComponent(kelas)}&bulan=${bulan}&tahun=${tahun}`, '_blank');
+    window.open(`/api/admin/rekap/download-kelas?kelas=${encodeURIComponent(kelas)}&tahun=${tahun}`, '_blank');
 }
 
 // ── Export semua ─────────────────────────────────────────
 function exportRekap() {
-    const bulan = document.getElementById('filterBulan').value;
     const tahun = document.getElementById('filterTahun').value;
-    window.open(`/api/admin/rekap/bulan/export?bulan=${bulan}&tahun=${tahun}`, '_blank');
+    window.open(`/api/admin/rekap/tahun/export?tahun=${tahun}`, '_blank');
 }
 
 // ── Search ───────────────────────────────────────────────
@@ -332,7 +322,6 @@ document.getElementById('searchTable')?.addEventListener('input', function () {
 });
 
 // ── Filter change ────────────────────────────────────────
-document.getElementById('filterBulan').addEventListener('change', loadRekap);
 document.getElementById('filterTahun').addEventListener('change', loadRekap);
 
 // ── Init ─────────────────────────────────────────────────

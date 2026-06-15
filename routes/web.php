@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ViolationTypeController;
 use App\Http\Controllers\DisciplineActionController;
+use App\Http\Controllers\KorbanActionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\GradeMajorController;
 use App\Http\Controllers\ContactController;
@@ -163,10 +164,12 @@ Route::middleware('auth:web')->group(function () {
     Route::middleware('permission:view-rekap')->group(function () {
         Route::get('/rekapitulasi-PerBulan',    fn () => view('pages.administrator.case-recapitulation-page.monthly'))->name('administrator.monthly');
         Route::get('/rekapitulasi-PerSemester', fn () => view('pages.administrator.case-recapitulation-page.semester'))->name('administrator.semester');
+        Route::get('/rekapitulasi-PerTahun',    fn () => view('pages.administrator.case-recapitulation-page.yearly'))->name('administrator.yearly');
 
         Route::prefix('api/admin/rekap')->group(function () {
             Route::get('/bulan',        [RekapController::class, 'bulan']);
             Route::get('/semester',     [RekapController::class, 'semester']);
+            Route::get('/tahun',        [RekapController::class, 'tahun']);
             Route::get('/detail-kelas', [RekapController::class, 'detailKelas']);
         });
     });
@@ -176,6 +179,7 @@ Route::middleware('auth:web')->group(function () {
         Route::prefix('api/admin/rekap')->group(function () {
             Route::get('/bulan/export',    [RekapController::class, 'exportBulan']);
             Route::get('/semester/export', [RekapController::class, 'exportSemester']);
+            Route::get('/tahun/export',    [RekapController::class, 'exportTahun']);
             Route::get('/download-kelas',  [RekapController::class, 'downloadKelas']);
         });
     });
@@ -226,6 +230,8 @@ Route::middleware('auth:web')->group(function () {
                 Route::post('/save',          [DisciplineActionController::class, 'store'])->name('discipline-actions.api.save');
                 Route::delete('/delete/{id}', [DisciplineActionController::class, 'destroy'])->name('discipline-actions.api.delete');
             });
+
+            Route::apiResource('api/admin/korban-actions', KorbanActionController::class);
         });
     });
 

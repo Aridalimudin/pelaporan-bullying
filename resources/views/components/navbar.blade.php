@@ -1,7 +1,7 @@
 <nav class="glass-effect fixed top-0 left-0 right-0 z-50 animate-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-            <div class="flex items-center gap-2 delay-1 animate-slide-up">
+            <a href="{{ route('home') }}" class="flex items-center gap-2 delay-1 animate-slide-up hover:opacity-90 transition-opacity" style="text-decoration: none;">
                 <div class="logo-container">
                     <img src="{{ asset('images/logoSMK.png') }}" alt="Logo SMK Muhammadiyah 3">
                 </div>
@@ -11,7 +11,7 @@
                     </span>
                     <span class="text-xs text-gray-600 hidden sm:block font-medium">SMK Muhammadiyah 3</span>
                 </div>
-            </div>
+            </a>
 
             <div class="hidden md:flex items-center gap-8 delay-2 animate-slide-up">
                 <a href="{{ route('home') }}" 

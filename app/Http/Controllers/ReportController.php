@@ -91,6 +91,23 @@ class ReportController extends Controller
             ], 404);
         }
 
+        // Cek apakah siswa memiliki laporan yang belum selesai ditangani
+        $activeReport = Report::where('student_id', $student->id)
+            ->whereNotIn('status', ['selesai', 'ditolak'])
+            ->first();
+
+        if ($activeReport) {
+            $ticket = $activeReport->ticket_code;
+            $len = strlen($ticket);
+            $censored = str_repeat('*', $len - 2) . substr($ticket, -2);
+            return response()->json([
+                'success' => false,
+                'active_report' => true,
+                'ticket_code' => $censored,
+                'message' => 'Anda masih memiliki laporan yang belum selesai ditangani dengan tiket ' . $censored . '. Jika sangat mendesak, silakan gunakan fitur kirim reminder di menu Lacak Laporan agar petugas dapat mempercepat penanganan kasus Anda.'
+            ], 422);
+        }
+
         return response()->json([
             'success' => true,
             'data'    => [
@@ -185,6 +202,33 @@ class ReportController extends Controller
         $request->validate($rules, $messages);
         } catch (ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+        }
+
+        // Cek jika siswa memiliki laporan yang masih aktif / belum selesai ditangani
+        if ($reporterType === 'siswa') {
+            $studentId = $request->student_id;
+            if (!$studentId && $request->nisn) {
+                $student = Student::where('nis', $request->nisn)->first();
+                if ($student) {
+                    $studentId = $student->id;
+                }
+            }
+            if ($studentId) {
+                $activeReport = Report::where('student_id', $studentId)
+                    ->whereNotIn('status', ['selesai', 'ditolak'])
+                    ->first();
+                if ($activeReport) {
+                    $ticket = $activeReport->ticket_code;
+                    $len = strlen($ticket);
+                    $censored = str_repeat('*', $len - 2) . substr($ticket, -2);
+                    return response()->json([
+                        'success' => false,
+                        'active_report' => true,
+                        'ticket_code' => $censored,
+                        'message' => 'Anda masih memiliki laporan yang belum selesai ditangani dengan tiket ' . $censored . '. Jika sangat mendesak, silakan gunakan fitur kirim reminder di menu Lacak Laporan agar petugas dapat mempercepat penanganan kasus Anda.'
+                    ], 422);
+                }
+            }
         }
 
         // Validasi manual MIME type file bukti
@@ -311,6 +355,7 @@ class ReportController extends Controller
             'persons.student',
             'activities.actor:id,nama',
             'followUp.files',
+            'followUp.korbanAction',
             'feedback',
         ])->where('ticket_code', strtoupper($code))->first();
 
@@ -426,13 +471,18 @@ class ReportController extends Controller
                     'url'           => asset('storage/' . $f->stored_name),
                 ]),
                 'tindak_lanjut' => $report->followUp ? [
-                    'jenis_tindakan'      => $report->followUp->jenis_tindakan,
-                    'tanggal_pelaksanaan' => $report->followUp->tanggal_pelaksanaan?->format('d M Y'),
-                    'deskripsi'           => $report->followUp->deskripsi,
-                    'catatan_tambahan'    => $report->followUp->catatan_tambahan,
-                    'pelaksana'           => $report->followUp->pelaksana,         // ← tambah
-                    'keterlibatan_ortu'   => $report->followUp->keterlibatan_ortu, // ← tambah
-                    'files'               => $report->followUp->files->map(fn($f) => [
+                    'jenis_tindakan'         => $report->followUp->jenis_tindakan,
+                    'tanggal_pelaksanaan'    => $report->followUp->tanggal_pelaksanaan?->format('d M Y'),
+                    'deskripsi'              => $report->followUp->deskripsi,
+                    'catatan_tambahan'       => $report->followUp->catatan_tambahan,
+                    'pelaksana'              => $report->followUp->pelaksana,         // ← tambah
+                    'keterlibatan_ortu'      => $report->followUp->keterlibatan_ortu, // ← tambah
+                    'jenis_tindakan_korban'  => $report->followUp->korbanAction?->name,
+                    'catatan_korban'         => $report->followUp->catatan_korban,
+                    'nomor_berita_acara'     => $report->followUp->nomor_berita_acara,
+                    'tanggal_berita_acara'   => $report->followUp->tanggal_berita_acara?->format('d M Y'),
+                    'isi_berita_acara'       => $report->followUp->isi_berita_acara,
+                    'files'                  => $report->followUp->files->map(fn($f) => [
                         'url'  => asset('storage/' . $f->stored_name),
                         'nama' => $f->original_name,
                         'mime' => $f->mime_type,
@@ -530,7 +580,7 @@ class ReportController extends Controller
         // 1. Ambil data dari DB dengan relasi student
         $status = $request->query('status', 'masuk');
 
-        $reports = Report::with(['student', 'files', 'persons.student', 'followUp', 'followUp.files'])
+        $reports = Report::with(['student', 'files', 'persons.student', 'followUp', 'followUp.files', 'followUp.korbanAction'])
         ->where('status', $status)
         ->orderByDesc('created_at')
         ->get();
@@ -564,6 +614,12 @@ class ReportController extends Controller
                 'catatanTambahan'    => $item->followUp?->catatan_tambahan ?? null,
                 'pelaksana'          => $item->followUp?->pelaksana ?? null,          // ← TAMBAH
                 'keterlibatanOrtu'   => $item->followUp?->keterlibatan_ortu ?? null,  // ← TAMBAH
+                'disciplineActionIdKorban' => $item->followUp?->korban_action_id,
+                'jenisTindakanKorban'      => $item->followUp?->korbanAction?->name ?? '-',
+                'catatanKorban'            => $item->followUp?->catatan_korban,
+                'nomorBA'                  => $item->followUp?->nomor_berita_acara,
+                'tanggalBA'                => $item->followUp?->tanggal_berita_acara?->format('d M Y'),
+                'isiBA'                    => $item->followUp?->isi_berita_acara,
                 'feedback' => $item->feedback ? [
                     'rating' => $item->feedback->rating,
                     'pesan'  => $item->feedback->pesan,
@@ -1074,18 +1130,25 @@ class ReportController extends Controller
 
         try {
             $request->validate([
-                'discipline_action_id' => 'required|exists:discipline_actions,id',
-                'tanggal_pelaksanaan'  => 'required|date',
-                'deskripsi'            => 'required|string|min:10|max:5000',
-                'catatan_tambahan'     => 'nullable|string|max:2000',
-                'files'                => 'nullable|array|max:5',
-                'files.*'              => 'file|max:51200',
+                'discipline_action_id'        => 'required|exists:discipline_actions,id',
+                'tanggal_pelaksanaan'         => 'required|date',
+                'deskripsi'                   => 'required|string|min:10|max:5000',
+                'catatan_tambahan'            => 'nullable|string|max:2000',
+                'discipline_action_id_korban' => 'nullable|exists:korban_actions,id',
+                'catatan_korban'              => 'nullable|string|max:5000',
+                'nomor_berita_acara'          => 'nullable|string|max:255',
+                'tanggal_berita_acara'        => 'nullable|date',
+                'isi_berita_acara'            => 'nullable|string|max:10000',
+                'files'                       => 'nullable|array|max:5',
+                'files.*'                     => 'file|max:5120',
             ], [
                 'discipline_action_id.required' => 'Jenis tindakan wajib dipilih.',
                 'discipline_action_id.exists'   => 'Jenis tindakan tidak valid.',
                 'tanggal_pelaksanaan.required'  => 'Tanggal pelaksanaan wajib diisi.',
                 'deskripsi.required'            => 'Deskripsi tindakan wajib diisi.',
                 'deskripsi.min'                 => 'Deskripsi minimal 10 karakter.',
+                'files.*.file'                  => 'File gagal diunggah atau melebihi batas ukuran server (maksimal 5MB per file).',
+                'files.*.max'                   => 'Ukuran file tidak boleh melebihi 5MB.',
             ]);
         } catch (ValidationException $e) {
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
@@ -1115,13 +1178,18 @@ class ReportController extends Controller
             $followUp = ReportFollowUp::updateOrCreate(
                 ['report_id' => $report->id],
                 [
-                    'discipline_action_id' => $action->id,
-                    'jenis_tindakan'       => $action->name,
-                    'tanggal_pelaksanaan'  => $request->tanggal_pelaksanaan,
-                    'deskripsi'            => $request->deskripsi,
-                    'catatan_tambahan'     => $request->catatan_tambahan ?? null,
-                    'pelaksana'            => $action->executor ?? null,
-                    'keterlibatan_ortu'    => $action->parent_involvement ?? 'tidak',
+                    'discipline_action_id'        => $action->id,
+                    'jenis_tindakan'              => $action->name,
+                    'tanggal_pelaksanaan'         => $request->tanggal_pelaksanaan,
+                    'deskripsi'                   => $request->deskripsi,
+                    'catatan_tambahan'            => $request->catatan_tambahan ?? null,
+                    'pelaksana'                   => $action->executor ?? null,
+                    'keterlibatan_ortu'           => $action->parent_involvement ?? 'tidak',
+                    'korban_action_id'            => $request->discipline_action_id_korban ?? null,
+                    'catatan_korban'              => $request->catatan_korban ?? null,
+                    'nomor_berita_acara'          => $request->nomor_berita_acara ?? null,
+                    'tanggal_berita_acara'        => $request->tanggal_berita_acara ?? null,
+                    'isi_berita_acara'            => $request->isi_berita_acara ?? null,
                 ]
             );
 

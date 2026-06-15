@@ -230,6 +230,10 @@
 
                         <!-- EDIT MODE -->
                         <div id="tindakEditMode">
+                            <div style="font-size:.65rem;font-weight:800;letter-spacing:.1em;
+                                color:#047857;margin-bottom:12px;text-transform:uppercase;">
+                                ⚖️ Tindak Lanjut - Pelaku
+                            </div>
                             <div class="md-grid2" style="margin-bottom:10px">
                                 <div class="md-f">
                                     <div class="md-fl">JENIS TINDAKAN <span style="color:#ef4444">*</span></div>
@@ -261,24 +265,88 @@
                                     placeholder="Informasi tambahan yang perlu dicatat..."></textarea>
                             </div>
 
-                            <div class="md-f">
-                                <div class="md-fl">BUKTI PELAKSANAAN
-                                    <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(opsional)</span>
+                            <!-- TINDAK LANJUT UNTUK KORBAN -->
+                            <div style="margin-top:16px; padding-top:16px; border-top:1.5px dashed #86efac; margin-bottom:16px;">
+                                <!-- Section tindakan korban -->
+                                <div id="sectionTindakanKorban" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px;">
+                                    
+                                    <div style="font-size:.65rem;font-weight:800;letter-spacing:.1em;
+                                        color:#15803d;margin-bottom:10px;">
+                                        🛡️ TINDAK LANJUT UNTUK KORBAN
+                                    </div>
+
+                                    <div class="md-f" style="margin-bottom:10px;">
+                                        <div class="md-fl">JENIS TINDAKAN KORBAN 
+                                            <span style="font-weight:400;text-transform:none;
+                                                letter-spacing:0;color:#9ca3af">(opsional)</span>
+                                        </div>
+                                        <select class="md-select" id="mdJenisTindakanKorban"
+                                            onchange="onTindakanKorbanChange(this)">
+                                            <option value="">Pilih tindakan untuk korban...</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="mdInfoKorban" style="display:none;padding:8px 12px;
+                                        background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:9px;
+                                        font-size:.78rem;color:#1e40af;margin-bottom:10px;"></div>
+
+                                    <div class="md-f">
+                                        <div class="md-fl">CATATAN UNTUK KORBAN
+                                            <span style="font-weight:400;text-transform:none;
+                                                letter-spacing:0;color:#9ca3af">(opsional)</span>
+                                        </div>
+                                        <textarea class="md-textarea" id="mdCatatanKorban" rows="2"
+                                            placeholder="Misal: korban diberikan pendampingan psikolog selama 1 minggu..."></textarea>
+                                    </div>
                                 </div>
-                                <div class="md-upload" id="mdUploadArea"
-                                    onclick="document.getElementById('mdFileInput').click()">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                    </svg>
-                                    <p>Klik untuk upload bukti pelaksanaan</p>
-                                    <span>PNG, JPG, PDF, Video (maks. 50MB)</span>
-                                    <input type="file" id="mdFileInput" style="display:none"
-                                        accept="image/*,.pdf,video/*" multiple
-                                        onchange="onFollowUpFileSelected(this)">
+                            </div>
+
+                            <!-- BERITA ACARA -->
+                            <div style="margin-top:16px; padding-top:16px; border-top:1.5px dashed #bbf7d0;">
+                                <div class="md-sh" style="margin-bottom:12px;">
+                                    <div class="md-sh-icon" style="background:#d1fae5; color:#059669;">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <span>BERITA ACARA (BA) <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(opsional)</span></span>
                                 </div>
-                                <div id="mdFilePreview" style="display:none;margin-top:8px;
-                                    display:flex;flex-wrap:wrap;gap:6px;"></div>
+                                
+                                <div class="md-grid2" style="margin-bottom:10px">
+                                    <div class="md-f">
+                                        <div class="md-fl">NOMOR BERITA ACARA</div>
+                                        <input type="text" class="md-input-date" id="mdNomorBA" placeholder="Contoh: BA/2026/06/001">
+                                    </div>
+                                    <div class="md-f">
+                                        <div class="md-fl">TANGGAL BERITA ACARA</div>
+                                        <input type="date" class="md-input-date" id="mdTanggalBA">
+                                    </div>
+                                </div>
+
+                                <div class="md-f" style="margin-bottom:10px">
+                                    <div class="md-fl">ISI BERITA ACARA</div>
+                                    <textarea class="md-textarea" id="mdIsiBA" rows="3" placeholder="Tuliskan ringkasan isi berita acara penanganan..."></textarea>
+                                </div>
+
+                                <div class="md-f">
+                                    <div class="md-fl">FILE BERITA ACARA ATAU BUKTI
+                                        <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#9ca3af">(opsional)</span>
+                                    </div>
+                                    <div class="md-upload" id="mdUploadArea"
+                                        onclick="document.getElementById('mdFileInput').click()">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                        </svg>
+                                        <p>Klik untuk upload file berita acara / bukti</p>
+                                        <span>PNG, JPG, PDF, Video (maks. 5MB)</span>
+                                        <input type="file" id="mdFileInput" style="display:none"
+                                            accept="image/*,.pdf,video/*" multiple
+                                            onchange="onFollowUpFileSelected(this)">
+                                    </div>
+                                    <div id="mdFilePreview" style="display:none;margin-top:8px;
+                                        display:flex;flex-wrap:wrap;gap:6px;"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -333,23 +401,65 @@
                                 <p class="md-desc" id="mdCatatanTambahanDisplay"
                                 style="margin:0;font-style:italic;color:#6b7280;">—</p>
                             </div>
-                            <div class="md-f">
-                                <div class="md-fl">BUKTI PELAKSANAAN</div>
-                                <div class="md-dokumen" id="mdDokumenDisplay">
-                                    <div style="display:flex;align-items:center;gap:8px;flex:1">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                        <span style="font-size:.83rem;font-weight:600;color:#111827">Dokumen Penunjang</span>
+                            
+                            <div id="mdKorbanDisplayWrap" style="display:none;
+                                margin-top:10px;padding:12px 14px;
+                                background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;margin-bottom:10px;">
+                                <div style="font-size:.65rem;font-weight:800;letter-spacing:.1em;
+                                    color:#15803d;margin-bottom:10px;">
+                                    🛡️ TINDAK LANJUT UNTUK KORBAN
+                                </div>
+                                <div class="md-grid2" style="margin-bottom:8px;">
+                                    <div class="md-f">
+                                        <div class="md-fl">JENIS TINDAKAN KORBAN</div>
+                                        <div class="md-fv">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                            </svg>
+                                            <span id="mdJenisTindakanKorbanText">—</span>
+                                        </div>
                                     </div>
-                                    <button class="md-dl-btn">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </div>
+                                <div class="md-f" id="mdCatatanKorbanWrap" style="display:none;">
+                                    <div class="md-fl">CATATAN UNTUK KORBAN</div>
+                                    <p class="md-desc" id="mdCatatanKorbanText" 
+                                        style="margin:0;font-style:italic;">—</p>
+                                </div>
+                            </div>
+
+                            <div id="mdBeritaAcaraWrap" style="display:none; margin-top:14px; padding-top:14px; border-top:1.5px dashed #bbf7d0;">
+                                <div class="md-sh" style="margin-bottom:8px;">
+                                    <div class="md-sh-icon" style="background:#d1fae5; color:#059669;">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        Unduh
-                                    </button>
+                                    </div>
+                                    <span>BERITA ACARA (BA)</span>
+                                </div>
+                                <div class="md-grid2" style="margin-bottom:10px">
+                                    <div class="md-f">
+                                        <div class="md-fl">NOMOR BERITA ACARA</div>
+                                        <div class="md-fv">
+                                            <span id="mdNomorBAText">—</span>
+                                        </div>
+                                    </div>
+                                    <div class="md-f">
+                                        <div class="md-fl">TANGGAL BERITA ACARA</div>
+                                        <div class="md-fv">
+                                            <span id="mdTanggalBAText">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md-f" style="margin-bottom:10px">
+                                    <div class="md-fl">ISI BERITA ACARA</div>
+                                    <p class="md-desc" id="mdIsiBAText" style="margin:0; white-space:pre-wrap;">—</p>
+                                </div>
+                                <div class="md-f" id="mdDokumenDisplayWrap">
+                                    <div class="md-fl">FILE BERITA ACARA / DOKUMEN PENUNJANG</div>
+                                    <div class="md-dokumen" id="mdDokumenDisplay">
+                                        <!-- isi file link & button download -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -978,19 +1088,72 @@
                     } else {
                         if (catatanWrap) catatanWrap.style.display = 'none';
                     }
+
+                    // Tindakan untuk Korban
+                    const korbanDisplayWrap = document.getElementById('mdKorbanDisplayWrap');
+                    if (data.jenisTindakanKorban && data.jenisTindakanKorban !== '-') {
+                        if (korbanDisplayWrap) korbanDisplayWrap.style.display = '';
+                        _T('mdJenisTindakanKorbanText', data.jenisTindakanKorban);
+                        
+                        const catatKorbanWrap = document.getElementById('mdCatatanKorbanWrap');
+                        const catatKorbanText = document.getElementById('mdCatatanKorbanText');
+                        if (data.catatanKorban) {
+                            if (catatKorbanWrap) catatKorbanWrap.style.display = '';
+                            if (catatKorbanText) catatKorbanText.textContent = data.catatanKorban;
+                        } else {
+                            if (catatKorbanWrap) catatKorbanWrap.style.display = 'none';
+                        }
+                    } else {
+                        if (korbanDisplayWrap) korbanDisplayWrap.style.display = 'none';
+                    }
+
+                    // Berita Acara
+                    const baWrap = document.getElementById('mdBeritaAcaraWrap');
+                    const hasBA = data.nomorBA || (data.tanggalBA && data.tanggalBA !== '-') || data.isiBA || (data.followUpFiles && data.followUpFiles.length > 0);
+                    if (hasBA) {
+                        if (baWrap) baWrap.style.display = '';
+                        _T('mdNomorBAText', data.nomorBA);
+                        _T('mdTanggalBAText', data.tanggalBA);
+                        _T('mdIsiBAText', data.isiBA);
+                    } else {
+                        if (baWrap) baWrap.style.display = 'none';
+                    }
                 } else {
                     loadDisciplineActions().then(populateTindakanSelect);
+                    loadKorbanActionsForSelect().then(() => {
+                        const selK = document.getElementById('mdJenisTindakanKorban');
+                        if (selK && data.disciplineActionIdKorban) {
+                            selK.value = data.disciplineActionIdKorban;
+                            onTindakanKorbanChange(selK);
+                        }
+                    });
 
-                    ['mdDeskripsiTindakan','mdCatatanTambahan'].forEach(id => {
+                    ['mdDeskripsiTindakan','mdCatatanTambahan','mdNomorBA','mdIsiBA'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.value = '';
                     });
-                    const tgl = document.getElementById('mdTanggalTindak');
-                    if (tgl) tgl.value = '';
-                    const sel = document.getElementById('mdJenisTindakan');
-                    if (sel) sel.value = '';
+                    ['mdTanggalTindak','mdTanggalBA'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    ['mdJenisTindakan','mdJenisTindakanKorban'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
                     const info = document.getElementById('mdTindakanInfo');
                     if (info) info.style.display = 'none';
+
+                    // Reset data tindakan korban
+                    const selK = document.getElementById('mdJenisTindakanKorban');
+                    if (selK) selK.value = '';
+                    const catatK = document.getElementById('mdCatatanKorban');
+                    if (catatK) {
+                        catatK.value = '';
+                        catatK.removeAttribute('data-user-edited');
+                    }
+                    const infoK = document.getElementById('mdInfoKorban');
+                    if (infoK) infoK.style.display = 'none';
+
                     const prev = document.getElementById('mdFilePreview');
                     if (prev) prev.style.display = 'none';
                 }
@@ -1088,18 +1251,44 @@
 
         function populateTindakanSelect() {
             const sel = document.getElementById('mdJenisTindakan');
-            if (!sel) return;
-            // Hapus opsi lama kecuali placeholder
-            while (sel.options.length > 1) sel.remove(1);
+            if (sel) {
+                while (sel.options.length > 1) sel.remove(1);
+            }
             _disciplineActions.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value        = a.id;
-                opt.textContent  = `${a.name} (${a.level})`;
-                opt.dataset.desc  = a.description || '';
-                opt.dataset.level = a.level || '';
-                opt.dataset.cond  = a.condition || '';
-                sel.appendChild(opt);
+                if (sel) {
+                    const opt = document.createElement('option');
+                    opt.value        = a.id;
+                    opt.textContent  = `${a.name} (${a.level})`;
+                    opt.dataset.desc  = a.description || '';
+                    opt.dataset.level = a.level || '';
+                    opt.dataset.cond  = a.condition || '';
+                    sel.appendChild(opt);
+                }
             });
+        }
+
+        async function loadKorbanActionsForSelect() {
+            try {
+                const res  = await fetch('{{ route("korban-actions.index") }}', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : (data.data || []);
+                
+                const sel = document.getElementById('mdJenisTindakanKorban');
+                if (!sel) return;
+                
+                while (sel.options.length > 1) sel.remove(1);
+                list.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value       = item.id;
+                    opt.textContent = item.name;
+                    opt.dataset.desc = item.description || '';
+                    sel.appendChild(opt);
+                });
+            } catch(e) {
+                console.error('Gagal load tindakan korban untuk select', e);
+            }
         }
 
         function onTindakanChange(sel) {
@@ -1110,7 +1299,15 @@
             const textarea = document.getElementById('mdDeskripsiTindakan');
             const infoBox  = document.getElementById('mdTindakanInfo');
 
-            if (textarea) textarea.value = desc;
+            if (textarea) {
+                textarea.value = desc;
+                
+                // Copy to victim notes if victim notes hasn't been manually edited yet
+                const descKorban = document.getElementById('mdCatatanKorban');
+                if (descKorban && !descKorban.dataset.userEdited) {
+                    descKorban.value = desc;
+                }
+            }
 
             if (infoBox && sel.value) {
                 const bgMap    = { Ringan:'#d1fae5', Sedang:'#fef3c7', Berat:'#fee2e2' };
@@ -1124,17 +1321,53 @@
             }
         }
 
+        function onTindakanKorbanChange(sel) {
+            const opt     = sel.options[sel.selectedIndex];
+            if (!opt) return;
+            const desc    = opt.dataset.desc  || '';
+            const level   = opt.dataset.level || '';
+            const infoBox = document.getElementById('mdInfoKorban');
+            if (infoBox && sel.value) {
+                const bgMap    = { Ringan:'#d1fae5', Sedang:'#fef3c7', Berat:'#fee2e2' };
+                const colorMap = { Ringan:'#065f46', Sedang:'#92400e', Berat:'#7f1d1d' };
+                infoBox.style.display    = '';
+                infoBox.style.background = bgMap[level]    || '#eff6ff';
+                infoBox.style.color      = colorMap[level] || '#1e40af';
+                if (level) {
+                    infoBox.innerHTML = `<strong>Level: ${level}</strong>${desc ? ' &nbsp;·&nbsp; ' + desc : ''}`;
+                } else {
+                    infoBox.innerHTML = desc;
+                }
+                if (!level && !desc) {
+                    infoBox.style.display = 'none';
+                }
+            } else if (infoBox) {
+                infoBox.style.display = 'none';
+            }
+        }
+
         function onFollowUpFileSelected(input) {
             const preview = document.getElementById('mdFilePreview');
             if (!preview) return;
             preview.style.display = 'flex';
             preview.innerHTML = '';
+            
+            let hasLargeFile = false;
             Array.from(input.files).forEach(f => {
+                if (f.size > 5 * 1024 * 1024) {
+                    hasLargeFile = true;
+                }
                 const tag = document.createElement('span');
                 tag.style.cssText = 'font-size:.73rem;background:#f0fdf4;color:#166534;padding:4px 10px;border-radius:99px;border:1px solid #bbf7d0;';
-                tag.textContent = f.name;
+                tag.textContent = `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`;
                 preview.appendChild(tag);
             });
+
+            if (hasLargeFile) {
+                showAdminToast('Ukuran file melebihi batas maksimal 5MB per file.', 'error');
+                input.value = '';
+                preview.innerHTML = '';
+            }
         }
 
         async function submitFollowUp() {
@@ -1143,6 +1376,13 @@
             const deskripsi = document.getElementById('mdDeskripsiTindakan')?.value?.trim();
             const catatan   = document.getElementById('mdCatatanTambahan')?.value?.trim();
             const files     = document.getElementById('mdFileInput')?.files;
+
+            // New fields
+            const actionIdKorban = document.getElementById('mdJenisTindakanKorban')?.value;
+            const catatanKorban  = document.getElementById('mdCatatanKorban')?.value?.trim();
+            const nomorBA        = document.getElementById('mdNomorBA')?.value?.trim();
+            const tanggalBA      = document.getElementById('mdTanggalBA')?.value;
+            const isiBA          = document.getElementById('mdIsiBA')?.value?.trim();
 
             if (!actionId)  { showAdminToast('Jenis tindakan wajib dipilih.', 'error'); return; }
             if (!tanggal)   { showAdminToast('Tanggal pelaksanaan wajib diisi.', 'error'); return; }
@@ -1155,6 +1395,14 @@
             formData.append('tanggal_pelaksanaan',  tanggal);
             formData.append('deskripsi',            deskripsi);
             if (catatan) formData.append('catatan_tambahan', catatan);
+            
+            // Append new fields
+            if (actionIdKorban) formData.append('discipline_action_id_korban', actionIdKorban);
+            if (catatanKorban)  formData.append('catatan_korban', catatanKorban);
+            if (nomorBA) formData.append('nomor_berita_acara', nomorBA);
+            if (tanggalBA) formData.append('tanggal_berita_acara', tanggalBA);
+            if (isiBA) formData.append('isi_berita_acara', isiBA);
+
             if (files) Array.from(files).forEach(f => formData.append('files[]', f));
 
             try {
@@ -1243,6 +1491,21 @@
                     a.click();
                     a.remove();
                 }, i * 500);
+            });
+        }
+
+        // Sinkronisasi deskripsi pelaku ke catatan korban
+        const descPelaku = document.getElementById('mdDeskripsiTindakan');
+        const descKorban = document.getElementById('mdCatatanKorban');
+        if (descPelaku && descKorban) {
+            descPelaku.addEventListener('input', function() {
+                if (!descKorban.dataset.userEdited) {
+                    descKorban.value = this.value;
+                }
+            });
+
+            descKorban.addEventListener('input', function() {
+                descKorban.dataset.userEdited = 'true';
             });
         }
 

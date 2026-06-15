@@ -203,10 +203,18 @@ async function cariSiswa() {
             emailEl.classList.remove('bg-gray-50');
             hint.classList.add('hidden');
 
+            const modalTitle = document.querySelector('#modalNisnNotFound .modal-box-title');
+            if (data.active_report) {
+                if (modalTitle) modalTitle.textContent = 'Laporan Belum Selesai';
+                FormValidator.showError('nisn', 'Laporan sebelumnya belum selesai');
+            } else {
+                if (modalTitle) modalTitle.textContent = 'NIS Tidak Ditemukan';
+                FormValidator.showError('nisn', 'NIS tidak ditemukan');
+            }
+
             document.getElementById('nisnNotFoundMsg').textContent =
                 data.message || 'NIS tidak ditemukan. Periksa kembali atau hubungi wali kelas.';
             document.getElementById('modalNisnNotFound').classList.remove('hidden');
-            FormValidator.showError('nisn', 'NIS tidak ditemukan');
         }
     } catch (e) {
         console.error(e);
@@ -445,6 +453,12 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             updateSubmitState();
 
             if (typeof openReportModal === 'function') openReportModal(data.ticket_code);
+        } else if (res.status === 422 && data.active_report) {
+            const modalTitle = document.querySelector('#modalNisnNotFound .modal-box-title');
+            if (modalTitle) modalTitle.textContent = 'Laporan Belum Selesai';
+            document.getElementById('nisnNotFoundMsg').textContent = data.message;
+            document.getElementById('modalNisnNotFound').classList.remove('hidden');
+            FormValidator.showError('nisn', 'Laporan sebelumnya belum selesai');
         } else if (res.status === 422 && data.errors) {
             Object.entries(data.errors).forEach(([field, msgs]) => {
                 FormValidator.showError(field, Array.isArray(msgs) ? msgs[0] : msgs);
@@ -757,3 +771,161 @@ document.getElementById('deskripsi').addEventListener('blur', function() {
 
 // Init — disable submit saat pertama load
 updateSubmitState();
+
+/* ──────────────────────────────────────────────
+RESUBMIT – Baca sessionStorage dari halaman lacak
+(dipanggil saat user klik "Ajukan Ulang Laporan")
+────────────────────────────────────────────── */
+(function initResubmit() {
+    const raw = sessionStorage.getItem('resubmit_data');
+    if (!raw) return;
+
+    let data;
+    try { data = JSON.parse(raw); } catch { return; }
+    if (!data?.is_resubmit) return;
+
+    // Hapus dari sessionStorage segera setelah dibaca
+    sessionStorage.removeItem('resubmit_data');
+
+    const type         = data.reporter_type || 'siswa';
+    const tipePelapor  = type === 'ortu' ? 'Orang Tua / Wali' : 'Siswa';
+
+    // ── 1. Set & KUNCI tipe pelapor ─────────────
+    // Aktifkan tipe yang benar terlebih dahulu
+    setReporterType(type);
+
+    // Kunci kedua tombol toggle agar tidak bisa diganti
+    const btnSiswa = document.getElementById('btnSiswa');
+    const btnOrtu  = document.getElementById('btnOrtu');
+    [btnSiswa, btnOrtu].forEach(btn => {
+        if (!btn) return;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity       = '0.5';
+        btn.style.cursor        = 'not-allowed';
+        btn.title               = 'Tipe pelapor dikunci saat pengajuan ulang';
+    });
+
+    // ── 2. Banner info ──────────────────────────
+    const form = document.getElementById('reportForm');
+    if (form) {
+        const banner = document.createElement('div');
+        banner.id = 'resubmitBanner';
+        banner.style.cssText = [
+            'display:flex', 'align-items:flex-start', 'gap:12px',
+            'padding:14px 18px', 'margin-bottom:20px',
+            'background:#fef9c3', 'border:1.5px solid #fde047',
+            'border-radius:12px', 'font-size:.84rem',
+            'color:#713f12', 'line-height:1.7',
+        ].join(';');
+        banner.innerHTML = `
+            <span style="font-size:1.2rem;flex-shrink:0;">🔄</span>
+            <div>
+                <strong>Pengajuan Ulang Laporan ${data.original_code}</strong><br>
+                Tipe pelapor dikunci sebagai: <strong>${tipePelapor}</strong><br>
+                <span style="font-size:.79rem;">Data laporan sebelumnya telah diisi otomatis. Periksa kembali sebelum mengirim.</span>
+            </div>
+        `;
+        form.insertAdjacentElement('beforebegin', banner);
+    }
+
+    // ── 3. Isi field sesuai tipe pelapor ────────
+    if (type === 'siswa') {
+        // Isi NIS → trigger cariSiswa() otomatis
+        const nisInput = document.getElementById('nisn');
+        if (nisInput && data.student_nis) {
+            nisInput.value = data.student_nis;
+            setTimeout(() => cariSiswa(), 300);
+        }
+
+        // Isi email hanya jika belum diisi otomatis oleh cariSiswa
+        if (data.student_email) {
+            setTimeout(() => {
+                const emailInput = document.getElementById('email');
+                if (emailInput && !emailInput.readOnly) {
+                    emailInput.value = data.student_email;
+                }
+            }, 1500);
+        }
+    } else {
+        // Isi field orang tua
+        const repNameEl    = document.getElementById('reporter_name');
+        const repPhoneEl   = document.getElementById('reporter_phone');
+        const childNameEl  = document.getElementById('child_name');
+        const childGradeEl = document.getElementById('child_grade');
+
+        if (repNameEl   && data.reporter_name)  repNameEl.value  = data.reporter_name;
+        if (repPhoneEl  && data.reporter_phone) repPhoneEl.value = data.reporter_phone;
+        if (childNameEl && data.child_name)     childNameEl.value = data.child_name;
+
+        // child_grade: opsi dimuat async — polling sampai opsi tersedia
+        if (childGradeEl && data.child_grade) {
+            const trySet = setInterval(() => {
+                const found = Array.from(childGradeEl.options)
+                    .find(o => o.value === data.child_grade);
+                if (found) {
+                    childGradeEl.value = data.child_grade;
+                    clearInterval(trySet);
+                }
+            }, 200);
+            setTimeout(() => clearInterval(trySet), 5000);
+        }
+    }
+
+    // ── 4. Isi deskripsi ───────────────────────
+    const deskEl = document.getElementById('deskripsi');
+    if (deskEl && data.deskripsi) {
+        deskEl.value = data.deskripsi;
+        deskEl.dispatchEvent(new Event('input')); // trigger counter karakter
+        FormValidator.clearError('deskripsi');
+        FormValidator.showSuccess('deskripsi');
+
+        // Trigger suggestion dropdown dari isi deskripsi
+        setTimeout(() => showDropdown(scanDeskripsi(data.deskripsi)), 500);
+    }
+
+    // ── 5. Pilih jenis pelanggaran otomatis ────
+    // violation_categories contoh: "Fisik & Verbal"
+    // Pilih 1 violation pertama per kategori sebagai referensi awal
+    if (data.violation_categories) {
+        setTimeout(() => {
+            const cats = data.violation_categories.split(' & ').map(c => c.trim());
+            (_allViolations || []).forEach(vt => {
+                if (!cats.includes(vt.category)) return;
+                if (_selectedViolations.find(s => s.id === vt.id)) return;
+                if (_selectedViolations.find(s => s.category === vt.category)) return;
+                selectViolation(vt.id, vt.name, vt.category, vt.weight);
+            });
+        }, 800);
+    }
+
+    // ── 6. Preview foto lama sebagai referensi ─
+    if (data.existing_files?.length > 0) {
+        const deskGroup = document.getElementById('deskripsi')?.closest('.form-group');
+        if (deskGroup) {
+            const previewWrap = document.createElement('div');
+            previewWrap.style.cssText = [
+                'padding:12px 14px', 'margin-top:12px',
+                'background:#fffbeb', 'border:1.5px solid #fde68a',
+                'border-radius:10px', 'font-size:.8rem',
+            ].join(';');
+            previewWrap.innerHTML = `
+                <div style="font-weight:600;color:#92400e;margin-bottom:6px;">
+                    📎 Foto/video dari laporan sebelumnya — upload ulang jika masih relevan:
+                </div>
+                <div style="font-size:.75rem;color:#b45309;margin-bottom:8px;">
+                    File tidak dapat diupload otomatis. Unduh lalu upload kembali secara manual jika diperlukan.
+                </div>
+                ${data.existing_files.map(f => `
+                    <a href="${f.url}" target="_blank" style="
+                        display:inline-flex;align-items:center;gap:5px;
+                        font-size:.79rem;color:#2563eb;
+                        margin-right:12px;margin-bottom:4px;
+                        text-decoration:underline;text-underline-offset:2px;
+                    ">📎 ${f.original_name}</a>
+                `).join('')}
+            `;
+            deskGroup.insertAdjacentElement('afterend', previewWrap);
+        }
+    }
+})();
+

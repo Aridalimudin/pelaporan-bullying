@@ -1073,46 +1073,47 @@ function getMajorByGrade(grade) {
     return pair ? pair.major : null;
 }
 
-/* =============================================================
-   EVENT LISTENERS
-============================================================= */
-document.getElementById('searchInput').addEventListener('input', applyFilter);
-document.getElementById('filterKelas').addEventListener('change', applyFilter);
-document.getElementById('filterJurusan').addEventListener('change', applyFilter);
+if (document.getElementById('tableBody')) {
+    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    document.getElementById('filterKelas').addEventListener('change', applyFilter);
+    document.getElementById('filterJurusan').addEventListener('change', applyFilter);
 
-// Tutup modal saat klik overlay (area di luar panel)
-document.getElementById('modalSiswa').addEventListener('click', function (e) {
-    if (e.target === this) closeSiswaModal();
-});
-document.getElementById('modalHapusSiswa').addEventListener('click', function (e) {
-    if (e.target === this) closeHapusSiswa();
-});
-document.getElementById('modalKelasMgr').addEventListener('click', function (e) {
-    if (e.target === this) closeKelasMgr();
-});
-document.getElementById('modalDeleteConfirm').addEventListener('click', function (e) {
-    if (e.target === this) closeDeleteConfirm();
-});
+    // Tutup modal saat klik overlay (area di luar panel)
+    document.getElementById('modalSiswa').addEventListener('click', function (e) {
+        if (e.target === this) closeSiswaModal();
+    });
+    document.getElementById('modalHapusSiswa').addEventListener('click', function (e) {
+        if (e.target === this) closeHapusSiswa();
+    });
+    document.getElementById('modalKelasMgr').addEventListener('click', function (e) {
+        if (e.target === this) closeKelasMgr();
+    });
+    document.getElementById('modalDeleteConfirm').addEventListener('click', function (e) {
+        if (e.target === this) closeDeleteConfirm();
+    });
+}
 
 /* =============================================================
    INIT — Jalankan saat DOM siap
-============================================================= */
+   ============================================================= */
 document.addEventListener('DOMContentLoaded', function () {
-    loadAll();
+    if (document.getElementById('tableBody')) {
+        loadAll();
 
-    // Live preview input kelas baru di modal kelola kelas
-    var inputKelas = document.getElementById('inputKelasBaru');
-    if (inputKelas) {
-        inputKelas.addEventListener('input', function () {
-            kmgrUpdatePreview();
-            var errEl = document.getElementById('kmgrKelasErr');
-            if (errEl) errEl.style.display = 'none';
-        });
-    }
-     var smTingkat = document.getElementById('smTingkat');
-    if (smTingkat) {
-        smTingkat.addEventListener('change', function () {
-            filterJurusanByKelas(this.value);
-        });
+        // Live preview input kelas baru di modal kelola kelas
+        var inputKelas = document.getElementById('inputKelasBaru');
+        if (inputKelas) {
+            inputKelas.addEventListener('input', function () {
+                kmgrUpdatePreview();
+                var errEl = document.getElementById('kmgrKelasErr');
+                if (errEl) errEl.style.display = 'none';
+            });
+        }
+        var smTingkat = document.getElementById('smTingkat');
+        if (smTingkat) {
+            smTingkat.addEventListener('change', function () {
+                filterJurusanByKelas(this.value);
+            });
+        }
     }
 });

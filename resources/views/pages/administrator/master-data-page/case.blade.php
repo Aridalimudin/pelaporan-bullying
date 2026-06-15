@@ -198,8 +198,27 @@
 </style>
 
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
-<script src="{{ asset('js/master-admin-page.js') }}"></script>
 <script>
+/* ─────────────────────────────────────────
+   MODAL OVERLAY HELPERS
+   (Inlined to decouple from master-admin-page.js)
+───────────────────────────────────────── */
+function mdOpenOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function mdCloseOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
 /* ─────────────────────────────────────────
    API ENDPOINTS
 ───────────────────────────────────────── */

@@ -32,6 +32,16 @@
                     <option value="Sedang">Sedang</option>
                     <option value="Berat">Berat</option>
                 </select>
+                <button class="td-btn-tambah" onclick="openKorbanPage()"
+                    style="background:linear-gradient(135deg,#2563eb,#1d4ed8); margin-right:8px;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 
+                            11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 
+                            9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    Kelola Tindakan Korban
+                </button>
                 <button class="td-btn-tambah" onclick="openTdModal()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
@@ -196,6 +206,136 @@
     </div>
 </div>
 
+<!-- Modal Kelola Tindakan Korban -->
+<div class="td-overlay" id="modalKorban" style="display:none">
+    <div class="td-panel" style="max-width:620px;">
+        
+        <!-- Header -->
+        <div class="td-modal-header" 
+            style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">
+            <div class="td-modal-header-left">
+                <div class="td-modal-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 
+                            11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 
+                            12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 
+                            9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="td-modal-sub">Master Data</p>
+                    <h3 class="td-modal-title">Kelola Tindakan untuk Korban</h3>
+                </div>
+            </div>
+            <button class="td-modal-close" onclick="closeKorbanPage()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" 
+                        stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body: daftar + form tambah -->
+        <div class="td-modal-body" style="max-height:70vh;overflow-y:auto;">
+
+            <!-- Tombol tambah baru -->
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <button type="button" onclick="openFormTambahKorban()"
+                    id="btnShowFormKorban"
+                    style="
+                        display:flex;align-items:center;gap:6px;
+                        padding:8px 16px;border-radius:9px;border:none;
+                        background:#2563eb;color:white;font-family:inherit;
+                        font-size:.82rem;font-weight:700;cursor:pointer;
+                    ">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+                        width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Tambah Tindakan Korban
+                </button>
+            </div>
+
+            <!-- Form tambah/edit (accordion, tersembunyi default) -->
+            <div id="formKorban" style="display:none;margin-bottom:14px;
+                background:#eff6ff;border:1.5px solid #bfdbfe;
+                border-radius:12px;padding:14px;">
+                
+                <div style="font-size:.65rem;font-weight:800;letter-spacing:.1em;
+                    color:#1e40af;margin-bottom:12px;" id="formKorbanTitle">
+                    ＋ TAMBAH TINDAKAN KORBAN
+                </div>
+
+                <div class="td-field" style="margin-bottom:10px;">
+                    <label class="td-label">
+                        Nama Tindakan <span class="td-req">*</span>
+                    </label>
+                    <input class="td-input" type="text" id="korbanNama"
+                        placeholder="cth: Konseling Korban, Pendampingan Psikolog...">
+                </div>
+
+                <div class="td-field" style="margin-bottom:10px;">
+                    <label class="td-label">
+                        Deskripsi 
+                        <span style="font-size:10.5px;color:#9ca3af;font-weight:500">
+                            (opsional)
+                        </span>
+                    </label>
+                    <textarea class="td-input" id="korbanDeskripsi" rows="2"
+                        placeholder="Jelaskan tindakan penanganan untuk korban ini..."
+                        style="resize:vertical"></textarea>
+                </div>
+
+                <div class="td-field" style="margin-bottom:12px;">
+                    <label class="td-label">
+                        Catatan Pelaksanaan
+                        <span style="font-size:10.5px;color:#9ca3af;font-weight:500">
+                            (opsional)
+                        </span>
+                    </label>
+                    <input class="td-input" type="text" id="korbanCatatan"
+                        placeholder="cth: Dilaksanakan oleh Guru BK, 3 sesi...">
+                </div>
+
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button type="button" onclick="closeFormKorban()"
+                        style="padding:8px 16px;border-radius:8px;
+                        border:1.5px solid #d1d5db;background:white;
+                        font-family:inherit;font-size:.82rem;font-weight:600;
+                        color:#374151;cursor:pointer;">
+                        Batal
+                    </button>
+                    <button type="button" onclick="saveKorbanAction()"
+                        id="btnSaveKorban"
+                        style="padding:8px 16px;border-radius:8px;border:none;
+                        background:#2563eb;color:white;font-family:inherit;
+                        font-size:.82rem;font-weight:700;cursor:pointer;
+                        display:flex;align-items:center;gap:6px;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+                            width="13" height="13">
+                            <path stroke-linecap="round" stroke-linejoin="round" 
+                                stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span id="btnSaveKorbanLabel">Simpan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daftar tindakan korban -->
+            <div id="listKorbanActions">
+                <!-- diisi oleh renderKorbanList() -->
+            </div>
+
+        </div>
+
+        <div class="td-modal-footer">
+            <button class="td-btn-cancel" onclick="closeKorbanPage()">Tutup</button>
+        </div>
+    </div>
+</div>
+
 <style>
 .btn-loading{opacity:.6;pointer-events:none;cursor:not-allowed}
 
@@ -233,14 +373,37 @@
 </style>
 
 <script src="{{ asset('js/report-admin-page.js') }}"></script>
-<script src="{{ asset('js/master-admin-page.js') }}"></script>
 <script>
 /* ─────────────────────────────────────────
-   API ENDPOINTS
+   MODAL OVERLAY HELPERS
+   (Inlined to decouple from master-admin-page.js)
 ───────────────────────────────────────── */
+function mdOpenOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function mdCloseOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) {
+        el.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+/* ─────────────────────────────────────────
+   API ENDPOINTS
+   ───────────────────────────────────────── */
 var API_TD_LIST   = '{{ route("discipline-actions.api.list") }}';
 var API_TD_SAVE   = '{{ route("discipline-actions.api.save") }}';
 var API_TD_DELETE = '{{ route("discipline-actions.api.delete", ":id") }}'.replace('/:id', '');
+
+var API_KORBAN_LIST   = '{{ route("korban-actions.index") }}';
+var API_KORBAN_SAVE   = '{{ route("korban-actions.store") }}';
+var API_KORBAN_DELETE = '{{ route("korban-actions.index") }}';
 
 /* ─────────────────────────────────────────
    CSRF TOKEN
@@ -276,6 +439,9 @@ async function apiFetchTd(url, options) {
 var _tdAll     = [];
 var _editTdId  = null;
 var _hapusTdId = null;
+
+var _korbanActions = [];
+var _editKorbanId  = null;
 
 var SVG_EDIT   = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
 var SVG_DELETE = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
@@ -561,6 +727,212 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     loadTd();
+});
+
+// Buka modal kelola korban
+async function openKorbanPage() {
+    await loadKorbanActions();
+    mdOpenOverlay('modalKorban');
+}
+
+function closeKorbanPage() {
+    closeFormKorban();
+    mdCloseOverlay('modalKorban');
+}
+
+// Load data dari API
+async function loadKorbanActions() {
+    try {
+        const res = await apiFetchTd(API_KORBAN_LIST);
+        _korbanActions = Array.isArray(res) ? res : (res.data || []);
+        renderKorbanList();
+    } catch(e) {
+        console.error('Gagal load tindakan korban', e);
+    }
+}
+
+// Render daftar tindakan korban
+function renderKorbanList() {
+    const list = document.getElementById('listKorbanActions');
+    if (!list) return;
+
+    if (_korbanActions.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center;padding:32px 20px;color:#9ca3af;">
+                <div style="font-size:2rem;margin-bottom:8px;">🛡️</div>
+                <div style="font-size:.85rem;font-weight:600;">
+                    Belum ada tindakan korban
+                </div>
+                <div style="font-size:.78rem;margin-top:4px;">
+                    Klik "Tambah Tindakan Korban" untuk menambahkan
+                </div>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = _korbanActions.map((item, i) => `
+        <div style="
+            display:flex;align-items:flex-start;justify-content:space-between;
+            gap:12px;padding:12px 14px;
+            background:${i % 2 === 0 ? '#f8fafc' : 'white'};
+            border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:8px;
+        ">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:.88rem;color:#111827;
+                    margin-bottom:4px;">
+                    🛡️ ${item.name}
+                </div>
+                ${item.description ? `
+                <div style="font-size:.78rem;color:#6b7280;
+                    line-height:1.5;margin-bottom:3px;">
+                    ${item.description}
+                </div>` : ''}
+                ${item.catatan ? `
+                <div style="font-size:.74rem;color:#9ca3af;font-style:italic;">
+                    📌 ${item.catatan}
+                </div>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+                <button onclick="editKorbanAction(${item.id})"
+                    style="width:32px;height:32px;border-radius:8px;border:none;
+                    background:#eff6ff;color:#2563eb;cursor:pointer;
+                    display:flex;align-items:center;justify-content:center;"
+                    title="Edit">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+                        width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 
+                            002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 
+                            112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </button>
+                <button onclick="hapusKorbanAction(${item.id}, '${(item.name||'').replace(/'/g,"\\'")}' )"
+                    style="width:32px;height:32px;border-radius:8px;border:none;
+                    background:#fef2f2;color:#dc2626;cursor:pointer;
+                    display:flex;align-items:center;justify-content:center;"
+                    title="Hapus">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" 
+                        width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M19 7l-.867 12.142A2 2 0 
+                            0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 
+                            4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 
+                            1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Buka form tambah
+function openFormTambahKorban() {
+    _editKorbanId = null;
+    document.getElementById('korbanNama').value      = '';
+    document.getElementById('korbanDeskripsi').value = '';
+    document.getElementById('korbanCatatan').value   = '';
+    document.getElementById('formKorbanTitle').textContent = '＋ TAMBAH TINDAKAN KORBAN';
+    document.getElementById('btnSaveKorbanLabel').textContent = 'Simpan';
+    document.getElementById('formKorban').style.display = '';
+    document.getElementById('korbanNama').focus();
+}
+
+// Buka form edit
+function editKorbanAction(id) {
+    const item = _korbanActions.find(x => x.id == id);
+    if (!item) return;
+    _editKorbanId = id;
+    document.getElementById('korbanNama').value      = item.name        || '';
+    document.getElementById('korbanDeskripsi').value = item.description || '';
+    document.getElementById('korbanCatatan').value   = item.catatan     || '';
+    document.getElementById('formKorbanTitle').textContent = '✏️ EDIT TINDAKAN KORBAN';
+    document.getElementById('btnSaveKorbanLabel').textContent = 'Update';
+    document.getElementById('formKorban').style.display = '';
+    document.getElementById('korbanNama').focus();
+    document.getElementById('formKorban').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// Tutup form
+function closeFormKorban() {
+    _editKorbanId = null;
+    document.getElementById('formKorban').style.display = 'none';
+    document.getElementById('korbanNama').value      = '';
+    document.getElementById('korbanDeskripsi').value = '';
+    document.getElementById('korbanCatatan').value   = '';
+}
+
+// Simpan tindakan korban
+async function saveKorbanAction() {
+    const nama = document.getElementById('korbanNama')?.value?.trim();
+    if (!nama) {
+        document.getElementById('korbanNama').focus();
+        if (typeof Toast !== 'undefined') {
+            Toast.show('error', 'Validasi', 'Nama tindakan wajib diisi.');
+        }
+        return;
+    }
+
+    const btn = document.getElementById('btnSaveKorban');
+    if (btn) { btn.style.opacity = '.6'; btn.style.pointerEvents = 'none'; }
+
+    const payload = {
+        id          : _editKorbanId || null,
+        name        : nama,
+        description : document.getElementById('korbanDeskripsi')?.value?.trim() || null,
+        catatan     : document.getElementById('korbanCatatan')?.value?.trim()   || null,
+    };
+
+    const url    = _editKorbanId 
+        ? API_KORBAN_SAVE + '/' + _editKorbanId 
+        : API_KORBAN_SAVE;
+    const method = _editKorbanId ? 'PUT' : 'POST';
+
+    try {
+        const res = await apiFetchTd(url, { method, body: payload });
+        if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+
+        if (res.status === 'success' || res.id) {
+            closeFormKorban();
+            await loadKorbanActions();
+            if (typeof loadKorbanActionsForSelect === 'function') {
+                loadKorbanActionsForSelect();
+            }
+            if (typeof Toast !== 'undefined') {
+                Toast.show('success', 'Berhasil', 
+                    _editKorbanId ? 'Tindakan korban diperbarui.' : 'Tindakan korban ditambahkan.');
+            }
+        } else {
+            if (typeof Toast !== 'undefined') {
+                Toast.show('error', 'Gagal', res.message || 'Gagal menyimpan.');
+            }
+        }
+    } catch(err) {
+        if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+        console.error(err);
+    }
+}
+
+// Hapus tindakan korban
+async function hapusKorbanAction(id, nama) {
+    if (!confirm(`Hapus tindakan korban "${nama}"?`)) return;
+    
+    const res = await apiFetchTd(API_KORBAN_DELETE + '/' + id, { method: 'DELETE' });
+    
+    if (res.status === 'success') {
+        await loadKorbanActions();
+        if (typeof Toast !== 'undefined') {
+            Toast.show('success', 'Dihapus', 'Tindakan korban dihapus.');
+        }
+    } else {
+        if (typeof Toast !== 'undefined') {
+            Toast.show('error', 'Gagal', res.message || 'Gagal menghapus.');
+        }
+    }
+}
+
+// Tutup modal jika klik backdrop
+document.getElementById('modalKorban').addEventListener('click', function(e) { 
+    if (e.target === this) closeKorbanPage(); 
 });
 </script>
 @endsection

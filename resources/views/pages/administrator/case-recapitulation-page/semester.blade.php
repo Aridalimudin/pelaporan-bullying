@@ -167,6 +167,10 @@ async function loadRekap() {
         document.getElementById('semester-pelaporSiswa').textContent = stats.pelaporSiswa ?? 0;
         document.getElementById('semester-pelaporOrtu').textContent  = stats.pelaporOrtu  ?? 0;
 
+        // Tambahan 2 baris update status penanganan
+        document.getElementById('semester-belumSelesai').textContent     = stats.belumSelesai ?? 0;
+        document.getElementById('semester-sedangDitangani').textContent = stats.sedangDitangani ?? 0;
+
 
         document.getElementById('chartSubLabel').textContent = `Total laporan per bulan — ${stats.periodeLabel}`;
         document.getElementById('tableSubLabel').textContent = `Per kelas — ${stats.periodeLabel}`;

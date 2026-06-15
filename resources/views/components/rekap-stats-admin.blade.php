@@ -8,6 +8,10 @@
     // Tambahan 2 baris variabel pelapor
     $pelaporSiswa = $pelaporSiswa ?? 0;
     $pelaporOrtu  = $pelaporOrtu  ?? 0;
+
+    // Tambahan 2 baris variabel status penanganan
+    $belumSelesai = $belumSelesai ?? 0;
+    $sedangDitangani = $sedangDitangani ?? 0;
     
     $pct                 = (int) $tingkatPenyelesaian;
 
@@ -78,7 +82,38 @@
 
 </div>
 
-{{-- Baris 2: Pelapor (Grid Baru sesuai arahan) --}}
+{{-- Baris 2: Status Penanganan (Unresolved & Being Handled) --}}
+<div class="rs-grid" style="grid-template-columns: repeat(2,1fr); margin-top:-6px; margin-bottom:14px;">
+    <div class="rs-card rs-red">
+        <div class="rs-icon-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        </div>
+        <div class="rs-body">
+            <span class="rs-val" id="{{ $idPrefix }}-belumSelesai">{{ $belumSelesai }}</span>
+            <span class="rs-lbl">Belum Selesai</span>
+            <span class="rs-period">perlu ditindaklanjuti</span>
+        </div>
+    </div>
+
+    <div class="rs-card rs-cyan">
+        <div class="rs-icon-wrap">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+        </div>
+        <div class="rs-body">
+            <span class="rs-val" id="{{ $idPrefix }}-sedangDitangani">{{ $sedangDitangani }}</span>
+            <span class="rs-lbl">Sedang Ditangani</span>
+            <span class="rs-period">dalam proses penanganan</span>
+        </div>
+    </div>
+</div>
+
+{{-- Baris 3: Pelapor --}}
 <div class="rs-grid" style="grid-template-columns: repeat(2,1fr); margin-top:-6px">
     <div class="rs-card rs-purple">
         <div class="rs-icon-wrap">
@@ -141,9 +176,11 @@
 .rs-amber .rs-icon-wrap { background: #fffbeb; color: #d97706; }
 .rs-green .rs-icon-wrap { background: #ecfdf5; color: #10b981; }
 
-/* Tambahan 2 baris style pelapor */
+/* Tambahan 2 baris style pelapor & status */
 .rs-purple .rs-icon-wrap { background: #f5f3ff; color: #7c3aed; }
 .rs-rose   .rs-icon-wrap { background: #fff1f2; color: #e11d48; }
+.rs-red    .rs-icon-wrap { background: #fef2f2; color: #ef4444; }
+.rs-cyan   .rs-icon-wrap { background: #ecfeff; color: #0891b2; }
 
 .rs-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 .rs-val  { font-size: 1.7rem; font-weight: 800; color: #111827; line-height: 1; }
