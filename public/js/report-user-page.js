@@ -947,6 +947,11 @@ if (childNameInput && childNameDropdown) {
     childNameInput.addEventListener('input', function() {
         const q = this.value;
 
+        // Reset memory of last selected child if the input is cleared completely
+        if (q.trim() === '') {
+            _lastSelectedChild = null;
+        }
+
         // If it matches the last selected child's name, re-select it and skip autocomplete fetch
         if (_lastSelectedChild && q.trim().toLowerCase() === _lastSelectedChild.fullname.trim().toLowerCase()) {
             selectChild(_lastSelectedChild);
