@@ -157,6 +157,10 @@
                         <span class="info-key">Pelapor</span>
                         <span class="info-val" id="sideNama">—</span>
                     </div>
+                    <div class="info-row" id="sideChildNameRow" style="display: none;">
+                        <span class="info-key">Nama Anak</span>
+                        <span class="info-val" id="sideChildName">—</span>
+                    </div>
                     <div class="info-row">
                         <span class="info-key">NIS</span>
                         <span class="info-val mono" id="sideNis">—</span>

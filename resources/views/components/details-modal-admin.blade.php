@@ -802,12 +802,12 @@
             const isOrtu = data.reporter_type === 'ortu';
             const NA = '<span style="color:#9ca3af;font-style:italic;font-size:.78rem;">Tidak diisi</span>';
 
-            // Sembunyikan field NIS & Kelas untuk ortu
+            // Sembunyikan field NIS & Kelas untuk ortu jika tidak ada NIS (manual fill)
             const mdNisEl   = document.getElementById('mdNis')?.closest('.md-f');
             const mdKelasEl = document.getElementById('mdKelas')?.closest('.md-f');
             const mdNamaEl  = document.getElementById('mdNama')?.closest('.md-f');
-            if (mdNisEl)   mdNisEl.style.display   = isOrtu ? 'none' : '';
-            if (mdKelasEl) mdKelasEl.style.display  = isOrtu ? 'none' : '';
+            if (mdNisEl)   mdNisEl.style.display   = (isOrtu && !data.nis) ? 'none' : '';
+            if (mdKelasEl) mdKelasEl.style.display  = (isOrtu && !data.nis) ? 'none' : '';
 
             if (isOrtu) {
                 // Ubah label NAMA jadi NAMA ORANG TUA / WALI
@@ -819,6 +819,12 @@
                 if (emailEl) emailEl.innerHTML = data.email
                     ? data.email
                     : NA;
+
+                // Bind NIS & Kelas jika ada siswa terhubung via autocomplete
+                if (data.nis) {
+                    _T('mdNis',   data.nis);
+                    _T('mdKelas', data.kelas || data.child_grade || '');
+                }
             } else {
                 if (mdNamaEl) mdNamaEl.querySelector('.md-fl').textContent = 'NAMA';
                 _T('mdNama',  data.nama);

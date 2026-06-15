@@ -20,7 +20,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <span class="text-sm font-semibold text-gray-700 mb-1">Klik atau seret bukti pendukung</span>
-                <span class="text-xs text-gray-500">Foto (JPG, PNG, WEBP) maks. 5MB · Video (MP4, MOV) maks. 50MB</span>
+                <span class="text-xs text-gray-500">Foto (JPG, PNG, WEBP) & Video (MP4, MOV) maks. 5MB</span>
             </div>
         </label>
     </div>
@@ -205,8 +205,8 @@ let selectedFiles = [];
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
-const MAX_IMAGE_SIZE = 5  * 1024 * 1024;  // 5 MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;  // 50 MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;  // 5 MB
+const MAX_VIDEO_SIZE = 5 * 1024 * 1024;  // 5 MB
 const MAX_FILES      = 5;
 
 function handleFileSelect(event) {
@@ -228,7 +228,7 @@ function handleFileSelect(event) {
         }
 
         const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
-        const label   = isImage ? '5MB' : '50MB';
+        const label   = '5MB';
         if (file.size > maxSize) {
             alert(`File "${file.name}" terlalu besar. Batas: ${label}.`);
             return;

@@ -82,7 +82,8 @@ class RekapController extends Controller
             ->selectRaw("
                 CONCAT(students.grade, ' ', students.major) as kelas,
                 COUNT(*) as total,
-                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai
+                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai,
+                SUM(CASE WHEN reports.status = 'ditolak' THEN 1 ELSE 0 END) as ditolak
             ")
             ->whereMonth('reports.created_at', $bulan)
             ->whereYear('reports.created_at', $tahun)
@@ -93,6 +94,7 @@ class RekapController extends Controller
                 'kelas'   => $r->kelas,
                 'total'   => (int) $r->total,
                 'selesai' => (int) $r->selesai,
+                'ditolak' => (int) $r->ditolak,
             ])->values();
 
         return response()->json([
@@ -131,7 +133,7 @@ class RekapController extends Controller
 
         // Tambahkan kolom ditolak ke tabel
         $tabel = collect($data['tabel'])->map(function ($row) {
-            $row['ditolak'] = $row['total'] - $row['selesai'];
+            $row['ditolak'] = $row['ditolak'] ?? 0;
             return $row;
         })->toArray();
 
@@ -246,7 +248,8 @@ class RekapController extends Controller
             ->selectRaw("
                 CONCAT(students.grade, ' ', students.major) as kelas,
                 COUNT(*) as total,
-                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai
+                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai,
+                SUM(CASE WHEN reports.status = 'ditolak' THEN 1 ELSE 0 END) as ditolak
             ")
             ->whereYear('reports.created_at', $tahunFilter)
             ->whereBetween(DB::raw('MONTH(reports.created_at)'), [$bulanMulai, $bulanAkhir])
@@ -257,6 +260,7 @@ class RekapController extends Controller
                 'kelas'   => $r->kelas,
                 'total'   => (int) $r->total,
                 'selesai' => (int) $r->selesai,
+                'ditolak' => (int) $r->ditolak,
             ])->values();
 
         return response()->json([
@@ -287,7 +291,7 @@ class RekapController extends Controller
         $data         = json_decode($dataResponse->getContent(), true)['data'];
 
         $tabel = collect($data['tabel'])->map(function ($row) {
-            $row['ditolak'] = $row['total'] - $row['selesai'];
+            $row['ditolak'] = $row['ditolak'] ?? 0;
             return $row;
         })->toArray();
 
@@ -364,7 +368,8 @@ class RekapController extends Controller
             ->selectRaw("
                 CONCAT(students.grade, ' ', students.major) as kelas,
                 COUNT(*) as total,
-                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai
+                SUM(CASE WHEN reports.status = 'selesai' THEN 1 ELSE 0 END) as selesai,
+                SUM(CASE WHEN reports.status = 'ditolak' THEN 1 ELSE 0 END) as ditolak
             ")
             ->whereYear('reports.created_at', $tahun)
             ->groupBy('students.grade', 'students.major')
@@ -374,6 +379,7 @@ class RekapController extends Controller
                 'kelas'   => $r->kelas,
                 'total'   => (int) $r->total,
                 'selesai' => (int) $r->selesai,
+                'ditolak' => (int) $r->ditolak,
             ])->values();
 
         return response()->json([
@@ -403,7 +409,7 @@ class RekapController extends Controller
         $data         = json_decode($dataResponse->getContent(), true)['data'];
 
         $tabel = collect($data['tabel'])->map(function ($row) {
-            $row['ditolak'] = $row['total'] - $row['selesai'];
+            $row['ditolak'] = $row['ditolak'] ?? 0;
             return $row;
         })->toArray();
 

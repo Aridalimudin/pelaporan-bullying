@@ -367,6 +367,10 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             formData.append('reporter_phone', document.getElementById('reporter_phone').value.trim());
             formData.append('child_name',     document.getElementById('child_name').value.trim());
             formData.append('child_grade',    document.getElementById('child_grade').value);
+            
+            const studentId = document.getElementById('student_id').value;
+            if (studentId) formData.append('student_id', studentId);
+            
             const emailOrtu = document.getElementById('email_ortu').value.trim();
             if (emailOrtu) formData.append('email', emailOrtu);
         }
@@ -380,8 +384,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
                 return;
             }
 
-            const IMG_MAX   = 5  * 1024 * 1024;
-            const VIDEO_MAX = 50 * 1024 * 1024;
+            const IMG_MAX   = 5 * 1024 * 1024;
+            const VIDEO_MAX = 5 * 1024 * 1024;
             const videoTypes = ['video/mp4','video/quicktime','video/x-msvideo','video/webm'];
             const imgTypes   = ['image/jpeg','image/jpg','image/png','image/webp'];
 
@@ -404,7 +408,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
                 }
 
                 if (isVideo && file.size > VIDEO_MAX) {
-                    alert(`Video "${file.name}" terlalu besar. Maksimal 50MB.`);
+                    alert(`Video "${file.name}" terlalu besar. Maksimal 5MB.`);
                     submitBtn.disabled  = false;
                     submitBtn.innerHTML = originalContent;
                     return;
@@ -427,7 +431,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             data = await res.json();
         } else {
             if (res.status === 413) {
-                alert('File yang Anda kirim terlalu besar. Batas ukuran: foto maks 5MB, video maks 50MB.');
+                alert('File yang Anda kirim terlalu besar. Batas ukuran: foto dan video maks 5MB.');
             } else {
                 alert(`Terjadi kesalahan server (${res.status}). Coba lagi.`);
             }
@@ -928,4 +932,165 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
         }
     }
 })();
+
+/* ─── Child Name Autocomplete (Orang Tua / Wali) ─── */
+let _childSuggestionTimeout = null;
+let _activeChildSuggestionIdx = -1;
+let _currentChildMatches = [];
+let _lastSelectedChild = null;
+
+const childNameInput = document.getElementById('child_name');
+const childNameDropdown = document.getElementById('child_name-dropdown');
+const childGradeSelect = document.getElementById('child_grade');
+
+if (childNameInput && childNameDropdown) {
+    childNameInput.addEventListener('input', function() {
+        const q = this.value;
+
+        // If it matches the last selected child's name, re-select it and skip autocomplete fetch
+        if (_lastSelectedChild && q.trim().toLowerCase() === _lastSelectedChild.fullname.trim().toLowerCase()) {
+            selectChild(_lastSelectedChild);
+            return;
+        }
+
+        // Unlock child class and clear student_id when parent edits the child's name
+        if (childGradeSelect) childGradeSelect.disabled = false;
+        const studentIdEl = document.getElementById('student_id');
+        if (studentIdEl) studentIdEl.value = '';
+
+        clearTimeout(_childSuggestionTimeout);
+        const qTrim = q.trim();
+
+        if (qTrim.length < 2) {
+            hideChildDropdown();
+            return;
+        }
+
+        _childSuggestionTimeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/students/autocomplete?q=${encodeURIComponent(qTrim)}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    showChildDropdown(json.data);
+                } else {
+                    hideChildDropdown();
+                }
+            } catch(e) {
+                console.error(e);
+                hideChildDropdown();
+            }
+        }, 200);
+    });
+
+    childNameInput.addEventListener('keydown', function(e) {
+        if (childNameDropdown.classList.contains('hidden')) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveChildIdx(Math.min(_activeChildSuggestionIdx + 1, _currentChildMatches.length - 1));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveChildIdx(Math.max(_activeChildSuggestionIdx - 1, 0));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (_activeChildSuggestionIdx >= 0 && _currentChildMatches[_activeChildSuggestionIdx]) {
+                const s = _currentChildMatches[_activeChildSuggestionIdx];
+                selectChild(s);
+            }
+        } else if (e.key === 'Escape') {
+            hideChildDropdown();
+        }
+    });
+
+    childNameInput.addEventListener('blur', function() {
+        setTimeout(() => hideChildDropdown(), 250);
+    });
+}
+
+function showChildDropdown(matches) {
+    _currentChildMatches = matches;
+    _activeChildSuggestionIdx = -1;
+
+    if (matches.length === 0) {
+        childNameDropdown.classList.add('hidden');
+        childNameDropdown.innerHTML = '';
+        return;
+    }
+
+    childNameDropdown.innerHTML = matches.map((s, i) => `
+        <div class="student-suggestion-item" data-idx="${i}"
+            onmouseover="setActiveChildIdx(${i})"
+            onmouseout="setActiveChildIdx(-1)"
+            onmousedown="selectChildByIdx(${i})">
+            <div style="display:flex; flex-direction:column; text-align:left;">
+                <span style="font-weight:600; color:#111827;">${s.fullname}</span>
+                <span style="font-size:0.72rem; color:#6b7280;">NIS: ${s.nis} · Kelas: ${s.grade} ${s.major}</span>
+            </div>
+        </div>
+    `).join('');
+
+    childNameDropdown.classList.remove('hidden');
+}
+
+function hideChildDropdown() {
+    childNameDropdown.classList.add('hidden');
+    _activeChildSuggestionIdx = -1;
+}
+
+function setActiveChildIdx(idx) {
+    _activeChildSuggestionIdx = idx;
+    const items = childNameDropdown.querySelectorAll('.student-suggestion-item');
+    items.forEach((el, i) => {
+        el.classList.toggle('student-suggestion-active', i === idx);
+    });
+}
+
+// Global functions so they can be called from inline onmousedown/onclick
+window.selectChildByIdx = function(idx) {
+    const s = _currentChildMatches[idx];
+    if (s) selectChild(s);
+};
+
+window.setActiveChildIdx = function(idx) {
+    setActiveChildIdx(idx);
+};
+
+function selectChild(student) {
+    _lastSelectedChild = student;
+    childNameInput.value = student.fullname;
+    
+    // Set child_grade select value
+    const gradeLabel = `${student.grade} ${student.major}`.trim();
+    
+    // Cek apakah opsi kelas tersebut ada di select
+    let hasOption = Array.from(childGradeSelect.options).some(opt => opt.value === gradeLabel);
+    
+    if (hasOption) {
+        childGradeSelect.value = gradeLabel;
+    } else {
+        // Jika opsi belum termuat/tidak ada, tambahkan opsi sementara
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = gradeLabel;
+        childGradeSelect.appendChild(opt);
+        childGradeSelect.value = gradeLabel;
+    }
+
+    // Kunci dropdown kelas dan simpan student_id anak
+    if (childGradeSelect) childGradeSelect.disabled = true;
+    const studentIdEl = document.getElementById('student_id');
+    if (studentIdEl) studentIdEl.value = student.id;
+    
+    // Trigger validation update if exists
+    if (typeof FormValidator !== 'undefined') {
+        FormValidator.clearError('child_name');
+        FormValidator.clearError('child_grade');
+        FormValidator.showSuccess('child_name');
+        FormValidator.showSuccess('child_grade');
+    }
+
+    hideChildDropdown();
+}
+
 

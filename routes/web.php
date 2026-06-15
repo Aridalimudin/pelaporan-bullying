@@ -145,7 +145,6 @@ Route::middleware('auth:web')->group(function () {
             Route::post('/reports/{id}/persons',               [ReportController::class, 'storePerson']);
             Route::delete('/reports/{id}/persons/{personId}',  [ReportController::class, 'destroyPerson']);
             Route::post('/reports/{id}/follow-up',             [ReportController::class, 'storeFollowUp']);
-            Route::put('/reports/{id}/follow-up/{followUpId}', [ReportController::class, 'updateFollowUp']);
             Route::post('/reports/{id}/reminder-to-reporter',  [ReportController::class, 'sendReminderToReporter'])->name('api.admin.reports.reminder-reporter');
         });
     });
@@ -192,6 +191,8 @@ Route::middleware('auth:web')->group(function () {
 
     Route::middleware('permission:manage-master-data')->group(function () {
 
+        Route::apiResource('api/admin/korban-actions', KorbanActionController::class);
+
         Route::prefix('SIP-Bullying')->group(function () {
 
             // Data Siswa
@@ -230,8 +231,6 @@ Route::middleware('auth:web')->group(function () {
                 Route::post('/save',          [DisciplineActionController::class, 'store'])->name('discipline-actions.api.save');
                 Route::delete('/delete/{id}', [DisciplineActionController::class, 'destroy'])->name('discipline-actions.api.delete');
             });
-
-            Route::apiResource('api/admin/korban-actions', KorbanActionController::class);
         });
     });
 

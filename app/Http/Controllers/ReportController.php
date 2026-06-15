@@ -40,7 +40,7 @@ class ReportController extends Controller
         'video/webm',
     ];
 
-    private const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file (video bisa besar)
+    private const MAX_FILE_SIZE = 5  * 1024 * 1024; // 5MB per file
     private const MAX_IMG_SIZE  = 5  * 1024 * 1024; // 5MB untuk gambar
 
     private function notifyAllUsers(
@@ -182,6 +182,7 @@ class ReportController extends Controller
             'child_name'     => 'required|string|max:150',
             'child_grade'    => 'required|string|max:50',
             'email'          => 'nullable|email|max:255',
+            'student_id'     => 'nullable|exists:students,id',
         ];
 
         $rules = array_merge($baseRules, $reporterType === 'ortu' ? $ortuRules : $siswaRules);
@@ -243,10 +244,10 @@ class ReportController extends Controller
                     ], 422);
                 }
 
-                // Batas ukuran berbeda untuk gambar vs video
-                $maxSize = str_starts_with($mime, 'image/') ? self::MAX_IMG_SIZE : self::MAX_FILE_SIZE;
+                // Batas ukuran disamakan 5MB untuk semua jenis berkas
+                $maxSize = self::MAX_IMG_SIZE;
                 if ($file->getSize() > $maxSize) {
-                    $limitLabel = str_starts_with($mime, 'image/') ? '5MB' : '50MB';
+                    $limitLabel = '5MB';
                     return response()->json([
                         'success' => false,
                         'message' => "File '{$file->getClientOriginalName()}' terlalu besar. Batas: {$limitLabel}.",
@@ -268,7 +269,7 @@ class ReportController extends Controller
                 'ticket_code'         => Report::generateTicketCode(),
                 'nisn'                => $reporterType === 'siswa' ? $request->nisn : null,
                 'email'               => $request->email ?? null,
-                'student_id'          => $reporterType === 'siswa' ? ($request->student_id ?? null) : null,
+                'student_id'          => $request->student_id ?? null,
                 'deskripsi'           => $request->deskripsi,
                 'status'              => 'masuk',
                 'reporter_type'       => $reporterType,
@@ -417,7 +418,7 @@ class ReportController extends Controller
                 'student_grade'     => $report->student
                     ? "{$report->student->grade} {$report->student->major}"
                     : null,
-                'student_nis'       => $report->nisn,
+                'student_nis'       => $report->student?->nis ?? $report->nisn,
                 'urgency'           => $report->urgency,
                 'urgency_label'     => $report->urgencyLabel(),
                 'violation_categories' => $this->buildViolationCategories($report),
@@ -593,7 +594,7 @@ class ReportController extends Controller
                 'nama'      => $item->reporter_type === 'ortu'
                     ? ($item->reporter_name ?? 'Orang Tua/Wali')
                     : ($item->student->fullname ?? 'Pelapor Tidak Dikenal'),
-                'nis'       => $item->nisn,
+                'nis'       => $item->student?->nis ?? $item->nisn,
                 'kelas'     => $item->student ? ($item->student->grade . ' ' . $item->student->major) : '-',
                 'urgensi'   => $item->urgency ?? 'sedang',
                 'email'     => $item->email,

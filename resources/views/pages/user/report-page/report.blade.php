@@ -125,13 +125,16 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="form-group">
+                            <div class="form-group relative">
                                 <label class="form-label">
                                     <span class="text-gray-800 font-semibold text-sm">Nama Anak</span>
                                     <span class="text-red-500 text-sm">*</span>
                                 </label>
-                                <input type="text" id="child_name" name="child_name"
-                                    class="form-input" placeholder="Nama lengkap anak">
+                                <div class="relative">
+                                    <input type="text" id="child_name" name="child_name"
+                                        class="form-input" placeholder="Nama lengkap anak" autocomplete="off">
+                                    <div id="child_name-dropdown" class="hidden absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50"></div>
+                                </div>
                                 <p id="child_name-error" class="text-xs text-red-600 mt-1.5 hidden"></p>
                             </div>
                             <div class="form-group">

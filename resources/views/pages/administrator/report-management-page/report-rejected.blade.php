@@ -170,9 +170,7 @@ function renderTable() {
                     </div>
                     </td>
                     <td class="text-mono" style="font-size:.78rem">
-                        ${d.reporter_type === 'ortu' 
-                            ? `<span style="color:#9ca3af;font-style:italic">—</span>` 
-                            : (d.nis || '—')}
+                        ${d.nis || '—'}
                     </td>
                     <td>
                         ${d.reporter_type === 'ortu' 

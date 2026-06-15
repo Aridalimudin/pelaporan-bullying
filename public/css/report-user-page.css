@@ -804,3 +804,42 @@ html {
     color: #ffffff;
     opacity: 1;
 }
+
+/* ── Child Name Dropdown (Student Autocomplete) ── */
+#child_name-dropdown {
+    background: #ffffff !important;
+    border: 1.5px solid #dcfce7 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.08) !important;
+    overflow-y: auto !important;
+    max-height: 240px !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    margin-top: 6px !important;
+}
+
+#child_name-dropdown .student-suggestion-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 11px 16px !important;
+    cursor: pointer !important;
+    font-size: .85rem !important;
+    color: #1f2937 !important;
+    background: #ffffff !important;
+    transition: background .12s !important;
+    border-bottom: 1px solid #f0fdf4 !important;
+}
+
+#child_name-dropdown .student-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+
+#child_name-dropdown .student-suggestion-item:hover,
+#child_name-dropdown .student-suggestion-active {
+    background: #f0fdf4 !important;
+    color: #047857 !important;
+}
+

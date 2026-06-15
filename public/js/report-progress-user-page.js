@@ -170,7 +170,18 @@ function renderSidebar(d) {
     setText('sideNama', d.reporter_type === 'ortu'
         ? `Orang Tua (${d.reporter_name || '-'})`
         : (d.student_name || '(anonim)'));
-    setText('sideNis', d.reporter_type === 'ortu' ? '-' : (d.student_nis || '-'));
+
+    const childNameRow = document.getElementById('sideChildNameRow');
+    if (childNameRow) {
+        if (d.reporter_type === 'ortu') {
+            childNameRow.style.display = '';
+            setText('sideChildName', d.child_name || '-');
+        } else {
+            childNameRow.style.display = 'none';
+        }
+    }
+
+    setText('sideNis', d.student_nis || '-');
     setText('sideKelas', d.reporter_type === 'ortu'
         ? (d.child_grade || '-')
         : (d.student_grade || '-'));

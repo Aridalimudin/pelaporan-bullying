@@ -70,48 +70,6 @@ function ucfirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function openSidebar() {
-    var sidebar = document.getElementById('adminSidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    if (sidebar) sidebar.classList.add('open');
-    if (overlay) overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeSidebar() {
-    var sidebar = document.getElementById('adminSidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function toggleNavGroup(id) {
-    var group = document.getElementById(id);
-    if (!group) return;
-    var isOpen = group.classList.contains('open');
-    document.querySelectorAll('.nav-group.open').forEach(function (g) { g.classList.remove('open'); });
-    if (!isOpen) group.classList.add('open');
-}
-
-function toggleNotif() {
-    var nd = document.getElementById('notifDropdown');
-    var ad = document.getElementById('avatarDropdown');
-    if (nd) nd.classList.toggle('open');
-    if (ad) ad.classList.remove('open');
-}
-
-function toggleAvatar() {
-    var ad = document.getElementById('avatarDropdown');
-    var nd = document.getElementById('notifDropdown');
-    if (ad) ad.classList.toggle('open');
-    if (nd) nd.classList.remove('open');
-}
-
-document.addEventListener('click', function (e) {
-    if (!e.target.closest('#notifWrap'))  { var nd = document.getElementById('notifDropdown');  if (nd) nd.classList.remove('open'); }
-    if (!e.target.closest('#avatarWrap')) { var ad = document.getElementById('avatarDropdown'); if (ad) ad.classList.remove('open'); }
-});
 
 function smSetError(fieldId, message) {
     var field = document.getElementById(fieldId);
