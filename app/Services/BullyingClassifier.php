@@ -21,7 +21,14 @@ class BullyingClassifier
         }
 
         if (!empty($manualIds)) {
-            $ids = array_filter(array_map('intval', explode(',', $manualIds)));
+            $manualIdsTrimmed = trim($manualIds);
+            if (str_starts_with($manualIdsTrimmed, '[') && str_ends_with($manualIdsTrimmed, ']')) {
+                $decoded = json_decode($manualIdsTrimmed, true);
+                $ids = is_array($decoded) ? $decoded : [];
+            } else {
+                $ids = explode(',', $manualIdsTrimmed);
+            }
+            $ids = array_filter(array_map('intval', $ids));
             foreach ($violations->filter(fn($vt) => in_array($vt->id, $ids)) as $vt) {
                 if (!isset($detected[$vt->id])) {
                     $detected[$vt->id] = $vt;

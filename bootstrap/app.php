@@ -11,8 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Redirect unauthenticated user ke halaman login admin
-        $middleware->redirectGuestsTo(fn () => route('administrator.login'));
+        // Redirect unauthenticated user sesuai guard:
+        // - guard student → /lapor (halaman login inline siswa)
+        // - guard lainnya (web/admin) → halaman login admin
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('siswa/*') || $request->routeIs('siswa.*')) {
+                return route('lapor.index');
+            }
+            return route('administrator.login');
+        });
         $middleware->alias([
         'permission' => \App\Http\Middleware\CheckPermission::class,
     ]);

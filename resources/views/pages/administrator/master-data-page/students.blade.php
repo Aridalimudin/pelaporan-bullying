@@ -184,6 +184,31 @@
                 <label class="sm-label">Email Siswa <span class="sm-req">*</span></label>
                 <input class="sm-input" type="email" id="smEmail" placeholder="Contoh: siswa@student.smk.sch.id">
             </div>
+            {{-- ====== PASSWORD SECTION ====== --}}
+            <div class="sm-field" style="margin-top: 12px;">
+                <label class="sm-label" id="smPasswordLabel">
+                    Password Login <span id="smPasswordReq" class="sm-req">*</span>
+                </label>
+                <div id="smPasswordWrap" style="position: relative; display: flex; align-items: center; flex-direction: column;">
+                    <div style="position: relative; width: 100%;">
+                        <input class="sm-input" type="password" id="smPassword"
+                               placeholder="Masukkan password login siswa (min. 6 karakter)"
+                               style="padding-right: 42px; width: 100%; box-sizing: border-box;"
+                               data-error-container="smPassword_err">
+                        <button type="button" id="toggleSmPassword"
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; display: flex; align-items: center; padding: 4px;"
+                                title="Tampilkan/Sembunyikan Password">
+                            <svg id="smEyeIcon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {{-- Tempat error password muncul di sini (di bawah baris input+mata) --}}
+                    <span id="smPassword_err" class="sm-field-error" style="display:none; width:100%;"></span>
+                </div>
+                <p style="font-size:11px;color:#6b7280;margin-top:4px;" id="smPasswordHint"></p>
+            </div>
         </div>
         <div class="sm-footer">
             <button class="sm-btn-cancel" onclick="closeSiswaModal()">Batal</button>

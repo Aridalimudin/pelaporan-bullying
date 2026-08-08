@@ -2,24 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 
-class Student extends Model
+class Student extends Authenticatable
 {
+    use Notifiable;
+
     protected $fillable = [
         'fullname', 'nis', 'grade', 'major',
-        'gender', 'phone', 'email', 'report_history'
+        'gender', 'phone', 'email', 'report_history',
+        'password', 'plain_password', 'is_active',
     ];
 
-    /* ── Relasi ke laporan ─────────────────────── */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
     }
 
-    /* ── Grades (via DB facade, tanpa model terpisah) ── */
     public static function allGrades(): array
     {
         return DB::table('grades')->orderBy('name')->pluck('name')->toArray();
@@ -35,7 +46,6 @@ class Student extends Model
         DB::table('grades')->where('name', $name)->delete();
     }
 
-    /* ── Majors (via DB facade, tanpa model terpisah) ── */
     public static function allMajors(): array
     {
         return DB::table('majors')->orderBy('name')->pluck('name')->toArray();

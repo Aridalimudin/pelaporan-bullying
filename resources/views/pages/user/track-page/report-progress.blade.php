@@ -44,13 +44,24 @@
     <!-- KONTEN UTAMA -->
     <div class="content-wrap hidden" id="contentWrap">
 
-        <!-- Tombol Kembali -->
-        <a href="#" class="back-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Kembali
-        </a>
+        <!-- Tombol Navigasi Kembali & Dashboard -->
+        <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <a href="{{ route('lapor.lacak') }}" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span>Cari Tiket Lain</span>
+            </a>
+
+            @if(Auth::guard('student')->check())
+                <a href="{{ route('siswa.dashboard') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl font-bold text-xs shadow-sm hover:scale-105 transition-all" style="text-decoration: none;">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>📊 Lihat Dashboard Saya</span>
+                </a>
+            @endif
+        </div>
 
         <!-- ══════════════════════
              PAGE HEADER

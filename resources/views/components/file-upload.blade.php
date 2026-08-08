@@ -214,7 +214,11 @@ function handleFileSelect(event) {
 
     files.forEach(file => {
         if (selectedFiles.length >= MAX_FILES) {
-            alert(`Maksimal ${MAX_FILES} file bukti.`);
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Batas Jumlah File', `Maksimal ${MAX_FILES} file bukti pendukung yang dapat diunggah.`, 'warning');
+            } else {
+                alert(`Maksimal ${MAX_FILES} file bukti.`);
+            }
             return;
         }
 
@@ -223,14 +227,22 @@ function handleFileSelect(event) {
         const isVideo = ALLOWED_VIDEO_TYPES.includes(type);
 
         if (!isImage && !isVideo) {
-            alert(`File "${file.name}" tidak didukung.\nHanya foto (JPG, PNG, WEBP) dan video (MP4, MOV, AVI, WEBM).`);
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Format File Tidak Didukung', `File "${file.name}" tidak didukung.\nHanya foto (JPG, PNG, WEBP) dan video (MP4, MOV, AVI, WEBM).`, 'warning');
+            } else {
+                alert(`File "${file.name}" tidak didukung.`);
+            }
             return;
         }
 
         const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_VIDEO_SIZE;
         const label   = '5MB';
         if (file.size > maxSize) {
-            alert(`File "${file.name}" terlalu besar. Batas: ${label}.`);
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Ukuran File Terlalu Besar', `File "${file.name}" melebihi batas ukuran maksimal (${label}). Silakan gunakan file lain.`, 'warning');
+            } else {
+                alert(`File "${file.name}" terlalu besar. Batas: ${label}.`);
+            }
             return;
         }
 

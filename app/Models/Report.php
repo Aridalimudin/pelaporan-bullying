@@ -212,6 +212,16 @@ class Report extends Model
      */
     public function canSendReminder(): bool
     {
+        // Pengecekan interval minimal 1 jam dari reminder terakhir
+        $lastReminder = $this->activities()
+            ->where('description', 'like', '%reminder%')
+            ->latest()
+            ->first();
+
+        if ($lastReminder && $lastReminder->created_at->diffInMinutes(now()) < 60) {
+            return false;
+        }
+
         // Maksimal 2x per hari, reset tiap tengah malam
         $todayCount = $this->activities()
             ->where('description', 'like', '%reminder%')

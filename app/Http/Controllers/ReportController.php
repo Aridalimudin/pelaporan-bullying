@@ -205,13 +205,21 @@ class ReportController extends Controller
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
         }
 
-        // Cek jika siswa memiliki laporan yang masih aktif / belum selesai ditangani
+        // Resolusi student_id & nisn untuk dikaitkan ke akun siswa (baik laporan siswa maupun ortu)
+        $studentId  = $request->student_id ?? null;
+        $studentNis = null;
+
         if ($reporterType === 'siswa') {
-            $studentId = $request->student_id;
             if (!$studentId && $request->nisn) {
                 $student = Student::where('nis', $request->nisn)->first();
                 if ($student) {
-                    $studentId = $student->id;
+                    $studentId  = $student->id;
+                    $studentNis = $student->nis;
+                }
+            } else if ($studentId) {
+                $student = Student::find($studentId);
+                if ($student) {
+                    $studentNis = $student->nis;
                 }
             }
             if ($studentId) {
@@ -228,6 +236,24 @@ class ReportController extends Controller
                         'ticket_code' => $censored,
                         'message' => 'Anda masih memiliki laporan yang belum selesai ditangani dengan tiket ' . $censored . '. Jika sangat mendesak, silakan gunakan fitur kirim reminder di menu Lacak Laporan agar petugas dapat mempercepat penanganan kasus Anda.'
                     ], 422);
+                }
+            }
+        } else if ($reporterType === 'ortu') {
+            // Untuk Orang Tua / Wali: coba cari data siswa berdasarkan NISN anak atau Nama anak
+            $childNisn = trim($request->input('child_nisn', $request->input('nisn', '')));
+            if ($childNisn) {
+                $student = Student::where('nis', $childNisn)->first();
+                if ($student) {
+                    $studentId  = $student->id;
+                    $studentNis = $student->nis;
+                }
+            }
+            if (!$studentId && $request->filled('child_name')) {
+                $childName = trim($request->child_name);
+                $student = Student::where('fullname', 'like', $childName)->first();
+                if ($student) {
+                    $studentId  = $student->id;
+                    $studentNis = $student->nis;
                 }
             }
         }
@@ -267,17 +293,17 @@ class ReportController extends Controller
 
             $report = Report::create([
                 'ticket_code'         => Report::generateTicketCode(),
-                'nisn'                => $reporterType === 'siswa' ? $request->nisn : null,
-                'email'               => $request->email ?? null,
-                'student_id'          => $request->student_id ?? null,
+                'nisn'                => $reporterType === 'siswa' ? $request->nisn : ($studentNis ?? $request->input('child_nisn')),
+                'email'               => $request->email ?? $request->input('email_ortu') ?? null,
+                'student_id'          => $studentId,
                 'deskripsi'           => $request->deskripsi,
                 'status'              => 'masuk',
                 'reporter_type'       => $reporterType,
                 'reporter_name'       => $reporterType === 'ortu' ? $request->reporter_name  : null,
                 'reporter_phone'      => $reporterType === 'ortu' ? $request->reporter_phone : null,
-                'catatan_admin' => null,
-                'child_name'    => $reporterType === 'ortu' ? $request->child_name  : null,
-                'child_grade'   => $reporterType === 'ortu' ? $request->child_grade : null,
+                'catatan_admin'       => null,
+                'child_name'          => $reporterType === 'ortu' ? $request->child_name  : null,
+                'child_grade'         => $reporterType === 'ortu' ? $request->child_grade : null,
                 'urgency'             => $classified['urgency'],
                 'urgency_score'       => $classified['score'],
                 'detected_violations' => json_encode($classified['violation_ids']),
@@ -524,6 +550,19 @@ class ReportController extends Controller
         }
 
         if (! $report->canSendReminder()) {
+            $lastReminder = $report->activities()
+                ->where('description', 'like', '%reminder%')
+                ->latest()
+                ->first();
+
+            if ($lastReminder && $lastReminder->created_at->diffInMinutes(now()) < 60) {
+                $diff = ceil(60 - $lastReminder->created_at->diffInMinutes(now()));
+                return response()->json([
+                    'success' => false,
+                    'message' => "Reminder baru saja dikirim. Silakan tunggu {$diff} menit lagi.",
+                ], 429);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Batas pengiriman reminder adalah 2 kali per hari. Coba lagi besok.',
@@ -619,7 +658,10 @@ class ReportController extends Controller
                 'jenisTindakanKorban'      => $item->followUp?->korbanAction?->name ?? '-',
                 'catatanKorban'            => $item->followUp?->catatan_korban,
                 'nomorBA'                  => $item->followUp?->nomor_berita_acara,
+                'autoNomorBA'              => $item->followUp?->nomor_berita_acara ?? $this->generateBANumber($item->id),
                 'tanggalBA'                => $item->followUp?->tanggal_berita_acara?->format('d M Y'),
+                'tanggalBA_raw'            => $item->followUp?->tanggal_berita_acara?->format('Y-m-d') ?? date('Y-m-d'),
+                'tanggalTindak_raw'        => $item->followUp?->tanggal_pelaksanaan?->format('Y-m-d') ?? date('Y-m-d'),
                 'isiBA'                    => $item->followUp?->isi_berita_acara,
                 'feedback' => $item->feedback ? [
                     'rating' => $item->feedback->rating,
@@ -1093,7 +1135,7 @@ class ReportController extends Controller
                 "Pelapor telah melengkapi detail laporan #{$report->ticket_code}. Laporan siap diverifikasi.",
                 'check',
                 'blue',
-                '/menunggu-verifikasi?open=' . $report->id
+                '/proses-laporan?open=' . $report->id
             );
 
             DB::commit();
@@ -1188,8 +1230,8 @@ class ReportController extends Controller
                     'keterlibatan_ortu'           => $action->parent_involvement ?? 'tidak',
                     'korban_action_id'            => $request->discipline_action_id_korban ?? null,
                     'catatan_korban'              => $request->catatan_korban ?? null,
-                    'nomor_berita_acara'          => $request->nomor_berita_acara ?? null,
-                    'tanggal_berita_acara'        => $request->tanggal_berita_acara ?? null,
+                    'nomor_berita_acara'          => $request->nomor_berita_acara ? trim($request->nomor_berita_acara) : $this->generateBANumber($report->id),
+                    'tanggal_berita_acara'        => $request->tanggal_berita_acara ?: date('Y-m-d'),
                     'isi_berita_acara'            => $request->isi_berita_acara ?? null,
                 ]
             );
@@ -1237,6 +1279,10 @@ class ReportController extends Controller
             DB::rollBack();
             Log::error('storeFollowUp: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Gagal menyimpan tindak lanjut.'], 500);
+        }
+
+        if ($report->email) {
+            Mail::to($report->email)->send(new LaporanSelesaiMail($report));
         }
 
         return response()->json([
@@ -1376,5 +1422,27 @@ class ReportController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'Reminder berhasil dikirim ke pelapor.']);
+    }
+
+    private function generateBANumber(?int $reportId = null): string
+    {
+        $year   = date('Y');
+        $month  = date('m');
+        $prefix = "BA/{$year}/{$month}/";
+
+        $last = ReportFollowUp::where('nomor_berita_acara', 'like', "{$prefix}%")
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+        if ($last && preg_match('/BA\/\d{4}\/\d{2}\/(\d+)/', $last->nomor_berita_acara, $matches)) {
+            $nextNum = (int)$matches[1] + 1;
+        } else {
+            $count = ReportFollowUp::whereYear('created_at', $year)
+                        ->whereMonth('created_at', $month)
+                        ->count();
+            $nextNum = max($count + 1, $reportId ?? 1);
+        }
+
+        return sprintf("BA/%s/%s/%03d", $year, $month, $nextNum);
     }
 }

@@ -1,47 +1,39 @@
-/**
- * report-user-page.js
- * Handles: NISN search, form validation, file upload, form submission ke API, 
- * dan Auto-Suggestion Jenis Pelanggaran.
- */
-
-/* ─── CSRF helper ─────────────────────────── */
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
 
-/* ─── FormValidator ───────────────────────── */
 const FormValidator = {
-    validateNISN: function(value) {
+    validateNISN: function (value) {
         if (!value.trim()) return { valid: false, message: 'NISN wajib diisi' };
         if (!/^\d+$/.test(value)) return { valid: false, message: 'NISN hanya boleh berisi angka' };
         if (value.length < 4) return { valid: false, message: 'NISN minimal 4 digit' };
         return { valid: true, message: '' };
     },
-    validateEmail: function(value) {
+    validateEmail: function (value) {
         if (!value.trim()) return { valid: false, message: 'Email wajib diisi' };
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return { valid: false, message: 'Format email tidak valid' };
         return { valid: true, message: '' };
     },
-    validateDeskripsi: function(value) {
+    validateDeskripsi: function (value) {
         if (!value.trim()) return { valid: false, message: 'Deskripsi kejadian wajib diisi' };
         if (value.trim().length < 20) return { valid: false, message: `Minimal 20 karakter (saat ini: ${value.trim().length})` };
         return { valid: true, message: '' };
     },
-    validatePhone: function(value) {
+    validatePhone: function (value) {
         if (!value.trim()) return { valid: false, message: 'Nomor HP wajib diisi' };
         if (!/^\d+$/.test(value.trim())) return { valid: false, message: 'Nomor HP hanya boleh berisi angka' };
         if (value.trim().length < 9) return { valid: false, message: 'Nomor HP minimal 9 digit' };
         if (value.trim().length > 15) return { valid: false, message: 'Nomor HP maksimal 15 digit' };
         return { valid: true, message: '' };
     },
-    validateName: function(value) {
+    validateName: function (value) {
         if (!value.trim()) return { valid: false, message: 'Nama wajib diisi' };
         if (value.trim().length < 3) return { valid: false, message: 'Nama minimal 3 karakter' };
         return { valid: true, message: '' };
     },
-    showError: function(inputId, message) {
+    showError: function (inputId, message) {
         const input = document.getElementById(inputId);
-        const err   = document.getElementById(`${inputId}-error`);
+        const err = document.getElementById(`${inputId}-error`);
         if (!input || !err) return;
         input.classList.add('border-red-500', 'shake-animation');
         input.classList.remove('border-emerald-500');
@@ -49,15 +41,15 @@ const FormValidator = {
         err.classList.remove('hidden');
         setTimeout(() => input.classList.remove('shake-animation'), 500);
     },
-    clearError: function(inputId) {
+    clearError: function (inputId) {
         const input = document.getElementById(inputId);
-        const err   = document.getElementById(`${inputId}-error`);
+        const err = document.getElementById(`${inputId}-error`);
         if (!input || !err) return;
         input.classList.remove('border-red-500');
         err.classList.add('hidden');
         err.textContent = '';
     },
-    showSuccess: function(inputId) {
+    showSuccess: function (inputId) {
         const input = document.getElementById(inputId);
         if (!input) return;
         input.classList.add('border-emerald-500');
@@ -65,22 +57,24 @@ const FormValidator = {
     }
 };
 
-/* ─── NISN Search ─────────────────────────── */
-let _studentId = null; 
+let _studentId = document.getElementById('student_id')?.value || null;
+document.addEventListener('DOMContentLoaded', function () {
+    const existingId = document.getElementById('student_id')?.value;
+    if (existingId) _studentId = existingId;
+});
 
-/* ── Reporter Type Toggle ─────────────────── */
 let _reporterType = 'siswa';
 
 function setReporterType(type) {
     _reporterType = type;
     document.getElementById('reporter_type').value = type;
 
-    const formOrtu  = document.getElementById('formOrtu');
-    const btnSiswa  = document.getElementById('btnSiswa');
-    const btnOrtu   = document.getElementById('btnOrtu');
+    const formOrtu = document.getElementById('formOrtu');
+    const btnSiswa = document.getElementById('btnSiswa');
+    const btnOrtu = document.getElementById('btnOrtu');
 
     btnSiswa.classList.toggle('active', type === 'siswa');
-    btnOrtu.classList.toggle('active',  type === 'ortu');
+    btnOrtu.classList.toggle('active', type === 'ortu');
 
     if (type === 'ortu') {
         document.getElementById('formSiswaFields').classList.add('hidden');
@@ -92,7 +86,7 @@ function setReporterType(type) {
     }
 }
 
-let _gradesLoaded  = false;
+let _gradesLoaded = false;
 let _gradesLoading = false;
 
 async function loadGradesForOrtu() {
@@ -102,13 +96,13 @@ async function loadGradesForOrtu() {
     _gradesLoading = true;
 
     const loadingOpt = document.createElement('option');
-    loadingOpt.value       = '';
+    loadingOpt.value = '';
     loadingOpt.textContent = 'Memuat kelas...';
-    loadingOpt.disabled    = true;
+    loadingOpt.disabled = true;
     sel.appendChild(loadingOpt);
 
     try {
-        const res  = await fetch('/api/data-siswa/grade-majors');
+        const res = await fetch('/api/data-siswa/grade-majors');
         const json = await res.json();
 
         while (sel.options.length > 1) sel.remove(1);
@@ -129,19 +123,19 @@ async function loadGradesForOrtu() {
             _gradesLoaded = true;
         } else {
             const errOpt = document.createElement('option');
-            errOpt.value       = '';
+            errOpt.value = '';
             errOpt.textContent = 'Gagal memuat — coba lagi';
-            errOpt.disabled    = true;
+            errOpt.disabled = true;
             sel.appendChild(errOpt);
         }
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         while (sel.options.length > 1) sel.remove(1);
 
         const errOpt = document.createElement('option');
-        errOpt.value       = '';
+        errOpt.value = '';
         errOpt.textContent = 'Gagal memuat — coba lagi';
-        errOpt.disabled    = true;
+        errOpt.disabled = true;
         sel.appendChild(errOpt);
         _gradesLoaded = false;
     } finally {
@@ -150,11 +144,11 @@ async function loadGradesForOrtu() {
 }
 
 async function cariSiswa() {
-    const nisn    = document.getElementById('nisn').value.trim();
-    const btn     = document.getElementById('btnCariNisn');
-    const info    = document.getElementById('student-info');
+    const nisn = document.getElementById('nisn').value.trim();
+    const btn = document.getElementById('btnCariNisn');
+    const info = document.getElementById('student-info');
     const emailEl = document.getElementById('email');
-    const hint    = document.getElementById('email-hint');
+    const hint = document.getElementById('email-hint');
 
     const validation = FormValidator.validateNISN(nisn);
     if (!validation.valid) {
@@ -167,7 +161,7 @@ async function cariSiswa() {
     btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>`;
 
     try {
-        const res  = await fetch(`/api/students/search?nisn=${encodeURIComponent(nisn)}`, {
+        const res = await fetch(`/api/students/search?nisn=${encodeURIComponent(nisn)}`, {
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
         });
         const data = await res.json();
@@ -212,9 +206,13 @@ async function cariSiswa() {
                 FormValidator.showError('nisn', 'NIS tidak ditemukan');
             }
 
-            document.getElementById('nisnNotFoundMsg').textContent =
-                data.message || 'NIS tidak ditemukan. Periksa kembali atau hubungi wali kelas.';
-            document.getElementById('modalNisnNotFound').classList.remove('hidden');
+            const msgEl = document.getElementById('nisnNotFoundMsg');
+            if (msgEl) {
+                msgEl.textContent = data.message || 'NIS tidak ditemukan. Periksa kembali atau hubungi wali kelas.';
+            } else if (typeof showCustomAlert === 'function') {
+                showCustomAlert(data.active_report ? 'Laporan Belum Selesai' : 'NIS Tidak Ditemukan', data.message || 'NIS tidak ditemukan.', 'warning');
+            }
+            document.getElementById('modalNisnNotFound')?.classList.remove('hidden');
         }
     } catch (e) {
         console.error(e);
@@ -231,8 +229,7 @@ function closeNisnModal(e) {
     }
 }
 
-/* ─── Real-time validation ────────────────── */
-document.getElementById('nisn').addEventListener('input', function() {
+document.getElementById('nisn').addEventListener('input', function () {
     const before = this.value;
     this.value = this.value.replace(/\D/g, '').slice(0, 6);
 
@@ -247,13 +244,16 @@ document.getElementById('nisn').addEventListener('input', function() {
 
     if (_studentId) {
         _studentId = null;
-        document.getElementById('student_id').value = '';
-        document.getElementById('student-info').classList.add('hidden');
+        const studentIdInput = document.getElementById('student_id');
+        if (studentIdInput) studentIdInput.value = '';
+        document.getElementById('student-info')?.classList.add('hidden');
         const emailEl = document.getElementById('email');
-        emailEl.value    = ''; 
-        emailEl.readOnly = false;
-        emailEl.classList.remove('bg-gray-50');
-        document.getElementById('email-hint').classList.add('hidden');
+        if (emailEl) {
+            emailEl.value = '';
+            emailEl.readOnly = false;
+            emailEl.classList.remove('bg-gray-50');
+        }
+        document.getElementById('email-hint')?.classList.add('hidden');
         FormValidator.clearError('email');
     }
 
@@ -261,44 +261,46 @@ document.getElementById('nisn').addEventListener('input', function() {
 });
 
 let _nisnEnterTimeout = null;
-document.getElementById('nisn').addEventListener('keydown', function(e) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    clearTimeout(_nisnEnterTimeout);
-    _nisnEnterTimeout = setTimeout(() => cariSiswa(), 50);
-});
+const nisnEl = document.getElementById('nisn');
+if (nisnEl) {
+    nisnEl.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        clearTimeout(_nisnEnterTimeout);
+        _nisnEnterTimeout = setTimeout(() => cariSiswa(), 50);
+    });
+}
 
-document.getElementById('email').addEventListener('blur', function() {
+document.getElementById('email').addEventListener('blur', function () {
     const v = FormValidator.validateEmail(this.value);
     if (!v.valid) FormValidator.showError('email', v.message);
     else { FormValidator.clearError('email'); FormValidator.showSuccess('email'); }
 });
-document.getElementById('email').addEventListener('input', function() {
+document.getElementById('email').addEventListener('input', function () {
     if (this.value) FormValidator.clearError('email');
 });
 
-document.getElementById('deskripsi').addEventListener('blur', function() {
+document.getElementById('deskripsi').addEventListener('blur', function () {
     const v = FormValidator.validateDeskripsi(this.value);
     if (!v.valid) FormValidator.showError('deskripsi', v.message);
     else { FormValidator.clearError('deskripsi'); FormValidator.showSuccess('deskripsi'); }
 });
-document.getElementById('deskripsi').addEventListener('input', function() {
+document.getElementById('deskripsi').addEventListener('input', function () {
     if (this.value) FormValidator.clearError('deskripsi');
 });
 
-/* ─── Form Submission ─────────────────────── */
 let _isSubmitting = false;
-document.getElementById('reportForm').addEventListener('submit', async function(e) {
+document.getElementById('reportForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     if (_isSubmitting) return;
     _isSubmitting = true;
 
     const deskripsi = document.getElementById('deskripsi').value.trim();
-    const dv        = FormValidator.validateDeskripsi(deskripsi);
-    let isValid     = true;
+    const dv = FormValidator.validateDeskripsi(deskripsi);
+    let isValid = true;
 
     if (!dv.valid) { FormValidator.showError('deskripsi', dv.message); isValid = false; }
-    
+
     const wrap = document.getElementById('violation_tags_wrap');
     if (wrap && _selectedViolations.length === 0) {
         const errEl = document.getElementById('violation_ids-error');
@@ -311,28 +313,31 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     }
 
     if (_reporterType === 'siswa') {
-        const nisn  = document.getElementById('nisn').value.trim();
+        const studentIdEl = document.getElementById('student_id');
+        if (studentIdEl && studentIdEl.value) _studentId = studentIdEl.value;
+
+        const nisn = document.getElementById('nisn').value.trim();
         const email = document.getElementById('email').value.trim();
-        const nv    = FormValidator.validateNISN(nisn);
-        const ev    = FormValidator.validateEmail(email);
-        if (!nv.valid) { FormValidator.showError('nisn', nv.message);  isValid = false; }
+        const nv = FormValidator.validateNISN(nisn);
+        const ev = FormValidator.validateEmail(email);
+        if (!nv.valid) { FormValidator.showError('nisn', nv.message); isValid = false; }
         if (!ev.valid) { FormValidator.showError('email', ev.message); isValid = false; }
         if (!_studentId && nv.valid) {
-            FormValidator.showError('nisn', 'Tekan tombol cari (🔍) untuk validasi NIS terlebih dahulu.');
+            FormValidator.showError('nisn', 'Silakan login terlebih dahulu untuk membuat laporan sebagai siswa.');
             isValid = false;
         }
     } else {
-        const rName  = document.getElementById('reporter_name').value.trim();
+        const rName = document.getElementById('reporter_name').value.trim();
         const rPhone = document.getElementById('reporter_phone').value.trim();
-        const cName  = document.getElementById('child_name').value.trim();
+        const cName = document.getElementById('child_name').value.trim();
         const cGrade = document.getElementById('child_grade').value;
         const rnv = FormValidator.validateName(rName);
         const rpv = FormValidator.validatePhone(rPhone);
         const cnv = FormValidator.validateName(cName);
-        if (!rnv.valid) { FormValidator.showError('reporter_name',  rnv.message); isValid = false; }
+        if (!rnv.valid) { FormValidator.showError('reporter_name', rnv.message); isValid = false; }
         if (!rpv.valid) { FormValidator.showError('reporter_phone', rpv.message); isValid = false; }
-        if (!cnv.valid) { FormValidator.showError('child_name',     cnv.message); isValid = false; }
-        if (!cGrade)    { FormValidator.showError('child_grade', 'Kelas anak wajib dipilih.');     isValid = false; }
+        if (!cnv.valid) { FormValidator.showError('child_name', cnv.message); isValid = false; }
+        if (!cGrade) { FormValidator.showError('child_grade', 'Kelas anak wajib dipilih.'); isValid = false; }
     }
 
     if (!isValid) {
@@ -355,61 +360,64 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     try {
         const formData = new FormData();
         formData.append('reporter_type', _reporterType);
-        formData.append('deskripsi',     deskripsi);
-        formData.append('_token',        csrfToken());
+        formData.append('deskripsi', deskripsi);
+        formData.append('_token', csrfToken());
 
         if (_reporterType === 'siswa') {
-            formData.append('nisn',       document.getElementById('nisn').value.trim());
-            formData.append('email',      document.getElementById('email').value.trim());
+            formData.append('nisn', document.getElementById('nisn').value.trim());
+            formData.append('email', document.getElementById('email').value.trim());
             formData.append('student_id', document.getElementById('student_id').value);
         } else {
-            formData.append('reporter_name',  document.getElementById('reporter_name').value.trim());
+            formData.append('reporter_name', document.getElementById('reporter_name').value.trim());
             formData.append('reporter_phone', document.getElementById('reporter_phone').value.trim());
-            formData.append('child_name',     document.getElementById('child_name').value.trim());
-            formData.append('child_grade',    document.getElementById('child_grade').value);
-            
+            formData.append('child_name', document.getElementById('child_name').value.trim());
+            formData.append('child_grade', document.getElementById('child_grade').value);
+
             const studentId = document.getElementById('student_id').value;
             if (studentId) formData.append('student_id', studentId);
-            
+
             const emailOrtu = document.getElementById('email_ortu').value.trim();
             if (emailOrtu) formData.append('email', emailOrtu);
         }
 
-        // Handle file uploads jika ada variabel global selectedFiles dari komponen file-upload
         if (typeof selectedFiles !== 'undefined') {
             if (selectedFiles.length > 5) {
-                alert('Maksimal 5 file yang bisa dikirim (foto atau video).');
-                submitBtn.disabled  = false;
+                if (typeof showCustomAlert === 'function') showCustomAlert('Batas Jumlah File', 'Maksimal 5 file yang bisa dikirim (foto atau video).', 'warning');
+                else alert('Maksimal 5 file yang bisa dikirim (foto atau video).');
+                submitBtn.disabled = false;
                 submitBtn.innerHTML = originalContent;
                 return;
             }
 
-            const IMG_MAX   = 5 * 1024 * 1024;
+            const IMG_MAX = 5 * 1024 * 1024;
             const VIDEO_MAX = 5 * 1024 * 1024;
-            const videoTypes = ['video/mp4','video/quicktime','video/x-msvideo','video/webm'];
-            const imgTypes   = ['image/jpeg','image/jpg','image/png','image/webp'];
+            const videoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+            const imgTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
             for (const file of selectedFiles) {
                 const isVideo = videoTypes.includes(file.type);
                 const isImage = imgTypes.includes(file.type);
 
                 if (!isVideo && !isImage) {
-                    alert(`File "${file.name}" tidak didukung.`);
-                    submitBtn.disabled  = false;
+                    if (typeof showCustomAlert === 'function') showCustomAlert('Format Tidak Didukung', `File "${file.name}" tidak didukung.`, 'warning');
+                    else alert(`File "${file.name}" tidak didukung.`);
+                    submitBtn.disabled = false;
                     submitBtn.innerHTML = originalContent;
                     return;
                 }
 
                 if (isImage && file.size > IMG_MAX) {
-                    alert(`Foto "${file.name}" terlalu besar. Maksimal 5MB.`);
-                    submitBtn.disabled  = false;
+                    if (typeof showCustomAlert === 'function') showCustomAlert('File Terlalu Besar', `Foto "${file.name}" terlalu besar. Maksimal 5MB.`, 'warning');
+                    else alert(`Foto "${file.name}" terlalu besar. Maksimal 5MB.`);
+                    submitBtn.disabled = false;
                     submitBtn.innerHTML = originalContent;
                     return;
                 }
 
                 if (isVideo && file.size > VIDEO_MAX) {
-                    alert(`Video "${file.name}" terlalu besar. Maksimal 5MB.`);
-                    submitBtn.disabled  = false;
+                    if (typeof showCustomAlert === 'function') showCustomAlert('File Terlalu Besar', `Video "${file.name}" terlalu besar. Maksimal 5MB.`, 'warning');
+                    else alert(`Video "${file.name}" terlalu besar. Maksimal 5MB.`);
+                    submitBtn.disabled = false;
                     submitBtn.innerHTML = originalContent;
                     return;
                 }
@@ -417,13 +425,68 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             selectedFiles.forEach(file => formData.append('bukti[]', file));
         }
 
-        // Tambahkan violation_ids kalau terpilih
         if (_selectedViolations.length > 0) {
             const ids = _selectedViolations.map(v => v.id);
             formData.append('violation_ids', JSON.stringify(ids));
         }
 
-        const res  = await fetch('/api/reports', { method: 'POST', body: formData });
+        let res = await fetch('/api/reports', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken(),
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        // Auto-refresh CSRF token & retry request if 419 Token Mismatch occurs
+        if (res.status === 419) {
+            try {
+                const csrfRes = await fetch('/api/csrf-token', { credentials: 'same-origin' });
+                const csrfData = await csrfRes.json();
+                if (csrfData && csrfData.csrf_token) {
+                    document.querySelectorAll('meta[name="csrf-token"]').forEach(el => el.setAttribute('content', csrfData.csrf_token));
+                    document.querySelectorAll('input[name="_token"]').forEach(el => el.value = csrfData.csrf_token);
+
+                    res = await fetch('/api/reports', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfData.csrf_token,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                }
+            } catch (errRetry) {
+                console.error('CSRF Refresh failed:', errRetry);
+            }
+        }
+
+        if (res.status === 419) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Sesi Berakhir', 'Sesi pelaporan Anda telah berakhir. Halaman akan diperbarui otomatis.', 'warning');
+            } else {
+                alert('Sesi pelaporan Anda telah berakhir. Memuat ulang halaman...');
+            }
+            setTimeout(() => window.location.reload(), 1500);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+            return;
+        }
+
+        if (res.status === 401) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Sesi Login Berakhir', 'Silakan login kembali untuk melanjutkan pelaporan.', 'warning');
+            } else {
+                alert('Sesi login Anda telah berakhir. Silakan login kembali.');
+            }
+            setTimeout(() => window.location.reload(), 1500);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+            return;
+        }
 
         let data;
         const contentType = res.headers.get('content-type') || '';
@@ -431,11 +494,13 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             data = await res.json();
         } else {
             if (res.status === 413) {
-                alert('File yang Anda kirim terlalu besar. Batas ukuran: foto dan video maks 5MB.');
+                if (typeof showCustomAlert === 'function') showCustomAlert('Ukuran File Terlalu Besar', 'File yang Anda kirim terlalu besar. Batas ukuran: foto dan video maks 5MB.', 'warning');
+                else alert('File yang Anda kirim terlalu besar. Batas ukuran: foto dan video maks 5MB.');
             } else {
-                alert(`Terjadi kesalahan server (${res.status}). Coba lagi.`);
+                if (typeof showCustomAlert === 'function') showCustomAlert('Kesalahan Server', `Terjadi kesalahan server (${res.status}). Coba lagi.`, 'error');
+                else alert(`Terjadi kesalahan server (${res.status}). Coba lagi.`);
             }
-            submitBtn.disabled  = false;
+            submitBtn.disabled = false;
             submitBtn.innerHTML = originalContent;
             return;
         }
@@ -444,10 +509,10 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             this.reset();
             _studentId = null;
             document.getElementById('student_id').value = '';
-            document.getElementById('student-info').classList.add('hidden');
-            document.getElementById('email-hint').classList.add('hidden');
+            document.getElementById('student-info')?.classList.add('hidden');
+            document.getElementById('email-hint')?.classList.add('hidden');
             if (window.resetFileUpload) window.resetFileUpload();
-            ['nisn','email','deskripsi'].forEach(id => {
+            ['nisn', 'email', 'deskripsi'].forEach(id => {
                 FormValidator.clearError(id);
                 document.getElementById(id)?.classList.remove('border-emerald-500');
             });
@@ -458,21 +523,24 @@ document.getElementById('reportForm').addEventListener('submit', async function(
 
             if (typeof openReportModal === 'function') openReportModal(data.ticket_code);
         } else if (res.status === 422 && data.active_report) {
-            const modalTitle = document.querySelector('#modalNisnNotFound .modal-box-title');
-            if (modalTitle) modalTitle.textContent = 'Laporan Belum Selesai';
-            document.getElementById('nisnNotFoundMsg').textContent = data.message;
-            document.getElementById('modalNisnNotFound').classList.remove('hidden');
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Laporan Belum Selesai', data.message || 'Anda masih memiliki laporan yang belum selesai ditangani.', 'warning');
+            } else {
+                alert(data.message || 'Anda masih memiliki laporan yang belum selesai ditangani.');
+            }
             FormValidator.showError('nisn', 'Laporan sebelumnya belum selesai');
         } else if (res.status === 422 && data.errors) {
             Object.entries(data.errors).forEach(([field, msgs]) => {
                 FormValidator.showError(field, Array.isArray(msgs) ? msgs[0] : msgs);
             });
         } else {
-            alert(data.message || 'Terjadi kesalahan. Coba lagi.');
+            if (typeof showCustomAlert === 'function') showCustomAlert('Gagal Mengirim', data.message || 'Terjadi kesalahan. Coba lagi.', 'error');
+            else alert(data.message || 'Terjadi kesalahan. Coba lagi.');
         }
     } catch (err) {
         console.error(err);
-        alert('Koneksi bermasalah. Periksa internet Anda dan coba lagi.');
+        if (typeof showCustomAlert === 'function') showCustomAlert('Koneksi Bermasalah', 'Koneksi bermasalah. Periksa internet Anda dan coba lagi.', 'error');
+        else alert('Koneksi bermasalah. Periksa internet Anda dan coba lagi.');
     } finally {
         _isSubmitting = false;
         submitBtn.disabled = false;
@@ -480,52 +548,46 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     }
 });
 
-/* ─── Real-time validasi field ortu ──────── */
-document.getElementById('reporter_phone').addEventListener('input', function() {
+document.getElementById('reporter_phone').addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '').slice(0, 15);
     if (this.value) FormValidator.clearError('reporter_phone');
 });
-document.getElementById('reporter_phone').addEventListener('blur', function() {
+document.getElementById('reporter_phone').addEventListener('blur', function () {
     const v = FormValidator.validatePhone(this.value);
     if (!v.valid) FormValidator.showError('reporter_phone', v.message);
     else { FormValidator.clearError('reporter_phone'); FormValidator.showSuccess('reporter_phone'); }
 });
-document.getElementById('reporter_name').addEventListener('blur', function() {
+document.getElementById('reporter_name').addEventListener('blur', function () {
     const v = FormValidator.validateName(this.value);
     if (!v.valid) FormValidator.showError('reporter_name', v.message);
     else { FormValidator.clearError('reporter_name'); FormValidator.showSuccess('reporter_name'); }
 });
-document.getElementById('reporter_name').addEventListener('input', function() {
+document.getElementById('reporter_name').addEventListener('input', function () {
     if (this.value.length >= 3) FormValidator.clearError('reporter_name');
 });
-document.getElementById('child_name').addEventListener('blur', function() {
+document.getElementById('child_name').addEventListener('blur', function () {
     const v = FormValidator.validateName(this.value);
     if (!v.valid) FormValidator.showError('child_name', v.message);
     else { FormValidator.clearError('child_name'); FormValidator.showSuccess('child_name'); }
 });
-document.getElementById('child_name').addEventListener('input', function() {
+document.getElementById('child_name').addEventListener('input', function () {
     if (this.value.length >= 3) FormValidator.clearError('child_name');
 });
 
-/* ─── Violation Suggestion dari Deskripsi ── */
-let _selectedViolations  = [];
-let _suggestionTimeout   = null;
-let _allViolations       = [];
+let _selectedViolations = [];
+let _suggestionTimeout = null;
+let _allViolations = [];
 let _activeSuggestionIdx = -1;
-let _currentMatches      = [];
+let _currentMatches = [];
 
-// 1. Ambil Data API & Pasang CCTV Log
-// 1. Ambil Data & Otomatis Hapus Duplikat (Misal: Isolasi ada 2)
 async function loadAllViolations() {
     try {
-        const res  = await fetch('/api/violation-types/autocomplete');
+        const res = await fetch('/api/violation-types/autocomplete');
         let data = await res.json();
-        
-        // Jaga-jaga kalau Laravel membungkus dalam "data: []"
+
         if (data && Array.isArray(data.data)) data = data.data;
 
         if (Array.isArray(data)) {
-            // FILTER: Hapus nama tindakan yang dobel dari database
             const unique = [];
             const seen = new Set();
             for (const item of data) {
@@ -535,10 +597,10 @@ async function loadAllViolations() {
                     unique.push(item);
                 }
             }
-            _allViolations = unique; // Simpan data yang sudah bersih
+            _allViolations = unique;
         }
-    } catch(e) { 
-        console.error("❌ GAGAL MEMUAT API:", e); 
+    } catch (e) {
+        console.error("❌ GAGAL MEMUAT API:", e);
     }
 }
 loadAllViolations();
@@ -562,7 +624,6 @@ function scanDeskripsi(text) {
 
         const allTerms = [...nameWords, ...keywordList];
 
-        // Aturan 1: nama lengkap ada di teks
         if (cleanText.includes(nameLower)) return true;
 
         for (const w of words) {
@@ -582,7 +643,7 @@ function showDropdown(matches) {
     const box = document.getElementById('violation-dropdown');
     if (!box) return;
 
-    _currentMatches      = matches;
+    _currentMatches = matches;
     _activeSuggestionIdx = -1;
 
     if (matches.length === 0) {
@@ -595,7 +656,7 @@ function showDropdown(matches) {
         <div class="vt-suggestion-item" data-idx="${i}" data-id="${v.id}"
             onmouseover="setActiveIdx(${i})"
             onmouseout="setActiveIdx(-1)"
-            onmousedown="selectViolation(${v.id},'${v.name.replace(/'/g,"\\'")}','${v.category}',${v.weight})">
+            onmousedown="selectViolation(${v.id},'${v.name.replace(/'/g, "\\'")}','${v.category}',${v.weight})">
             <span class="vt-suggestion-icon">
                 ${v.category === 'Fisik' ? '🥊' : '💬'}
             </span>
@@ -621,49 +682,50 @@ function setActiveIdx(idx) {
     });
 }
 
-// 4. Memilih Tindakan
-function selectViolation(id, name, category, weight) {
+function selectViolation(id, name, category, weight, appendTextBox = true) {
     if (_selectedViolations.find(v => v.id === id)) return;
     _selectedViolations.push({ id, name, category, weight });
 
     const textarea = document.getElementById('deskripsi');
-    const fullText = textarea.value;
-    const words    = fullText.trimEnd().split(/\s+/);
-    const lastWord = words[words.length - 1] ?? '';
+    if (appendTextBox && textarea) {
+        const fullText = textarea.value;
+        const words    = fullText.trimEnd().split(/\s+/);
+        const lastWord = words[words.length - 1] ?? '';
 
-    const nameWords = name.toLowerCase().split(/\s+/);
-    const matchedNameWord = nameWords.find(w => w.startsWith(lastWord.toLowerCase()) && lastWord.length >= 3);
+        const nameWords = name.toLowerCase().split(/\s+/);
+        const matchedNameWord = nameWords.find(w => w.startsWith(lastWord.toLowerCase()) && lastWord.length >= 3);
 
-// Tentukan apakah nama perlu kapital atau lowercase
-    function smartCase(nameStr, fullStr) {
-        const trimmed = fullStr.trimEnd();
-        // Kapital jika: teks kosong, atau karakter terakhir adalah titik/tanda tanya/seru
-        const lastChar = trimmed.slice(-1);
-        const isStartOfSentence = trimmed === '' || ['.', '!', '?'].includes(lastChar);
-        if (isStartOfSentence) {
-            return nameStr.charAt(0).toUpperCase() + nameStr.slice(1).toLowerCase();
+        function smartCase(nameStr, fullStr) {
+            const trimmed = fullStr.trimEnd();
+            const lastChar = trimmed.slice(-1);
+            const isStartOfSentence = trimmed === '' || ['.', '!', '?'].includes(lastChar);
+            if (isStartOfSentence) {
+                return nameStr.charAt(0).toUpperCase() + nameStr.slice(1).toLowerCase();
+            }
+            return nameStr.toLowerCase();
         }
-        return nameStr.toLowerCase();
+
+        const casedName = smartCase(name, fullText);
+
+        if (matchedNameWord && lastWord.length >= 3) {
+            words[words.length - 1] = casedName;
+            textarea.value = words.join(' ') + ' ';
+        } else {
+            textarea.value = fullText.trimEnd() ? fullText.trimEnd() + ' ' + casedName + ' ' : casedName + ' ';
+        }
+
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
-
-    const casedName = smartCase(name, fullText);
-
-    if (matchedNameWord && lastWord.length >= 3) {
-        words[words.length - 1] = casedName;
-        textarea.value = words.join(' ') + ' ';
-    } else {
-        textarea.value = fullText.trimEnd() ? fullText.trimEnd() + ' ' + casedName + ' ' : casedName + ' ';
-    }
-
-    textarea.focus();
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
 
     renderViolationTags();
     updateViolationIds();
     updateSubmitState();
     hideDropdown();
 
-    showDropdown(scanDeskripsi(textarea.value));
+    if (textarea) {
+        showDropdown(scanDeskripsi(textarea.value));
+    }
     document.getElementById('violation_ids-error')?.classList.add('hidden');
 }
 
@@ -671,7 +733,6 @@ function removeViolation(id) {
     const removed = _selectedViolations.find(v => v.id === id);
     _selectedViolations = _selectedViolations.filter(v => v.id !== id);
 
-    // Hapus nama violation dari textarea (case-insensitive)
     if (removed) {
         const textarea = document.getElementById('deskripsi');
         const regex = new RegExp('\\s*' + removed.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*', 'gi');
@@ -694,7 +755,6 @@ function renderViolationTags() {
     tags.innerHTML = _selectedViolations.map(v => `
         <span class="vt-tag" style="
             display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500;
-            /* CEK KATEGORI FISIK DI SINI */
             background:${v.category === 'Fisik' ? '#fee2e2' : '#ede9fe'};
             color:${v.category === 'Fisik' ? '#991b1b' : '#4c1d95'};
             border: 1px solid ${v.category === 'Fisik' ? '#fca5a5' : '#c4b5fd'};">
@@ -712,11 +772,11 @@ function updateViolationIds() {
 }
 
 function updateSubmitState() {
-    const btn  = document.getElementById('submitBtn');
+    const btn = document.getElementById('submitBtn');
     const hint = document.getElementById('violation-required-hint');
     const hasViolation = _selectedViolations.length > 0;
 
-    if(btn) {
+    if (btn) {
         btn.disabled = !hasViolation;
         btn.classList.toggle('opacity-50', !hasViolation);
         btn.classList.toggle('cursor-not-allowed', !hasViolation);
@@ -724,8 +784,7 @@ function updateSubmitState() {
     if (hint) hint.style.display = hasViolation ? 'none' : 'flex';
 }
 
-/* ── Keyboard & Input Navigation ── */
-document.getElementById('deskripsi').addEventListener('keydown', function(e) {
+document.getElementById('deskripsi').addEventListener('keydown', function (e) {
     const box = document.getElementById('violation-dropdown');
     if (box?.classList.contains('hidden')) return;
 
@@ -746,11 +805,10 @@ document.getElementById('deskripsi').addEventListener('keydown', function(e) {
     }
 });
 
-document.getElementById('deskripsi').addEventListener('input', function() {
+document.getElementById('deskripsi').addEventListener('input', function () {
     clearTimeout(_suggestionTimeout);
     if (this.value) FormValidator.clearError('deskripsi');
 
-    // Auto hapus tag jika namanya tidak ada lagi di textarea
     const currentText = this.value.toLowerCase();
     const toRemove = _selectedViolations.filter(v => {
         return !currentText.includes(v.name.toLowerCase());
@@ -769,17 +827,12 @@ document.getElementById('deskripsi').addEventListener('input', function() {
     }, 300);
 });
 
-document.getElementById('deskripsi').addEventListener('blur', function() {
-    setTimeout(() => hideDropdown(), 250); 
+document.getElementById('deskripsi').addEventListener('blur', function () {
+    setTimeout(() => hideDropdown(), 250);
 });
 
-// Init — disable submit saat pertama load
 updateSubmitState();
 
-/* ──────────────────────────────────────────────
-RESUBMIT – Baca sessionStorage dari halaman lacak
-(dipanggil saat user klik "Ajukan Ulang Laporan")
-────────────────────────────────────────────── */
 (function initResubmit() {
     const raw = sessionStorage.getItem('resubmit_data');
     if (!raw) return;
@@ -788,28 +841,23 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
     try { data = JSON.parse(raw); } catch { return; }
     if (!data?.is_resubmit) return;
 
-    // Hapus dari sessionStorage segera setelah dibaca
     sessionStorage.removeItem('resubmit_data');
 
-    const type         = data.reporter_type || 'siswa';
-    const tipePelapor  = type === 'ortu' ? 'Orang Tua / Wali' : 'Siswa';
+    const type = data.reporter_type || 'siswa';
+    const tipePelapor = type === 'ortu' ? 'Orang Tua / Wali' : 'Siswa';
 
-    // ── 1. Set & KUNCI tipe pelapor ─────────────
-    // Aktifkan tipe yang benar terlebih dahulu
     setReporterType(type);
 
-    // Kunci kedua tombol toggle agar tidak bisa diganti
     const btnSiswa = document.getElementById('btnSiswa');
-    const btnOrtu  = document.getElementById('btnOrtu');
+    const btnOrtu = document.getElementById('btnOrtu');
     [btnSiswa, btnOrtu].forEach(btn => {
         if (!btn) return;
         btn.style.pointerEvents = 'none';
-        btn.style.opacity       = '0.5';
-        btn.style.cursor        = 'not-allowed';
-        btn.title               = 'Tipe pelapor dikunci saat pengajuan ulang';
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        btn.title = 'Tipe pelapor dikunci saat pengajuan ulang';
     });
 
-    // ── 2. Banner info ──────────────────────────
     const form = document.getElementById('reportForm');
     if (form) {
         const banner = document.createElement('div');
@@ -832,16 +880,13 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
         form.insertAdjacentElement('beforebegin', banner);
     }
 
-    // ── 3. Isi field sesuai tipe pelapor ────────
     if (type === 'siswa') {
-        // Isi NIS → trigger cariSiswa() otomatis
         const nisInput = document.getElementById('nisn');
         if (nisInput && data.student_nis) {
             nisInput.value = data.student_nis;
             setTimeout(() => cariSiswa(), 300);
         }
 
-        // Isi email hanya jika belum diisi otomatis oleh cariSiswa
         if (data.student_email) {
             setTimeout(() => {
                 const emailInput = document.getElementById('email');
@@ -851,17 +896,15 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
             }, 1500);
         }
     } else {
-        // Isi field orang tua
-        const repNameEl    = document.getElementById('reporter_name');
-        const repPhoneEl   = document.getElementById('reporter_phone');
-        const childNameEl  = document.getElementById('child_name');
+        const repNameEl = document.getElementById('reporter_name');
+        const repPhoneEl = document.getElementById('reporter_phone');
+        const childNameEl = document.getElementById('child_name');
         const childGradeEl = document.getElementById('child_grade');
 
-        if (repNameEl   && data.reporter_name)  repNameEl.value  = data.reporter_name;
-        if (repPhoneEl  && data.reporter_phone) repPhoneEl.value = data.reporter_phone;
-        if (childNameEl && data.child_name)     childNameEl.value = data.child_name;
+        if (repNameEl && data.reporter_name) repNameEl.value = data.reporter_name;
+        if (repPhoneEl && data.reporter_phone) repPhoneEl.value = data.reporter_phone;
+        if (childNameEl && data.child_name) childNameEl.value = data.child_name;
 
-        // child_grade: opsi dimuat async — polling sampai opsi tersedia
         if (childGradeEl && data.child_grade) {
             const trySet = setInterval(() => {
                 const found = Array.from(childGradeEl.options)
@@ -875,34 +918,36 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
         }
     }
 
-    // ── 4. Isi deskripsi ───────────────────────
     const deskEl = document.getElementById('deskripsi');
     if (deskEl && data.deskripsi) {
         deskEl.value = data.deskripsi;
-        deskEl.dispatchEvent(new Event('input')); // trigger counter karakter
+        deskEl.dispatchEvent(new Event('input'));
         FormValidator.clearError('deskripsi');
         FormValidator.showSuccess('deskripsi');
 
-        // Trigger suggestion dropdown dari isi deskripsi
         setTimeout(() => showDropdown(scanDeskripsi(data.deskripsi)), 500);
     }
 
-    // ── 5. Pilih jenis pelanggaran otomatis ────
-    // violation_categories contoh: "Fisik & Verbal"
-    // Pilih 1 violation pertama per kategori sebagai referensi awal
     if (data.violation_categories) {
         setTimeout(() => {
             const cats = data.violation_categories.split(' & ').map(c => c.trim());
+
+            const scannedMatches = scanDeskripsi(data.deskripsi || '');
+            scannedMatches.forEach(vt => {
+                if (cats.includes(vt.category)) {
+                    selectViolation(vt.id, vt.name, vt.category, vt.weight, false);
+                }
+            });
+
             (_allViolations || []).forEach(vt => {
                 if (!cats.includes(vt.category)) return;
                 if (_selectedViolations.find(s => s.id === vt.id)) return;
                 if (_selectedViolations.find(s => s.category === vt.category)) return;
-                selectViolation(vt.id, vt.name, vt.category, vt.weight);
+                selectViolation(vt.id, vt.name, vt.category, vt.weight, false);
             });
         }, 800);
     }
 
-    // ── 6. Preview foto lama sebagai referensi ─
     if (data.existing_files?.length > 0) {
         const deskGroup = document.getElementById('deskripsi')?.closest('.form-group');
         if (deskGroup) {
@@ -933,7 +978,6 @@ RESUBMIT – Baca sessionStorage dari halaman lacak
     }
 })();
 
-/* ─── Child Name Autocomplete (Orang Tua / Wali) ─── */
 let _childSuggestionTimeout = null;
 let _activeChildSuggestionIdx = -1;
 let _currentChildMatches = [];
@@ -944,21 +988,18 @@ const childNameDropdown = document.getElementById('child_name-dropdown');
 const childGradeSelect = document.getElementById('child_grade');
 
 if (childNameInput && childNameDropdown) {
-    childNameInput.addEventListener('input', function() {
+    childNameInput.addEventListener('input', function () {
         const q = this.value;
 
-        // Reset memory of last selected child if the input is cleared completely
         if (q.trim() === '') {
             _lastSelectedChild = null;
         }
 
-        // If it matches the last selected child's name, re-select it and skip autocomplete fetch
         if (_lastSelectedChild && q.trim().toLowerCase() === _lastSelectedChild.fullname.trim().toLowerCase()) {
             selectChild(_lastSelectedChild);
             return;
         }
 
-        // Unlock child class and clear student_id when parent edits the child's name
         if (childGradeSelect) childGradeSelect.disabled = false;
         const studentIdEl = document.getElementById('student_id');
         if (studentIdEl) studentIdEl.value = '';
@@ -982,14 +1023,14 @@ if (childNameInput && childNameDropdown) {
                 } else {
                     hideChildDropdown();
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 hideChildDropdown();
             }
         }, 200);
     });
 
-    childNameInput.addEventListener('keydown', function(e) {
+    childNameInput.addEventListener('keydown', function (e) {
         if (childNameDropdown.classList.contains('hidden')) return;
 
         if (e.key === 'ArrowDown') {
@@ -1009,7 +1050,7 @@ if (childNameInput && childNameDropdown) {
         }
     });
 
-    childNameInput.addEventListener('blur', function() {
+    childNameInput.addEventListener('blur', function () {
         setTimeout(() => hideChildDropdown(), 250);
     });
 }
@@ -1052,42 +1093,36 @@ function setActiveChildIdx(idx) {
     });
 }
 
-// Global functions so they can be called from inline onmousedown/onclick
-window.selectChildByIdx = function(idx) {
+window.selectChildByIdx = function (idx) {
     const s = _currentChildMatches[idx];
     if (s) selectChild(s);
 };
 
-window.setActiveChildIdx = function(idx) {
+window.setActiveChildIdx = function (idx) {
     setActiveChildIdx(idx);
 };
 
 function selectChild(student) {
     _lastSelectedChild = student;
     childNameInput.value = student.fullname;
-    
-    // Set child_grade select value
+
     const gradeLabel = `${student.grade} ${student.major}`.trim();
-    
-    // Cek apakah opsi kelas tersebut ada di select
+
     let hasOption = Array.from(childGradeSelect.options).some(opt => opt.value === gradeLabel);
-    
+
     if (hasOption) {
         childGradeSelect.value = gradeLabel;
     } else {
-        // Jika opsi belum termuat/tidak ada, tambahkan opsi sementara
         const opt = document.createElement('option');
         opt.value = opt.textContent = gradeLabel;
         childGradeSelect.appendChild(opt);
         childGradeSelect.value = gradeLabel;
     }
 
-    // Kunci dropdown kelas dan simpan student_id anak
     if (childGradeSelect) childGradeSelect.disabled = true;
     const studentIdEl = document.getElementById('student_id');
     if (studentIdEl) studentIdEl.value = student.id;
-    
-    // Trigger validation update if exists
+
     if (typeof FormValidator !== 'undefined') {
         FormValidator.clearError('child_name');
         FormValidator.clearError('child_grade');
@@ -1097,5 +1132,3 @@ function selectChild(student) {
 
     hideChildDropdown();
 }
-
-

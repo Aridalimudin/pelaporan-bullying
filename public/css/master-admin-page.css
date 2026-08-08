@@ -446,3 +446,49 @@ html, body { height: 100%; overflow: auto; }
     padding: 0;
 }
 .kmgr-kelas-tag button:hover { color: #ef4444; }
+
+/* ════════════════════════════════════════════════
+   FORM VALIDATION & ERROR STYLING
+════════════════════════════════════════════════ */
+.sm-field-error,
+.field-error,
+.input-error-msg {
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #dc2626 !important;
+    margin-top: 5px !important;
+    line-height: 1.4;
+}
+
+.sm-field-error::before,
+.field-error::before,
+.input-error-msg::before {
+    content: '⚠';
+    font-size: 11px;
+}
+
+.sm-input-error,
+.input-error,
+input.sm-input-error,
+select.sm-input-error,
+textarea.sm-input-error,
+input.input-error,
+select.input-error,
+textarea.input-error {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+    color: #991b1b !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
+.sm-input-error:focus,
+.input-error:focus,
+input.sm-input-error:focus,
+select.sm-input-error:focus,
+textarea.sm-input-error:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3.5px rgba(220, 38, 38, 0.25) !important;
+}

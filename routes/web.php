@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RekapController;
+use App\Http\Controllers\Student\StudentAuthController;
+use App\Http\Controllers\Student\StudentDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +26,10 @@ use App\Http\Controllers\Admin\RekapController;
 */
 
 Route::get('/', fn () => view('pages.welcome'))->name('home');
-Route::get('/lapor',             fn () => view('pages.user.report-page.report'))->name('lapor.index');
+Route::get('/lapor', function () {
+    $student = Auth::guard('student')->user();
+    return view('pages.user.report-page.report', compact('student'));
+})->name('lapor.index');
 Route::get('/lacak',             fn () => view('pages.user.track-page.track'))->name('lapor.lacak');
 Route::get('/progress-laporan',  fn () => view('pages.user.track-page.report-progress'))->name('lapor.progress');
 Route::get('/contact',           fn () => view('pages.user.contact-page.contact'))->name('lapor.contact');
@@ -44,7 +49,7 @@ Route::prefix('api')->group(function () {
     Route::post('/reports',           [ReportController::class, 'store'])->middleware('throttle:30,1')->name('api.reports.store');
     Route::get('/reports/track',      [ReportController::class, 'track'])->name('api.reports.track');
     Route::post('/reports/feedback',  [ReportController::class, 'storeFeedback'])->middleware('throttle:3,1')->name('api.reports.feedback');
-    Route::post('/reports/reminder',  [ReportController::class, 'sendReminder'])->middleware('throttle:3,1')->name('api.reports.reminder');
+    Route::post('/reports/reminder',  [ReportController::class, 'sendReminder'])->middleware('throttle:10,1')->name('api.reports.reminder');
     Route::post('/reports/detail',    [ReportController::class, 'storeDetail'])->middleware('throttle:10,1')->name('api.reports.detail');
 
     Route::get('/students/search',       [ReportController::class, 'searchStudent'])->name('api.students.search');
@@ -74,6 +79,23 @@ Route::get('/login', function () {
 })->name('administrator.login');
 
 Route::post('/api/admin/login', [AuthController::class, 'login'])->name('api.admin.login');
+
+Route::get('/siswa/login', function () {
+    if (Auth::guard('student')->check()) {
+        return redirect()->route('siswa.dashboard');
+    }
+    return view('pages.user.login-page.login');
+})->name('siswa.login');
+
+Route::post('/api/siswa/login',  [StudentAuthController::class, 'login'])->name('api.siswa.login');
+Route::post('/api/siswa/logout', [StudentAuthController::class, 'logout'])->name('api.siswa.logout');
+Route::get('/api/siswa/me',      [StudentAuthController::class, 'me'])->name('api.siswa.me');
+Route::get('/api/csrf-token',     fn() => response()->json(['csrf_token' => csrf_token()]))->name('api.csrf-token');
+
+// Dashboard Siswa — harus login dengan guard student
+Route::middleware('auth:student')->group(function () {
+    Route::get('/siswa/dashboard', [StudentDashboardController::class, 'index'])->name('siswa.dashboard');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -202,6 +224,8 @@ Route::middleware('auth:web')->group(function () {
                 Route::get('/list',                       [StudentController::class, 'getStudents'])->name('students.api.list');
                 Route::post('/save',                      [StudentController::class, 'store'])->name('students.api.save');
                 Route::delete('/delete/{id}',             [StudentController::class, 'destroy'])->name('students.api.delete');
+                Route::post('/{id}/set-password',         [StudentController::class, 'setPassword'])->name('students.api.set-password');
+                Route::patch('/{id}/toggle-status',       [StudentController::class, 'toggleStatus'])->name('students.api.toggle-status');
 
                 Route::post('/majors/save',               [GradeMajorController::class, 'majorSave'])->name('students.api.majors.save');
                 Route::delete('/majors/delete/{name}',    [GradeMajorController::class, 'majorDelete'])->name('students.api.majors.delete');

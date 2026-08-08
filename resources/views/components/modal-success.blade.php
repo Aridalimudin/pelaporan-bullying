@@ -59,16 +59,28 @@
                 </p>
             </div>
 
-            {{-- Tombol tutup → redirect ke progress --}}
-            <button 
-                onclick="closeReportModal()" 
-                class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-green-700 transition-all active:scale-[0.98] shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-            >
-                <span>Pantau Status Laporan</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
-            </button>
+            {{-- Tombol Tindakan --}}
+            <div class="space-y-2.5">
+                <button 
+                    onclick="closeReportModal()" 
+                    class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold text-sm hover:from-emerald-600 hover:to-green-700 transition-all active:scale-[0.98] shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                    <span>Pantau Status Laporan</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </button>
+
+                <button 
+                    onclick="closeReportModalToDashboard()" 
+                    class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Dashboard Saya</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -138,6 +150,22 @@
                 window.location.href = `/progress-laporan?code=${encodeURIComponent(_activeTicketCode)}`;
             }
         }, 300); // tunggu animasi selesai baru redirect
+    }
+
+    function closeReportModalToDashboard() {
+        const modal   = document.getElementById('successModal');
+        const content = document.getElementById('modalContent');
+
+        content.classList.add('scale-95', 'opacity-0');
+        content.classList.remove('scale-100', 'opacity-100');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            // Redirect ke dashboard siswa jika sudah login, fallback ke lapor
+            window.location.href = "{{ route('siswa.dashboard') }}";
+        }, 300);
     }
 
     function copyToClipboard() {

@@ -314,8 +314,13 @@
                                 
                                 <div class="md-grid2" style="margin-bottom:10px">
                                     <div class="md-f">
-                                        <div class="md-fl">NOMOR BERITA ACARA</div>
-                                        <input type="text" class="md-input-date" id="mdNomorBA" placeholder="Contoh: BA/2026/06/001">
+                                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                                            <div class="md-fl" style="margin-bottom:0;">NOMOR BERITA ACARA</div>
+                                            <button type="button" onclick="autoGenerateNomorBA()" style="font-size:10.5px; font-weight:700; color:#059669; background:#d1fae5; border:1px solid #a7f3d0; padding:1px 8px; border-radius:12px; cursor:pointer; display:inline-flex; align-items:center; gap:3px;" title="Generate ulang nomor berita acara">
+                                                ⚡ Auto
+                                            </button>
+                                        </div>
+                                        <input type="text" class="md-input-date" id="mdNomorBA" placeholder="Contoh: BA/2026/08/001">
                                     </div>
                                     <div class="md-f">
                                         <div class="md-fl">TANGGAL BERITA ACARA</div>
@@ -1134,14 +1139,27 @@
                         }
                     });
 
-                    ['mdDeskripsiTindakan','mdCatatanTambahan','mdNomorBA','mdIsiBA'].forEach(id => {
+                    ['mdDeskripsiTindakan','mdCatatanTambahan','mdIsiBA'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.value = '';
                     });
-                    ['mdTanggalTindak','mdTanggalBA'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.value = '';
-                    });
+
+                    // Auto pre-fill Nomor BA & Tanggal BA
+                    const inputBA = document.getElementById('mdNomorBA');
+                    if (inputBA) {
+                        inputBA.value = data.nomorBA || data.autoNomorBA || autoFormatBANumber(data.id);
+                    }
+
+                    const inputTanggalBA = document.getElementById('mdTanggalBA');
+                    if (inputTanggalBA) {
+                        inputTanggalBA.value = data.tanggalBA_raw || getTodayYMDStr();
+                    }
+
+                    const inputTanggalTindak = document.getElementById('mdTanggalTindak');
+                    if (inputTanggalTindak) {
+                        inputTanggalTindak.value = data.tanggalTindak_raw || getTodayYMDStr();
+                    }
+
                     ['mdJenisTindakan','mdJenisTindakanKorban'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.value = '';
@@ -1526,5 +1544,29 @@
         function _V(id, show) {
             const e = document.getElementById(id);
             if (e) e.style.display = show ? '' : 'none';
+        }
+
+        function autoFormatBANumber(reportId) {
+            const today = new Date();
+            const Y = today.getFullYear();
+            const M = String(today.getMonth() + 1).padStart(2, '0');
+            const N = String(reportId || Math.floor(Math.random() * 900) + 100).padStart(3, '0');
+            return `BA/${Y}/${M}/${N}`;
+        }
+
+        function getTodayYMDStr() {
+            const today = new Date();
+            const Y = today.getFullYear();
+            const M = String(today.getMonth() + 1).padStart(2, '0');
+            const D = String(today.getDate()).padStart(2, '0');
+            return `${Y}-${M}-${D}`;
+        }
+
+        function autoGenerateNomorBA() {
+            const inputBA = document.getElementById('mdNomorBA');
+            if (inputBA) {
+                const repId = (typeof _currentData !== 'undefined' && _currentData) ? _currentData.id : null;
+                inputBA.value = autoFormatBANumber(repId);
+            }
         }
         </script>

@@ -71,34 +71,74 @@ function ucfirst(str) {
 }
 
 
+/* Terjemahan pesan error server (Laravel) ke Bahasa Indonesia */
+var SM_ERROR_TRANSLATIONS = {
+    'The nis has already been taken.'         : 'NIS ini sudah digunakan oleh siswa lain.',
+    'The fullname field is required.'          : 'Nama lengkap wajib diisi.',
+    'The nis field is required.'               : 'NIS wajib diisi.',
+    'The grade field is required.'             : 'Tingkat / kelas wajib dipilih.',
+    'The major field is required.'             : 'Jurusan wajib dipilih.',
+    'The phone field is required.'             : 'No. HP / WA wajib diisi.',
+    'The email field is required.'             : 'Email wajib diisi.',
+    'The email has already been taken.'        : 'Email ini sudah digunakan oleh siswa lain.',
+    'The password field is required.'          : 'Password wajib diisi.',
+    'The password must be at least 6 characters.' : 'Password minimal 6 karakter.',
+    'The nis must not be greater than 15 characters.' : 'NIS maksimal 15 karakter.',
+    'The nis must be at least 4 characters.'   : 'NIS minimal 4 karakter.',
+};
+
+function smTranslateError(msg) {
+    return SM_ERROR_TRANSLATIONS[msg] || msg;
+}
+
 function smSetError(fieldId, message) {
     var field = document.getElementById(fieldId);
     if (!field) return;
 
     field.classList.add('sm-input-error');
+    field.style.borderColor = '#ef4444';
+    field.style.backgroundColor = '#fef2f2';
 
     var errId = fieldId + '_err';
     var errEl = document.getElementById(errId);
     if (!errEl) {
-        errEl         = document.createElement('span');
-        errEl.id      = errId;
+        // Buat elemen baru jika belum ada di HTML
+        errEl = document.createElement('span');
+        errEl.id = errId;
         errEl.className = 'sm-field-error';
-        field.parentNode.appendChild(errEl);
+        // Sisipkan setelah field, bukan dalam container flex input+mata
+        var container = field.closest('.sm-field') || field.parentNode;
+        container.appendChild(errEl);
     }
-    errEl.textContent = message;
+    // Pastikan class selalu ada (jika sudah ada di HTML tapi belum punya class)
+    if (!errEl.classList.contains('sm-field-error')) {
+        errEl.className = 'sm-field-error';
+    }
+    // Ikon ⚠ sudah ditangani via CSS ::before — cukup isi pesan teksnya saja
+    errEl.textContent = smTranslateError(message);
+    errEl.style.color = '#dc2626';
+    errEl.style.fontSize = '12px';
+    errEl.style.fontWeight = '600';
+    errEl.style.marginTop = '4px';
     errEl.style.display = 'flex';
+    errEl.style.alignItems = 'center';
+    errEl.style.gap = '4px';
 }
 
 function smClearError(fieldId) {
     var field = document.getElementById(fieldId);
-    if (field) field.classList.remove('sm-input-error');
+    if (field) {
+        field.classList.remove('sm-input-error');
+        field.style.borderColor = '';
+        field.style.backgroundColor = '';
+    }
 
     var errEl = document.getElementById(fieldId + '_err');
     if (errEl) errEl.style.display = 'none';
 }
 
 function smClearAllErrors() {
-    ['smNama', 'smNis', 'smTingkat', 'smJurusan', 'smHp', 'smEmail'].forEach(function (id) {
+    ['smNama', 'smNis', 'smTingkat', 'smJurusan', 'smHp', 'smEmail', 'smPassword'].forEach(function (id) {
         smClearError(id);
     });
 }
@@ -173,20 +213,111 @@ function smValidateAll() {
         valid = false;
     }
 
+    // ── Password: Validasi ──
+    var pass         = (document.getElementById('smPassword')?.value || '').trim();
+    var passOriginal = (document.getElementById('smPassword')?.getAttribute('data-original') || '').trim();
+    var passReqEl    = document.getElementById('smPasswordReq');
+    var passIsRequired = passReqEl && passReqEl.style.display !== 'none';
+
+    if (passIsRequired && !pass) {
+        // Mode tambah baru / siswa belum punya password — wajib diisi
+        smSetError('smPassword', 'Password wajib diisi (min. 6 karakter).');
+        valid = false;
+    } else if (pass && pass.length < 6) {
+        smSetError('smPassword', 'Password minimal 6 karakter.');
+        valid = false;
+    }
+
+
     return valid;
 }
 
-/* Listener realtime: error hilang otomatis saat user mulai mengetik / memilih */
-document.addEventListener('DOMContentLoaded', function () {
+/* ========================
+   SVG paths helper
+======================== */
+var _eyeOpen   = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
+var _eyeClosed = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
+
+/* Listener realtime: error hilang otomatis saat field sudah diisi / dipilih */
+function smAttachRealtimeListeners() {
+    // Field teks / angka — error hilang begitu ada isian
     ['smNama', 'smNis', 'smHp', 'smEmail'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('input', function () { smClearError(id); });
+        (function (fieldId) {
+            var el = document.getElementById(fieldId);
+            if (!el) return;
+            if (el._smClearFn) el.removeEventListener('input', el._smClearFn);
+            el._smClearFn = function () {
+                if (el.value.trim().length > 0) smClearError(fieldId);
+            };
+            el.addEventListener('input', el._smClearFn);
+        })(id);
     });
+
+    // Password — error hilang begitu diketik (apapun isinya)
+    (function () {
+        var el = document.getElementById('smPassword');
+        if (!el) return;
+        if (el._smClearFn) el.removeEventListener('input', el._smClearFn);
+        el._smClearFn = function () {
+            if (el.value.length > 0) smClearError('smPassword');
+        };
+        el.addEventListener('input', el._smClearFn);
+    })();
+
+    // Select (kelas & jurusan) — error hilang saat nilai bukan kosong
     ['smTingkat', 'smJurusan'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.addEventListener('change', function () { smClearError(id); });
+        (function (fieldId) {
+            var el = document.getElementById(fieldId);
+            if (!el) return;
+            if (el._smClearFn) el.removeEventListener('change', el._smClearFn);
+            el._smClearFn = function () {
+                if (el.value && el.value.trim() !== '') smClearError(fieldId);
+            };
+            el.addEventListener('change', el._smClearFn);
+        })(id);
     });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    smAttachRealtimeListeners();
+
+    /* Toggle eye untuk input password baru / ganti */
+    var toggleBtn = document.getElementById('toggleSmPassword');
+    var passInput = document.getElementById('smPassword');
+    var eyeIcon   = document.getElementById('smEyeIcon');
+    if (toggleBtn && passInput && eyeIcon) {
+        toggleBtn.addEventListener('click', function () {
+            var isText = passInput.type === 'text';
+            passInput.type = isText ? 'password' : 'text';
+            eyeIcon.innerHTML = isText ? _eyeOpen : _eyeClosed;
+        });
+    }
 });
+
+/**
+ * Toggle section ganti password (mode edit: ada password).
+ * Klik "Ganti Password" → tampilkan input baru. Klik lagi → sembunyikan + kosongkan.
+ */
+function toggleGantiPasswordSection() {
+    var section = document.getElementById('smPasswordInputSection');
+    var btn     = document.getElementById('btnGantiPassword');
+    var inp     = document.getElementById('smPassword');
+    var eyeIcon = document.getElementById('smEyeIcon');
+
+    if (!section) return;
+
+    var isOpen = section.style.display !== 'none';
+    if (isOpen) {
+        section.style.display = 'none';
+        if (inp) { inp.value = ''; inp.type = 'password'; }
+        if (eyeIcon) eyeIcon.innerHTML = _eyeOpen;
+        if (btn) btn.style.background = '#eef2ff';
+    } else {
+        section.style.display = 'block';
+        if (inp) inp.focus();
+        if (btn) btn.style.background = '#c7d2fe';
+    }
+}
 
 var _confirmCallback = null;
 
@@ -519,11 +650,20 @@ function openSiswaModal(id) {
     _editId = id;
 
     document.getElementById('smTitle').textContent = id ? 'Edit Data Siswa' : 'Tambah Siswa Baru';
-
-    // Bersihkan semua error setiap kali modal dibuka
     smClearAllErrors();
 
-if (id) {
+    /* ── Reset password field ── */
+    var passInput = document.getElementById('smPassword');
+    var eyeIcon   = document.getElementById('smEyeIcon');
+    var passReq   = document.getElementById('smPasswordReq');
+    var passHint  = document.getElementById('smPasswordHint');
+    var passLabel = document.getElementById('smPasswordLabel');
+
+    if (passInput)  { passInput.value = ''; passInput.type = 'password'; }
+    if (eyeIcon)    eyeIcon.innerHTML = _eyeOpen;
+
+    if (id) {
+        /* ── MODE EDIT ── */
         var d = _allStudents.find(function (x) { return x.id == id; });
         if (d) {
             document.getElementById('smNama').value  = d.fullname;
@@ -535,19 +675,53 @@ if (id) {
             document.getElementById('smHp').value    = d.phone || '';
             document.getElementById('smEmail').value = d.email || '';
             document.getElementById('smAvatar').textContent = d.fullname.charAt(0).toUpperCase();
-        }
-        } else {
-                ['smNama', 'smNis', 'smHp', 'smEmail'].forEach(function (fid) {
-                    document.getElementById(fid).value = '';
-                });
-                populateFormKelas('');
-                populateFormJurusan('');
-                document.getElementById('smJurusan').innerHTML = '<option value="">Pilih jurusan dulu setelah pilih kelas</option>';
-                document.getElementById('smJK').value = 'L';
-                document.getElementById('smAvatar').textContent = '?';
-            }
-            
 
+            if (d.has_password && d.plain_password) {
+                /* Sudah ada password → isi kolom dengan pw tersimpan, eye icon bisa lihat */
+                if (passLabel) passLabel.childNodes[0].nodeValue = 'Password Login Saat Ini ';
+                if (passReq)   passReq.style.display = 'none';
+                if (passHint)  passHint.textContent = 'Klik 👁 untuk melihat password. Ubah isian untuk ganti password, atau kosongkan jika tidak ingin mengubah.';
+                if (passInput) {
+                    passInput.value = d.plain_password;
+                    passInput.setAttribute('data-original', d.plain_password);
+                    passInput.type        = 'password';
+                    passInput.placeholder = '';
+                }
+            } else {
+                /* Belum ada password → kolom kosong, wajib diisi */
+                if (passLabel) passLabel.childNodes[0].nodeValue = 'Buat Password Login ';
+                if (passReq)   passReq.style.display = 'inline';
+                if (passHint)  passHint.textContent = 'Siswa ini belum punya password login. Isi untuk membuat password (min. 6 karakter).';
+                if (passInput) {
+                    passInput.value = '';
+                    passInput.setAttribute('data-original', '');
+                    passInput.placeholder = 'Buat password login siswa (min. 6 karakter)';
+                }
+            }
+        }
+    } else {
+        /* ── MODE TAMBAH BARU ── */
+        if (passLabel) passLabel.childNodes[0].nodeValue = 'Password Login ';
+        if (passReq)   passReq.style.display = 'inline';
+        if (passHint)  passHint.textContent = 'Masukkan password untuk akun login siswa (minimal 6 karakter).';
+        if (passInput) {
+            passInput.value = '';
+            passInput.setAttribute('data-original', '');
+            passInput.placeholder = 'Masukkan password login siswa (min. 6 karakter)';
+        }
+
+        ['smNama', 'smNis', 'smHp', 'smEmail'].forEach(function (fid) {
+            var fel = document.getElementById(fid);
+            if (fel) fel.value = '';
+        });
+        populateFormKelas('');
+        populateFormJurusan('');
+        document.getElementById('smJurusan').innerHTML = '<option value="">Pilih jurusan dulu setelah pilih kelas</option>';
+        document.getElementById('smJK').value = 'L';
+        document.getElementById('smAvatar').textContent = '?';
+    }
+
+    smAttachRealtimeListeners();
     mdOpenOverlay('modalSiswa');
 }
 
@@ -568,6 +742,9 @@ async function saveSiswa() {
     btnSimpan.classList.add('btn-loading');
     btnSimpan.textContent = 'Menyimpan...';
 
+    var passVal      = (document.getElementById('smPassword')?.value || '').trim();
+    var passOriginal = (document.getElementById('smPassword')?.getAttribute('data-original') || '').trim();
+
     var payload = {
         id       : _editId || null,
         fullname : document.getElementById('smNama').value.trim(),
@@ -579,6 +756,14 @@ async function saveSiswa() {
         email    : document.getElementById('smEmail').value.trim()
     };
 
+    // Kirim password hanya jika:
+    // - Ada isinya, DAN
+    // - Bukan dikosongkan (beda dari original = sengaja dihapus → skip = tidak ubah password)
+    if (passVal) {
+        payload.password = passVal;
+    }
+    // Jika passVal kosong & original tidak kosong → user sengaja hapus isian tapi tidak mau ganti: skip
+
     var res = await apiFetch(API_STUDENTS_SAVE, { method: 'POST', body: payload });
 
     btnSimpan.classList.remove('btn-loading');
@@ -587,8 +772,11 @@ async function saveSiswa() {
     if (res.status === 'success') {
         closeSiswaModal();
         await loadAll();
-        if (typeof Toast !== 'undefined') {
-            Toast.show('success', 'Berhasil', _editId ? 'Data siswa diperbarui.' : 'Siswa baru ditambahkan.');
+        var msg = _editId ? 'Data siswa berhasil diperbarui.' : 'Siswa baru berhasil ditambahkan.';
+        if (typeof Toast !== 'undefined' && Toast.show) {
+            Toast.show('success', 'Berhasil', msg);
+        } else {
+            alert('✅ ' + msg);
         }
     } else {
         // Tampilkan error validasi dari server (Laravel) secara inline per field
@@ -599,11 +787,12 @@ async function saveSiswa() {
                 grade    : 'smTingkat',
                 major    : 'smJurusan',
                 phone    : 'smHp',
-                email    : 'smEmail'
+                email    : 'smEmail',
+                password : 'smPassword'
             };
             Object.keys(res.errors).forEach(function (key) {
                 var htmlId = fieldMap[key];
-                if (htmlId) smSetError(htmlId, res.errors[key][0]);
+                if (htmlId) smSetError(htmlId, smTranslateError(res.errors[key][0]));
             });
             var firstErr = document.querySelector('.sm-input-error');
             if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });

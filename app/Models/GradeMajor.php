@@ -26,7 +26,9 @@ class GradeMajor extends Model
      */
     public static function allGrades(): array
     {
-        return static::orderBy('grade')
+        return static::select('grade')
+            ->distinct()
+            ->orderBy('grade')
             ->pluck('grade')
             ->toArray();
     }
